@@ -1,4 +1,4 @@
-﻿namespace DotNETCoreWithReact.Models;
+﻿namespace ShopAPI.Models;
 
 public class Category
 {

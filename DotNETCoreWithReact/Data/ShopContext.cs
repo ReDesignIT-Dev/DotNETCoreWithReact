@@ -1,8 +1,7 @@
-﻿using DotNETCoreWithReact.Models;
+﻿using ShopAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace DotNETCoreWithReact.Data;
-
+namespace ShopAPI.Data;
 
 public class ShopContext : DbContext
 {
