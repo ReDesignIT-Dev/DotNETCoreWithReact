@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
 using ShopAPI.Dtos;
-using ShopAPI.Models;
 
 [ApiController]
 [Route("api/[controller]")]
