@@ -1,55 +1,25 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ShopAPI.Data;
 using ShopAPI.Dtos;
+using ShopAPI.Interfaces;
+
+namespace ShopAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-    private readonly ShopContext _context;
-    public ProductsController(ShopContext context) => _context = context;
+    private readonly IProductService _productService;
+    public ProductsController(IProductService productService) => _productService = productService;
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts(
+    public async Task<ActionResult> GetProducts(
         [FromQuery] int? category,
         [FromQuery] string? search,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var query = _context.Products.AsQueryable();
-
-        if (category.HasValue)
-        {
-            // Get all descendant category IDs (simple version, for demo)
-            var categoryIds = await _context.Categories
-                .Where(c => c.Id == category.Value || c.ParentId == category.Value)
-                .Select(c => c.Id)
-                .ToListAsync();
-            query = query.Where(p => categoryIds.Contains(p.CategoryId));
-        }
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            query = query.Where(p =>
-                p.Name.Contains(search) ||
-                (p.Description != null && p.Description.Contains(search))
-            );
-        }
-
-        var total = await query.CountAsync();
-        var products = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                CategoryId = p.CategoryId
-            })
-            .ToListAsync();
+        var products = await _productService.GetProductsAsync(category, search, page, pageSize);
+        var total = await _productService.GetProductsCountAsync(category, search);
 
         return Ok(new
         {
@@ -57,5 +27,32 @@ public class ProductsController : ControllerBase
             totalPages = (int)Math.Ceiling(total / (double)pageSize),
             products
         });
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] ProductDto dto)
+    {
+        var created = await _productService.CreateProductAsync(dto);
+        if (created == null)
+            return BadRequest("Category does not exist.");
+        return CreatedAtAction(nameof(GetProducts), new { id = created.Id }, created);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> EditProduct(int id, [FromBody] ProductDto dto)
+    {
+        var success = await _productService.UpdateProductAsync(id, dto);
+        if (!success)
+            return NotFound();
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        var success = await _productService.DeleteProductAsync(id);
+        if (!success)
+            return NotFound();
+        return NoContent();
     }
 }
