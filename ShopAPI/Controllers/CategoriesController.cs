@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos;
+using ShopAPI.Dtos.Category;
 using ShopAPI.Interfaces;
 
 namespace ShopAPI.Controllers;
@@ -12,14 +13,14 @@ public class CategoriesController : ControllerBase
     public CategoriesController(ICategoryService categoryService) => _categoryService = categoryService;
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
+    public async Task<ActionResult<IEnumerable<WriteCategoryDto>>> GetCategories()
     {
         var categories = await _categoryService.GetCategoriesAsync();
         return Ok(categories);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<CategoryDto>> GetCategory(int id)
+    public async Task<ActionResult<WriteCategoryDto>> GetCategory(int id)
     {
         var category = await _categoryService.GetCategoryByIdAsync(id);
         if (category == null)
@@ -28,14 +29,14 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CategoryDto>> CreateCategory([FromBody] CategoryDto dto)
+    public async Task<ActionResult<ReadCategoryDto>> CreateCategory([FromBody] WriteCategoryDto dto)
     {
         var created = await _categoryService.CreateCategoryAsync(dto);
         return CreatedAtAction(nameof(GetCategory), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> EditCategory(int id, [FromBody] CategoryDto dto)
+    public async Task<IActionResult> EditCategory(int id, [FromBody] WriteCategoryDto dto)
     {
         var success = await _categoryService.UpdateCategoryAsync(id, dto);
         if (!success)

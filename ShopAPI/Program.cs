@@ -1,5 +1,7 @@
 using ShopAPI.Data;
 using Microsoft.EntityFrameworkCore;
+using ShopAPI.Interfaces;
+using ShopAPI.Services;
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -22,6 +27,12 @@ else
 }
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ShopContext>();
+    db.Database.Migrate(); // This will create the DB and apply all migrations
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
