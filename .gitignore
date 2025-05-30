@@ -365,3 +365,5 @@ FodyWeavers.xsd
 *.env
 *.db
 /ShopAPI/Migrations
+/ShopAPI/shop.db-shm
+/ShopAPI/shop.db-wal
