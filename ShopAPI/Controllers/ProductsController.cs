@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ShopAPI.Dtos;
+using ShopAPI.Dtos.Product;
 using ShopAPI.Interfaces;
 
 namespace ShopAPI.Controllers;
@@ -30,7 +30,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] ProductDto dto)
+    public async Task<ActionResult<ReadProductDto>> CreateProduct([FromBody] ReadProductDto dto)
     {
         var created = await _productService.CreateProductAsync(dto);
         if (created == null)
@@ -39,7 +39,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> EditProduct(int id, [FromBody] ProductDto dto)
+    public async Task<IActionResult> EditProduct(int id, [FromBody] ReadProductDto dto)
     {
         var success = await _productService.UpdateProductAsync(id, dto);
         if (!success)
