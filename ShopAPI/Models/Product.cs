@@ -10,4 +10,6 @@ public class Product
     public required decimal Price { get; set; }
     public int CategoryId { get; set; }
     public required Category Category { get; set; }
+    public List<ProductImage> Images { get; set; } = new();
+
 }
