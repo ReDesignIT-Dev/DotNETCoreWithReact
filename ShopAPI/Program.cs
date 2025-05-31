@@ -12,6 +12,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<RecaptchaService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
