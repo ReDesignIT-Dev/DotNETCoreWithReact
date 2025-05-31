@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos;
 using ShopAPI.Interfaces;
+using ShopAPI.Services;
+
 
 namespace ShopAPI.Controllers;
 
@@ -9,11 +11,21 @@ namespace ShopAPI.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
-    public AuthController(IUserService userService) => _userService = userService;
+    private readonly RecaptchaService _reCaptchaService;
+
+    public AuthController(IUserService userService, RecaptchaService reCaptchaService)
+    {
+        _userService = userService;
+        _reCaptchaService = reCaptchaService;
+    }
 
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register(RegisterDto dto)
     {
+        var recaptchaValid = await _reCaptchaService.VerifyAsync(dto.RecaptchaToken);
+        if (!recaptchaValid)
+            return BadRequest("reCAPTCHA validation failed.");
+
         var user = await _userService.RegisterAsync(dto);
         if (user == null)
             return BadRequest("Username is already taken.");
@@ -23,6 +35,10 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto dto)
     {
+        var recaptchaValid = await _reCaptchaService.VerifyAsync(dto.RecaptchaToken);
+        if (!recaptchaValid)
+            return BadRequest("reCAPTCHA validation failed.");
+
         var user = await _userService.LoginAsync(dto);
         if (user == null)
             return Unauthorized("Invalid username or password.");
