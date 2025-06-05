@@ -367,3 +367,4 @@ FodyWeavers.xsd
 /ShopAPI/Migrations
 /ShopAPI/shop.db-shm
 /ShopAPI/shop.db-wal
+/ShopAPI/uploads
