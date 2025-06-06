@@ -13,7 +13,9 @@ public class ProductService : IProductService
 
     public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(int? categoryId, string? search, int page, int pageSize)
     {
-        var query = _context.Products.AsQueryable();
+        var query = _context.Products
+            .Include(p => p.Images)
+            .AsQueryable();
 
         if (categoryId.HasValue)
         {
@@ -41,7 +43,12 @@ public class ProductService : IProductService
                 Name = p.Name,
                 Description = p.Description,
                 Price = p.Price,
-                CategoryId = p.CategoryId
+                CategoryId = p.CategoryId,
+                Images = p.Images.Select(img => new ProductImageDto
+                {
+                    Id = img.Id,
+                    Url = img.Url
+                }).ToList()
             })
             .ToListAsync();
     }
@@ -70,11 +77,14 @@ public class ProductService : IProductService
         return await query.CountAsync();
     }
 
-    public async Task<ReadProductDto?> CreateProductAsync(ReadProductDto dto)
+    public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, List<string> imageUrls)
     {
         var category = await _context.Categories.FindAsync(dto.CategoryId);
         if (category == null)
             return null;
+
+        // Create ProductImage entities from URLs
+        var images = imageUrls?.Select(url => new ProductImage { Url = url }).ToList() ?? new List<ProductImage>();
 
         var product = new Product
         {
@@ -82,7 +92,8 @@ public class ProductService : IProductService
             Description = dto.Description,
             Price = dto.Price,
             CategoryId = dto.CategoryId,
-            Category = category
+            Category = category,
+            Images = images
         };
 
         _context.Products.Add(product);
@@ -94,16 +105,22 @@ public class ProductService : IProductService
             Name = product.Name,
             Description = product.Description,
             Price = product.Price,
-            CategoryId = product.CategoryId
+            CategoryId = product.CategoryId,
+            Images = product.Images.Select(img => new ProductImageDto
+            {
+                Id = img.Id,
+                Url = img.Url
+            }).ToList()
         };
     }
 
-    public async Task<bool> UpdateProductAsync(int id, ReadProductDto dto)
-    {
-        if (id != dto.Id)
-            return false;
 
-        var product = await _context.Products.FindAsync(id);
+    public async Task<bool> UpdateProductAsync(int id, WriteProductDto dto, List<string> imageUrls)
+    {
+        var product = await _context.Products
+            .Include(p => p.Images)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
         if (product == null)
             return false;
 
@@ -117,9 +134,17 @@ public class ProductService : IProductService
         product.CategoryId = dto.CategoryId;
         product.Category = category;
 
+        // Replace all images with new ones
+        product.Images.Clear();
+        foreach (var url in imageUrls)
+        {
+            product.Images.Add(new ProductImage { Url = url });
+        }
+
         await _context.SaveChangesAsync();
         return true;
     }
+
 
     public async Task<bool> DeleteProductAsync(int id)
     {
@@ -132,3 +157,4 @@ public class ProductService : IProductService
         return true;
     }
 }
+
