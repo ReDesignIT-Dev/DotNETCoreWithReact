@@ -30,18 +30,27 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ReadProductDto>> CreateProduct([FromBody] ReadProductDto dto)
+    public async Task<ActionResult<ReadProductDto>> CreateProduct(
+    [FromForm] WriteProductDto dto,
+    [FromForm] List<IFormFile> images)
     {
-        var created = await _productService.CreateProductAsync(dto);
+        var imageUrls = await SaveImagesAsync(images);
+
+        var created = await _productService.CreateProductAsync(dto, imageUrls);
         if (created == null)
             return BadRequest("Category does not exist.");
         return CreatedAtAction(nameof(GetProducts), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> EditProduct(int id, [FromBody] ReadProductDto dto)
+    public async Task<IActionResult> EditProduct(
+        int id,
+        [FromForm] WriteProductDto dto,
+        [FromForm] List<IFormFile> images)
     {
-        var success = await _productService.UpdateProductAsync(id, dto);
+        var imageUrls = await SaveImagesAsync(images);
+
+        var success = await _productService.UpdateProductAsync(id, dto, imageUrls);
         if (!success)
             return NotFound();
         return NoContent();
@@ -54,5 +63,22 @@ public class ProductsController : ControllerBase
         if (!success)
             return NotFound();
         return NoContent();
+    }
+
+    // Helper method to save images and return their URLs
+    private async Task<List<string>> SaveImagesAsync(List<IFormFile> images)
+    {
+        var imageUrls = new List<string>();
+        foreach (var file in images)
+        {
+            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var filePath = Path.Combine("uploads", fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            imageUrls.Add($"/uploads/{fileName}");
+        }
+        return imageUrls;
     }
 }
