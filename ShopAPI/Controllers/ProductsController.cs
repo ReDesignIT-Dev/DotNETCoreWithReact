@@ -66,13 +66,26 @@ public class ProductsController : ControllerBase
     }
 
     // Helper method to save images and return their URLs
+    private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
+    private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
+
     private async Task<List<string>> SaveImagesAsync(List<IFormFile> images)
     {
         var imageUrls = new List<string>();
         foreach (var file in images)
         {
-            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine("uploads", fileName);
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(ext))
+                throw new InvalidOperationException("Unsupported file type.");
+
+            if (file.Length > MaxFileSize)
+                throw new InvalidOperationException("File size exceeds limit.");
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            Directory.CreateDirectory(uploadDir);
+            var filePath = Path.Combine(uploadDir, fileName);
+
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
