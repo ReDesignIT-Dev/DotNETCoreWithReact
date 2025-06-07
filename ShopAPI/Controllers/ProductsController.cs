@@ -31,16 +31,27 @@ public class ProductsController : ControllerBase
 
     [HttpPost]
     public async Task<ActionResult<ReadProductDto>> CreateProduct(
-    [FromForm] WriteProductDto dto,
-    [FromForm] List<IFormFile> images)
+        [FromForm] WriteProductDto dto,
+        [FromForm] List<IFormFile> images)
     {
-        var imageUrls = await SaveImagesAsync(images);
-
-        var created = await _productService.CreateProductAsync(dto, imageUrls);
-        if (created == null)
-            return BadRequest("Category does not exist.");
-        return CreatedAtAction(nameof(GetProducts), new { id = created.Id }, created);
+        try
+        {
+            var imageUrls = await SaveImagesAsync(images);
+            var created = await _productService.CreateProductAsync(dto, imageUrls);
+            if (created == null)
+                return BadRequest("Category does not exist.");
+            return CreatedAtAction(nameof(GetProducts), new { id = created.Id }, created);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "An error occurred while processing your request.");
+        }
     }
+
 
     [HttpPut("{id}")]
     public async Task<IActionResult> EditProduct(
