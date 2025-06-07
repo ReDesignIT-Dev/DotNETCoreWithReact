@@ -12,22 +12,25 @@ public class ProductsController : ControllerBase
     public ProductsController(IProductService productService) => _productService = productService;
 
     [HttpGet]
-    public async Task<ActionResult> GetProducts(
-        [FromQuery] int? category,
-        [FromQuery] string? search,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<ProductListResponseDto>> GetProducts(
+    [FromQuery] int? category,
+    [FromQuery] string? search,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
     {
         var products = await _productService.GetProductsAsync(category, search, page, pageSize);
         var total = await _productService.GetProductsCountAsync(category, search);
 
-        return Ok(new
+        var response = new ProductListResponseDto
         {
-            count = total,
-            totalPages = (int)Math.Ceiling(total / (double)pageSize),
-            products
-        });
+            Count = total,
+            TotalPages = (int)Math.Ceiling(total / (double)pageSize),
+            Products = products
+        };
+
+        return Ok(response);
     }
+
 
     [HttpPost]
     public async Task<ActionResult<ReadProductDto>> CreateProduct(
