@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos.Product;
 using ShopAPI.Interfaces;
+using ShopAPI.Requests;
 
 namespace ShopAPI.Controllers;
 
@@ -12,24 +13,26 @@ public class ProductsController : ControllerBase
     public ProductsController(IProductService productService) => _productService = productService;
 
     [HttpGet]
-    public async Task<ActionResult<ProductListResponseDto>> GetProducts(
-    [FromQuery] int? category,
-    [FromQuery] string? search,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<ProductListResponseDto>> GetProducts([FromQuery] ProductQueryParameters query)
     {
-        var products = await _productService.GetProductsAsync(category, search, page, pageSize);
-        var total = await _productService.GetProductsCountAsync(category, search);
+        var products = await _productService.GetProductsAsync(
+            query.Category,
+            query.Search,
+            query.Page,
+            query.PageSize);
+
+        var total = await _productService.GetProductsCountAsync(query.Category, query.Search);
 
         var response = new ProductListResponseDto
         {
             Count = total,
-            TotalPages = (int)Math.Ceiling(total / (double)pageSize),
+            TotalPages = (int)Math.Ceiling(total / (double)query.PageSize),
             Products = products
         };
 
         return Ok(response);
     }
+
 
 
     [HttpPost]

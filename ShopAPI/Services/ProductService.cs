@@ -3,6 +3,9 @@ using ShopAPI.Data;
 using ShopAPI.Dtos.Product;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace ShopAPI.Services;
 
@@ -77,13 +80,40 @@ public class ProductService : IProductService
         return await query.CountAsync();
     }
 
+
+    private static string GenerateSlug(string name, int id)
+    {
+        // Normalize and remove diacritics (accents)
+        string normalized = name.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder();
+        foreach (var c in normalized)
+        {
+            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                sb.Append(c);
+        }
+        string noDiacritics = sb.ToString().Normalize(NormalizationForm.FormC);
+
+        // Replace all non-alphanumeric characters with hyphens
+        string slug = Regex.Replace(noDiacritics, @"[^a-zA-Z0-9\s-]", "");
+
+        // Replace multiple spaces or hyphens with a single hyphen
+        slug = Regex.Replace(slug, @"[\s-]+", "-");
+
+        // Trim leading/trailing hyphens and convert to lowercase
+        slug = slug.Trim('-').ToLowerInvariant();
+
+        // Append the id
+        return $"{slug}-{id}";
+    }
+
+
     public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, List<string> imageUrls)
     {
         var category = await _context.Categories.FindAsync(dto.CategoryId);
         if (category == null)
             return null;
 
-        // Create ProductImage entities from URLs
         var images = imageUrls?.Select(url => new ProductImage { Url = url }).ToList() ?? new List<ProductImage>();
 
         var product = new Product
@@ -99,6 +129,10 @@ public class ProductService : IProductService
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
 
+        // Generate slug after ID is available
+        product.Slug = GenerateSlug(product.Name, product.Id);
+        await _context.SaveChangesAsync();
+
         return new ReadProductDto
         {
             Id = product.Id,
@@ -106,6 +140,7 @@ public class ProductService : IProductService
             Description = product.Description,
             Price = product.Price,
             CategoryId = product.CategoryId,
+            Slug = product.Slug,
             Images = product.Images.Select(img => new ProductImageDto
             {
                 Id = img.Id,
@@ -113,6 +148,7 @@ public class ProductService : IProductService
             }).ToList()
         };
     }
+
 
 
     public async Task<bool> UpdateProductAsync(int id, WriteProductDto dto, List<string> imageUrls)
