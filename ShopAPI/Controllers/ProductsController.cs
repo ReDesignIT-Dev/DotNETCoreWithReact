@@ -15,11 +15,7 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ProductListResponseDto>> GetProducts([FromQuery] ProductQueryParameters query)
     {
-        var products = await _productService.GetProductsAsync(
-            query.Category,
-            query.Search,
-            query.Page,
-            query.PageSize);
+        var products = await _productService.GetProductsAsync(query);
 
         var total = await _productService.GetProductsCountAsync(query.Category, query.Search);
 
