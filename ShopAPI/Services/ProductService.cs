@@ -6,6 +6,8 @@ using ShopAPI.Models;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
+using ShopAPI.Requests;
+using ShopAPI.Enums;
 
 namespace ShopAPI.Services;
 
@@ -14,32 +16,57 @@ public class ProductService : IProductService
     private readonly ShopContext _context;
     public ProductService(ShopContext context) => _context = context;
 
-    public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(int? categoryId, string? search, int page, int pageSize)
+    public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query)
     {
-        var query = _context.Products
+        var productsQuery = _context.Products
             .Include(p => p.Images)
             .AsQueryable();
 
-        if (categoryId.HasValue)
+        if (query.Category.HasValue)
         {
             var categoryIds = await _context.Categories
-                .Where(c => c.Id == categoryId.Value || c.ParentId == categoryId.Value)
+                .Where(c => c.Id == query.Category.Value || c.ParentId == query.Category.Value)
                 .Select(c => c.Id)
                 .ToListAsync();
-            query = query.Where(p => categoryIds.Contains(p.CategoryId));
+            productsQuery = productsQuery.Where(p => categoryIds.Contains(p.CategoryId));
         }
 
-        if (!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            query = query.Where(p =>
-                p.Name.Contains(search) ||
-                (p.Description != null && p.Description.Contains(search))
+            productsQuery = productsQuery.Where(p =>
+                p.Name.Contains(query.Search) ||
+                (p.Description != null && p.Description.Contains(query.Search))
             );
         }
 
-        return await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        if (query.MinPrice.HasValue)
+            productsQuery = productsQuery.Where(p => p.Price >= query.MinPrice.Value);
+
+        if (query.MaxPrice.HasValue)
+            productsQuery = productsQuery.Where(p => p.Price <= query.MaxPrice.Value);
+
+        // Sorting
+        if (!string.IsNullOrWhiteSpace(query.SortBy))
+        {
+            var sortBy = query.SortBy.ToLowerInvariant();
+            productsQuery = query.SortOrder == SortOrder.Desc
+                ? sortBy switch
+                {
+                    "price" => productsQuery.OrderByDescending(p => p.Price),
+                    "id" => productsQuery.OrderByDescending(p => p.Id),
+                    _ => productsQuery.OrderByDescending(p => p.Name)
+                }
+                : sortBy switch
+                {
+                    "price" => productsQuery.OrderBy(p => p.Price),
+                    "id" => productsQuery.OrderBy(p => p.Id),
+                    _ => productsQuery.OrderBy(p => p.Name)
+                };
+        }
+
+        return await productsQuery
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
             .Select(p => new ReadProductDto
             {
                 Id = p.Id,
@@ -47,6 +74,7 @@ public class ProductService : IProductService
                 Description = p.Description,
                 Price = p.Price,
                 CategoryId = p.CategoryId,
+                Slug = p.Slug,
                 Images = p.Images.Select(img => new ProductImageDto
                 {
                     Id = img.Id,
@@ -55,6 +83,7 @@ public class ProductService : IProductService
             })
             .ToListAsync();
     }
+
 
     public async Task<int> GetProductsCountAsync(int? categoryId, string? search)
     {
