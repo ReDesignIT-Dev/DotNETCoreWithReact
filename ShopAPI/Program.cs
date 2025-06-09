@@ -15,7 +15,20 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<RecaptchaService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.WithOrigins("http://localhost:3000", "https://localhost:3000")
+               .AllowCredentials();
+    });
+});
+
+
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var app = builder.Build();
+app.UseCors();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -26,9 +39,10 @@ else
 {
     builder.Services.AddDbContext<ShopContext>(opt =>
         opt.UseNpgsql(connectionString));
+    app.UseHsts(); // HTTP Strict Transport Security (HSTS)
 }
 
-var app = builder.Build();
+
 
 using (var scope = app.Services.CreateScope())
 {
