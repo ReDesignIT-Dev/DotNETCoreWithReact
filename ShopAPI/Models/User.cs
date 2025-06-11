@@ -1,9 +1,10 @@
-﻿namespace ShopAPI.Models;
+﻿using Microsoft.AspNetCore.Identity;
 
-public class User
+namespace ShopAPI.Models;
+
+public class User : IdentityUser<int>
 {
-    public int Id { get; set; }
-    public required string Username { get; set; }
-    public required byte[] PasswordHash { get; set; }
-    public required byte[] PasswordSalt { get; set; }
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
+
