@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ShopAPI.Data;
 using ShopAPI.Dtos;
@@ -13,61 +14,64 @@ namespace ShopAPI.Services;
 
 public class UserService : IUserService
 {
-    private readonly ShopContext _context;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
     private readonly IConfiguration _config;
 
-    public UserService(ShopContext context, IConfiguration config)
+    public UserService(
+        UserManager<User> userManager,
+        SignInManager<User> signInManager,
+        IConfiguration config)
     {
-        _context = context;
+        _userManager = userManager;
+        _signInManager = signInManager;
         _config = config;
     }
 
     public async Task<UserDto?> RegisterAsync(RegisterDto dto)
     {
-        if (await UserExistsAsync(dto.Username))
-            return null;
-
-        using var hmac = new HMACSHA512();
         var user = new User
         {
-            Username = dto.Username,
-            PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(dto.Password)),
-            PasswordSalt = hmac.Key
+            UserName = dto.Username,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+        var result = await _userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded)
+            return null;
 
         return new UserDto
         {
             Id = user.Id,
-            Username = user.Username,
+            Username = user.UserName!,
             Token = CreateToken(user)
         };
     }
+
 
     public async Task<UserDto?> LoginAsync(LoginDto dto)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(x => x.Username == dto.Username);
+        var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
             return null;
 
-        using var hmac = new HMACSHA512(user.PasswordSalt);
-        var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(dto.Password));
-        if (!computedHash.SequenceEqual(user.PasswordHash))
+        var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+        if (!result.Succeeded)
             return null;
 
         return new UserDto
         {
             Id = user.Id,
-            Username = user.Username,
+            Username = user.UserName ?? string.Empty,
             Token = CreateToken(user)
         };
     }
 
-    public async Task<bool> UserExistsAsync(string username)
+
+    public async Task<bool> UserExistsAsync(string email)
     {
-        return await _context.Users.AnyAsync(x => x.Username == username);
+        return await _userManager.FindByEmailAsync(email) != null;
     }
 
     private string CreateToken(User user)
@@ -75,7 +79,8 @@ public class UserService : IUserService
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username)
+            new Claim(ClaimTypes.Email, user.Email!),
+            new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
