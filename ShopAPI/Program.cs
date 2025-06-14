@@ -2,6 +2,8 @@ using ShopAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using ShopAPI.Interfaces;
 using ShopAPI.Services;
+using Microsoft.AspNetCore.Identity;
+using ShopAPI.Models;
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<RecaptchaService>();
+builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddCors(options =>
 {
@@ -24,6 +27,12 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+{
+    options.SignIn.RequireConfirmedEmail = true;
+})
+.AddEntityFrameworkStores<ShopContext>()
+.AddDefaultTokenProviders();
 
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
