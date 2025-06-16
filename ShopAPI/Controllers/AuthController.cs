@@ -5,6 +5,7 @@ using ShopAPI.Services;
 using Microsoft.AspNetCore.Identity;
 using ShopAPI.Models;
 using System.Net;
+using DotNetEnv;
 
 namespace ShopAPI.Controllers;
 
@@ -16,25 +17,31 @@ public class AuthController : ControllerBase
     private readonly RecaptchaService _reCaptchaService;
     private readonly UserManager<User> _userManager;
     private readonly EmailService _emailService;
+    private readonly IWebHostEnvironment _env;
 
     public AuthController(
         IUserService userService,
         RecaptchaService reCaptchaService,
         UserManager<User> userManager,
-        EmailService emailService)
+        EmailService emailService,
+        IWebHostEnvironment env)
     {
         _userService = userService;
         _reCaptchaService = reCaptchaService;
         _userManager = userManager;
         _emailService = emailService;
+        _env = env; 
     }
 
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register(RegisterDto dto)
     {
-        var recaptchaValid = await _reCaptchaService.VerifyAsync(dto.RecaptchaToken);
-        if (!recaptchaValid)
-            return BadRequest("reCAPTCHA validation failed.");
+        if (!_env.IsDevelopment())
+        {
+            var recaptchaValid = await _reCaptchaService.VerifyAsync(dto.RecaptchaToken);
+            if (!recaptchaValid)
+                return BadRequest("reCAPTCHA validation failed.");
+        }
 
         var userDto = await _userService.RegisterAsync(dto);
         if (userDto == null)
@@ -67,18 +74,28 @@ public class AuthController : ControllerBase
         if (user == null)
             return BadRequest("Invalid user.");
 
-        var result = await _userManager.ConfirmEmailAsync(user, token);
+        var decodedToken = WebUtility.UrlDecode(token);
+        var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+
         if (result.Succeeded)
+        {
+            user.IsActive = true;
+            await _userManager.UpdateAsync(user);
             return Ok("Email confirmed!");
+        }
         return BadRequest("Email confirmation failed.");
     }
+
 
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto dto)
     {
-        var recaptchaValid = await _reCaptchaService.VerifyAsync(dto.RecaptchaToken);
-        if (!recaptchaValid)
-            return BadRequest("reCAPTCHA validation failed.");
+        if (!_env.IsDevelopment())
+        {
+            var recaptchaValid = await _reCaptchaService.VerifyAsync(dto.RecaptchaToken);
+            if (!recaptchaValid)
+                return BadRequest("reCAPTCHA validation failed.");
+        }
 
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
@@ -87,9 +104,13 @@ public class AuthController : ControllerBase
         if (!user.EmailConfirmed)
             return Unauthorized("Email not confirmed.");
 
+        if (!user.IsActive)
+            return Unauthorized("Account is not active.");
+
         var userDto = await _userService.LoginAsync(dto);
         if (userDto == null)
             return Unauthorized("Invalid email or password.");
         return Ok(userDto);
     }
+
 }

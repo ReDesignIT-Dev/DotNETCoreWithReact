@@ -33,7 +33,8 @@ public class UserService : IUserService
         var user = new User
         {
             UserName = dto.Username,
-            IsActive = true,
+            Email = dto.Email,
+            IsActive = false,
             CreatedAt = DateTime.UtcNow
         };
 
