@@ -58,8 +58,8 @@ public class AuthController : ControllerBase
             new { userId = user.Id, token = WebUtility.UrlEncode(token) },
             protocol: Request.Scheme);
 
-        var subject = "Confirm your email";
-        var body = $"Please confirm your account by clicking <a href=\"{confirmationLink}\">here</a>.";
+        var subject = "Activate Your Account";
+        var body = _emailService.GetActivationEmailBody(user.UserName ?? user.Email!, confirmationLink!);
 
         await _emailService.SendAsync(user.Email!, subject, body);
 
@@ -73,6 +73,8 @@ public class AuthController : ControllerBase
         var user = await _userManager.FindByIdAsync(userId.ToString());
         if (user == null)
             return BadRequest("Invalid user.");
+        if (user.IsActive)
+            return BadRequest("Email already confirmed.");
 
         var decodedToken = WebUtility.UrlDecode(token);
         var result = await _userManager.ConfirmEmailAsync(user, decodedToken);

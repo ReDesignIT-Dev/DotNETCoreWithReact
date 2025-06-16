@@ -1,17 +1,18 @@
 ﻿using System.Net;
 using System.Net.Mail;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 
 namespace ShopAPI.Services
 {
     public class EmailService
     {
         private readonly IConfiguration _config;
+        private readonly string _templatePath;
 
         public EmailService(IConfiguration config)
         {
             _config = config;
+            // Adjust the path as needed for your project structure
+            _templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EmailTemplates", "ActivationEmailTemplate.html");
         }
 
         public async Task SendAsync(string toEmail, string subject, string body)
@@ -41,5 +42,20 @@ namespace ShopAPI.Services
             await client.SendMailAsync(mail);
         }
 
+        private string LoadTemplate()
+        {
+            if (!File.Exists(_templatePath))
+                throw new FileNotFoundException("Activation email template not found.", _templatePath);
+
+            return File.ReadAllText(_templatePath);
+        }
+
+        public string GetActivationEmailBody(string username, string activationLink)
+        {
+            var template = LoadTemplate();
+            return template
+                .Replace("{{username}}", WebUtility.HtmlEncode(username))
+                .Replace("{{activation_link}}", activationLink);
+        }
     }
 }
