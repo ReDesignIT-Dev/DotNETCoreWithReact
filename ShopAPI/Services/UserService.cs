@@ -41,13 +41,11 @@ public class UserService : IUserService
         var result = await _userManager.CreateAsync(user, dto.Password);
         if (!result.Succeeded)
             return null;
-        var sessionId = Guid.NewGuid().ToString();
 
         return new UserDto
         {
             Id = user.Id,
             Username = user.UserName!,
-            Token = CreateToken(user, sessionId)
         };
     }
 
@@ -58,9 +56,14 @@ public class UserService : IUserService
         if (user == null)
             return null;
 
+        // Check if email is confirmed and account is active
+        if (!user.EmailConfirmed || !user.IsActive)
+            return null;
+
         var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
         if (!result.Succeeded)
             return null;
+
         var sessionId = Guid.NewGuid().ToString();
 
         return new UserDto
@@ -70,6 +73,7 @@ public class UserService : IUserService
             Token = CreateToken(user, sessionId)
         };
     }
+
 
 
     public async Task<bool> UserExistsAsync(string email)
