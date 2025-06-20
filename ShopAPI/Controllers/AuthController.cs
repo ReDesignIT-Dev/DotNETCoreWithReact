@@ -5,7 +5,12 @@ using ShopAPI.Services;
 using Microsoft.AspNetCore.Identity;
 using ShopAPI.Models;
 using System.Net;
-using DotNetEnv;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using ShopAPI.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ShopAPI.Controllers;
 
@@ -18,19 +23,24 @@ public class AuthController : ControllerBase
     private readonly UserManager<User> _userManager;
     private readonly EmailService _emailService;
     private readonly IWebHostEnvironment _env;
+    private readonly ShopContext _dbContext;
+
 
     public AuthController(
         IUserService userService,
         RecaptchaService reCaptchaService,
         UserManager<User> userManager,
         EmailService emailService,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        ShopContext dbContext,
+        ILogger<AuthController> logger)
     {
         _userService = userService;
         _reCaptchaService = reCaptchaService;
         _userManager = userManager;
         _emailService = emailService;
-        _env = env; 
+        _env = env;
+        _dbContext = dbContext;
     }
 
     [HttpPost("register")]
@@ -114,5 +124,52 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid email or password.");
         return Ok(userDto);
     }
+
+    
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> LogoutCurrentSession()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var sessionIdClaim = User.FindFirst(JwtRegisteredClaimNames.Jti);
+
+        if (userIdClaim == null)
+        {
+            return BadRequest("User ID not found in token.");
+        }
+        if (sessionIdClaim == null)
+        {
+            return BadRequest("Session ID not found in token.");
+        }
+
+        var userId = int.Parse(userIdClaim.Value);
+        var sessionId = sessionIdClaim.Value;
+
+        var session = await _dbContext.UserSessions
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.SessionId == sessionId);
+
+        if (session != null)
+        {
+            _dbContext.UserSessions.Remove(session);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        return Ok("Logged out from current session.");
+    }
+
+    [Authorize]
+    [HttpPost("logout-all")]
+    public async Task<IActionResult> LogoutAllSessions()
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var sessions = _dbContext.UserSessions.Where(s => s.UserId == userId);
+        _dbContext.UserSessions.RemoveRange(sessions);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok("Logged out from all sessions.");
+    }
+
+
 
 }
