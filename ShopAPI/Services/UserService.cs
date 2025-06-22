@@ -97,11 +97,12 @@ public class UserService : IUserService
     {
         var claims = new[]
         {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Email, user.Email!),
-        new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
-        new Claim(JwtRegisteredClaimNames.Jti, sessionId) // Unique per session/device
-    };
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
+            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Jti, sessionId)
+        };
+
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
