@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos;
 using ShopAPI.Dtos.Category;
+using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
+using System.Text.RegularExpressions;
 
 namespace ShopAPI.Controllers;
 
@@ -31,9 +33,22 @@ public class CategoriesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ReadCategoryDto>> CreateCategory([FromBody] WriteCategoryDto dto)
     {
+        if (!Regex.IsMatch(dto.Name, @"^[A-Za-z0-9 \-]+$"))
+        {
+            return BadRequest("Name can only contain letters, digits, spaces, and hyphens.");
+        }
         var created = await _categoryService.CreateCategoryAsync(dto);
+        created.slug = SlugHelper.GenerateSlug(created.Name, created.Id);
+
+        // Validate slug: letters, digits, hyphens, no leading/trailing/consecutive hyphens
+        if (!Regex.IsMatch(created.slug, @"^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$"))
+        {
+            return BadRequest("Generated slug is invalid.");
+        }
+
         return CreatedAtAction(nameof(GetCategory), new { id = created.Id }, created);
     }
+
 
     [HttpPut("{id}")]
     public async Task<IActionResult> EditCategory(int id, [FromBody] WriteCategoryDto dto)
