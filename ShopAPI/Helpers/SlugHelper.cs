@@ -1,19 +1,27 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ShopAPI.Helpers;
 public static class SlugHelper
 {
     public static string GenerateSlug(string name, int id)
     {
-        // Replace non-letter/digit with hyphen
-        var slug = Regex.Replace(name, @"[^A-Za-z0-9]+", "-");
-        // Remove consecutive hyphens
-        slug = Regex.Replace(slug, @"-+", "-");
-        // Trim hyphens from start/end
-        slug = slug.Trim('-');
-        // Append id
-        slug = $"{slug}-{id}";
-        return slug;
+        string normalized = name.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder();
+        foreach (var c in normalized)
+        {
+            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                sb.Append(c);
+        }
+        string noDiacritics = sb.ToString().Normalize(NormalizationForm.FormC);
+
+        string slug = Regex.Replace(noDiacritics, @"[^a-zA-Z0-9\s-]", "");
+        slug = Regex.Replace(slug, @"[\s-]+", "-");
+        slug = slug.Trim('-').ToLowerInvariant();
+        return $"{slug}-{id}";
     }
 }
+
 

@@ -3,11 +3,9 @@ using ShopAPI.Data;
 using ShopAPI.Dtos.Product;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
-using System.Globalization;
-using System.Text.RegularExpressions;
-using System.Text;
 using ShopAPI.Requests;
 using ShopAPI.Enums;
+using ShopAPI.Helpers;
 
 namespace ShopAPI.Services;
 
@@ -110,33 +108,6 @@ public class ProductService : IProductService
     }
 
 
-    private static string GenerateSlug(string name, int id)
-    {
-        // Normalize and remove diacritics (accents)
-        string normalized = name.Normalize(NormalizationForm.FormD);
-        var sb = new StringBuilder();
-        foreach (var c in normalized)
-        {
-            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-                sb.Append(c);
-        }
-        string noDiacritics = sb.ToString().Normalize(NormalizationForm.FormC);
-
-        // Replace all non-alphanumeric characters with hyphens
-        string slug = Regex.Replace(noDiacritics, @"[^a-zA-Z0-9\s-]", "");
-
-        // Replace multiple spaces or hyphens with a single hyphen
-        slug = Regex.Replace(slug, @"[\s-]+", "-");
-
-        // Trim leading/trailing hyphens and convert to lowercase
-        slug = slug.Trim('-').ToLowerInvariant();
-
-        // Append the id
-        return $"{slug}-{id}";
-    }
-
-
     public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, List<string> imageUrls)
     {
         var category = await _context.Categories.FindAsync(dto.CategoryId);
@@ -159,7 +130,8 @@ public class ProductService : IProductService
         await _context.SaveChangesAsync();
 
         // Generate slug after ID is available
-        product.Slug = GenerateSlug(product.Name, product.Id);
+        
+        product.Slug = SlugHelper.GenerateSlug(product.Name, product.Id);
         await _context.SaveChangesAsync();
 
         return new ReadProductDto
