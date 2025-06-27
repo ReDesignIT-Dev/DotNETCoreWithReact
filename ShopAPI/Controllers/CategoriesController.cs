@@ -38,9 +38,8 @@ public class CategoriesController : ControllerBase
             return BadRequest("Name can only contain letters, digits, spaces, and hyphens.");
         }
         var created = await _categoryService.CreateCategoryAsync(dto);
-        created.slug = SlugHelper.GenerateSlug(created.Name, created.Id);
 
-        // Validate slug: letters, digits, hyphens, no leading/trailing/consecutive hyphens
+        // Optionally validate the slug here if you want an extra check
         if (!Regex.IsMatch(created.slug, @"^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$"))
         {
             return BadRequest("Generated slug is invalid.");
@@ -48,6 +47,7 @@ public class CategoriesController : ControllerBase
 
         return CreatedAtAction(nameof(GetCategory), new { id = created.Id }, created);
     }
+
 
 
     [HttpPut("{id}")]

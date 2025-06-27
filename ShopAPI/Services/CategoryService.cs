@@ -2,6 +2,7 @@
 using ShopAPI.Data;
 using ShopAPI.Dtos;
 using ShopAPI.Dtos.Category;
+using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 
@@ -38,25 +39,35 @@ public class CategoryService : ICategoryService
         };
     }
 
+    // In CategoryService
     public async Task<ReadCategoryDto> CreateCategoryAsync(WriteCategoryDto dto)
     {
+        // ... create Category entity from dto
         var category = new Category
         {
             Name = dto.Name,
-            ParentId = dto.ParentId,
-            ShortName = dto.ShortName
+            ShortName = dto.ShortName,
+            ParentId = dto.ParentId
         };
+
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
-        return new ReadCategoryDto // Corrected to return a ReadCategoryDto  
+        // Generate slug after ID is available
+        category.Slug = SlugHelper.GenerateSlug(category.Name, category.Id);
+        await _context.SaveChangesAsync();
+
+        // Map to ReadCategoryDto and return
+        return new ReadCategoryDto
         {
             Id = category.Id,
             Name = category.Name,
+            slug = category.Slug,
             ParentId = category.ParentId,
             ShortName = category.ShortName
         };
     }
+
 
     public async Task<bool> UpdateCategoryAsync(int id, WriteCategoryDto dto)
     {
