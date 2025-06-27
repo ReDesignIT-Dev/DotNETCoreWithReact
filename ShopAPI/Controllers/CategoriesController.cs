@@ -33,10 +33,11 @@ public class CategoriesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ReadCategoryDto>> CreateCategory([FromBody] WriteCategoryDto dto)
     {
-        if (!Regex.IsMatch(dto.Name, @"^[A-Za-z0-9 \-]+$"))
+        if (!Regex.IsMatch(dto.Name, @"^[A-Za-z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ \-]+$"))
         {
-            return BadRequest("Name can only contain letters, digits, spaces, and hyphens.");
+            return BadRequest("Name can only contain letters (including Polish), digits, spaces, and hyphens.");
         }
+
         var created = await _categoryService.CreateCategoryAsync(dto);
 
         // Optionally validate the slug here if you want an extra check
