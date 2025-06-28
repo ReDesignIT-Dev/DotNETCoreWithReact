@@ -16,18 +16,22 @@ public class UserService : IUserService
     private readonly SignInManager<User> _signInManager;
     private readonly IConfiguration _config;
     private readonly ShopContext _dbContext;
+    private readonly ITokenService _tokenService;
 
 
     public UserService(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         IConfiguration config,
-        ShopContext dbContext)
+        ShopContext dbContext,
+        ITokenService tokenService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _config = config;
         _dbContext = dbContext;
+        _tokenService = tokenService;
+
     }
 
     public async Task<UserDto?> RegisterAsync(RegisterDto dto)
@@ -77,7 +81,7 @@ public class UserService : IUserService
             ExpiresAt = expiresAt
         });
         await _dbContext.SaveChangesAsync();
-        var token = CreateToken(user, sessionId, expiresAt);
+        var token = _tokenService.CreateToken(user, sessionId, expiresAt);
         return new UserDto
         {
             Id = user.Id,
@@ -91,31 +95,6 @@ public class UserService : IUserService
     public async Task<bool> UserExistsAsync(string email)
     {
         return await _userManager.FindByEmailAsync(email) != null;
-    }
-
-    private string CreateToken(User user, string sessionId, DateTime expiresAt)
-    {
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.Jti, sessionId)
-        };
-
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _config["Jwt:Issuer"],
-            audience: _config["Jwt:Audience"],
-            claims: claims,
-            expires: expiresAt,
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
 }

@@ -4,7 +4,6 @@ using ShopAPI.Interfaces;
 using ShopAPI.Services;
 using Microsoft.AspNetCore.Identity;
 using ShopAPI.Models;
-using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -22,6 +21,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<RecaptchaService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
 
 builder.Services.AddAuthentication(options =>
 {
