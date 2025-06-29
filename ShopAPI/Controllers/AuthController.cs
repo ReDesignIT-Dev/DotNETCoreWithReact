@@ -1,17 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ShopAPI.Data;
 using ShopAPI.Dtos;
 using ShopAPI.Interfaces;
-using ShopAPI.Services;
-using Microsoft.AspNetCore.Identity;
 using ShopAPI.Models;
-using System.Net;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using ShopAPI.Services;
 using System.IdentityModel.Tokens.Jwt;
-using ShopAPI.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-
+using System.Net;
+using System.Security.Claims;
 namespace ShopAPI.Controllers;
 
 [ApiController]
@@ -24,6 +22,7 @@ public class AuthController : ControllerBase
     private readonly EmailService _emailService;
     private readonly IWebHostEnvironment _env;
     private readonly ShopContext _dbContext;
+    
 
 
     public AuthController(
@@ -125,7 +124,7 @@ public class AuthController : ControllerBase
         return Ok(userDto);
     }
 
-    
+
     [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> LogoutCurrentSession()

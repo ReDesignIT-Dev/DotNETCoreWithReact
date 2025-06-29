@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
 using ShopAPI.Data;
 using ShopAPI.Dtos;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace ShopAPI.Services;
 
@@ -14,7 +10,6 @@ public class UserService : IUserService
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-    private readonly IConfiguration _config;
     private readonly ShopContext _dbContext;
     private readonly ITokenService _tokenService;
 
@@ -22,13 +17,11 @@ public class UserService : IUserService
     public UserService(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
-        IConfiguration config,
         ShopContext dbContext,
         ITokenService tokenService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _config = config;
         _dbContext = dbContext;
         _tokenService = tokenService;
 
