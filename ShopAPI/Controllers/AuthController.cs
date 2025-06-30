@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -125,7 +126,7 @@ public class AuthController : ControllerBase
     }
 
 
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("logout")]
     public async Task<IActionResult> LogoutCurrentSession()
     {
@@ -156,7 +157,7 @@ public class AuthController : ControllerBase
         return Ok("Logged out from current session.");
     }
 
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpPost("logout-all")]
     public async Task<IActionResult> LogoutAllSessions()
     {
@@ -167,6 +168,13 @@ public class AuthController : ControllerBase
         await _dbContext.SaveChangesAsync();
 
         return Ok("Logged out from all sessions.");
+    }
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet("Test")]
+    public IActionResult Test()
+    {
+        return Ok("Test successful!");
     }
 
 
