@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos;
 using ShopAPI.Dtos.Category;
 using ShopAPI.Helpers;
@@ -7,6 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace ShopAPI.Controllers;
 
+[Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase
@@ -20,7 +23,7 @@ public class CategoriesController : ControllerBase
         var categories = await _categoryService.GetCategoriesAsync();
         return Ok(categories);
     }
-
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<ActionResult<WriteCategoryDto>> GetCategory(int id)
     {

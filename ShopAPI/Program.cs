@@ -94,7 +94,18 @@ if (!builder.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ShopContext>();
-    db.Database.Migrate(); // This will create the DB and apply all migrations
+    db.Database.Migrate();
+
+    // Ensure roles exist
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
+    string[] roles = ["Admin", "User"];
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole<int>(role));
+        }
+    }
 }
 
 // Configure the HTTP request pipeline.
