@@ -7,6 +7,7 @@ using ShopAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using ShopAPI.Authorization;
 DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +44,13 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ActiveUserOnly", policy =>
+    policy.Requirements.Add(new ActiveUserRequirement()));
+    options.AddPolicy("AdminOnly", policy =>
+    policy.Requirements.Add(new AdminRequirement()));
+});
 
 builder.Services.AddCors(options =>
 {
@@ -127,7 +134,7 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true,
             IsActive = true
         };
-        var result = await userManager.CreateAsync(adminUser, "AdminPassword123!"); // Use a strong password
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, "Admin");

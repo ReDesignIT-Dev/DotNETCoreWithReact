@@ -170,7 +170,7 @@ public class AuthController : ControllerBase
         return Ok("Logged out from all sessions.");
     }
 
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminOnly")]
     [HttpGet("Test")]
     public IActionResult Test()
     {
