@@ -21,6 +21,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<RecaptchaService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 
 
 builder.Services.AddAuthentication(options =>
@@ -104,6 +105,32 @@ using (var scope = app.Services.CreateScope())
         if (!await roleManager.RoleExistsAsync(role))
         {
             await roleManager.CreateAsync(new IdentityRole<int>(role));
+        }
+    }
+
+    // Seed initial admin user
+    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    var adminEmail = config["ADMIN_EMAIL"] ?? "";
+    var adminPassword = config["ADMIN_PASSWORD"] ?? "";
+    if (adminEmail == "" || adminPassword == "")
+    {
+        throw new Exception("Admin email and password must be set in environment variables or appsettings.");
+    }
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new User
+        {
+            UserName = "admin",
+            Email = adminEmail,
+            EmailConfirmed = true,
+            IsActive = true
+        };
+        var result = await userManager.CreateAsync(adminUser, "AdminPassword123!"); // Use a strong password
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
         }
     }
 }
