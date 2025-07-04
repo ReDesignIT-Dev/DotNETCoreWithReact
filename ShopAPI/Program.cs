@@ -53,6 +53,11 @@ builder.Services.AddAuthorization(options =>
     policy.Requirements.Add(new ActiveUserRequirement()));
     options.AddPolicy("AdminOnly", policy =>
     policy.Requirements.Add(new AdminRequirement()));
+    options.AddPolicy("AdminAndActive", policy =>
+    {
+        policy.Requirements.Add(new AdminRequirement());
+        policy.Requirements.Add(new ActiveUserRequirement());
+    });
 });
 
 builder.Services.AddCors(options =>

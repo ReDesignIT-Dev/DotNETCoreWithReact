@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos;
 using ShopAPI.Dtos.Category;
-using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
 using System.Text.RegularExpressions;
 
 namespace ShopAPI.Controllers;
 
-[Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase
@@ -17,6 +16,7 @@ public class CategoriesController : ControllerBase
     private readonly ICategoryService _categoryService;
     public CategoriesController(ICategoryService categoryService) => _categoryService = categoryService;
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WriteCategoryDto>>> GetCategories()
     {

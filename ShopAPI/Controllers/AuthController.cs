@@ -98,7 +98,6 @@ public class AuthController : ControllerBase
         return BadRequest("Email confirmation failed.");
     }
 
-
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto dto)
     {
@@ -169,9 +168,7 @@ public class AuthController : ControllerBase
 
         return Ok("Logged out from all sessions.");
     }
-    [Authorize(Policy = "ActiveUserOnly")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
     [HttpGet("Test")]
     public IActionResult Test()
     {
