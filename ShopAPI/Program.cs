@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ShopAPI.Authorization;
+using Microsoft.AspNetCore.Authorization;
 DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,8 @@ builder.Services.AddScoped<RecaptchaService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
+builder.Services.AddScoped<IAuthorizationHandler, AdminHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ActiveUserHandler>();
 
 
 builder.Services.AddAuthentication(options =>
