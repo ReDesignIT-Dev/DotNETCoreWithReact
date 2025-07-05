@@ -59,7 +59,7 @@ public class UserService : IUserService
         if (!user.EmailConfirmed || !user.IsActive)
             return null;
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+        var result = await _signInManager.PasswordSignInAsync(user, dto.Password, isPersistent: false, lockoutOnFailure: true);
         if (!result.Succeeded)
             return null;
 

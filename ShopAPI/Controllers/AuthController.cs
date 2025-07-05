@@ -119,7 +119,19 @@ public class AuthController : ControllerBase
         if (!user.IsActive)
             return Unauthorized("Account is not active.");
 
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            // user.LockoutEnd is a nullable DateTimeOffset
+            var lockoutEnd = user.LockoutEnd?.UtcDateTime;
+            return Unauthorized(new
+            {
+                message = "Account is locked due to too many failed login attempts.",
+                lockoutEnd
+            });
+        }
+
         var userDto = await _userService.LoginAsync(dto);
+
         if (userDto == null)
             return Unauthorized("Invalid email or password.");
         return Ok(userDto);
