@@ -100,6 +100,7 @@ public class CategoryService : ICategoryService
 
         category.Name = dto.Name;
         category.ParentId = dto.ParentId;
+        category.Slug = SlugHelper.GenerateSlug(dto.Name, id);
 
         await _context.SaveChangesAsync();
         return true;
@@ -138,6 +139,4 @@ public class CategoryService : ICategoryService
         await _context.SaveChangesAsync();
         return true;
     }
-
-
 }
