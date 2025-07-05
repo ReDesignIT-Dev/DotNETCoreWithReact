@@ -20,6 +20,7 @@ public class CategoryService : ICategoryService
             {
                 Id = c.Id,
                 Name = c.Name,
+                Slug = c.Slug,
                 ShortName = c.ShortName,
                 ParentId = c.ParentId
             })
@@ -34,6 +35,7 @@ public class CategoryService : ICategoryService
         {
             Id = c.Id,
             Name = c.Name,
+            Slug = c.Slug,
             ShortName = c.ShortName,
             ParentId = c.ParentId
         };
@@ -42,16 +44,35 @@ public class CategoryService : ICategoryService
     // In CategoryService
     public async Task<ReadCategoryDto> CreateCategoryAsync(WriteCategoryDto dto)
     {
-        // ... create Category entity from dto
+        // Step 1: Create the category with ParentId = null
         var category = new Category
         {
             Name = dto.Name,
             ShortName = dto.ShortName,
-            ParentId = dto.ParentId
+            ParentId = null // Set to null initially
         };
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
+
+        // Step 2: Validate ParentId (must exist and not be self)
+        int? validParentId = null;
+        if (dto.ParentId.HasValue)
+        {
+            // Check if parent exists and is not self
+            if (dto.ParentId.Value != category.Id &&
+                await _context.Categories.AnyAsync(c => c.Id == dto.ParentId.Value))
+            {
+                validParentId = dto.ParentId.Value;
+            }
+        }
+
+        // Step 3: Update ParentId if valid
+        if (validParentId != null)
+        {
+            category.ParentId = validParentId;
+            await _context.SaveChangesAsync();
+        }
 
         // Generate slug after ID is available
         category.Slug = SlugHelper.GenerateSlug(category.Name, category.Id);
@@ -62,11 +83,12 @@ public class CategoryService : ICategoryService
         {
             Id = category.Id,
             Name = category.Name,
-            slug = category.Slug,
+            Slug = category.Slug,
             ParentId = category.ParentId,
             ShortName = category.ShortName
         };
     }
+
 
 
     public async Task<bool> UpdateCategoryAsync(int id, WriteCategoryDto dto)

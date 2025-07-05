@@ -14,8 +14,13 @@ namespace ShopAPI.Controllers;
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
-    public CategoriesController(ICategoryService categoryService) => _categoryService = categoryService;
+    private readonly ILogger<CategoriesController> _logger;
 
+    public CategoriesController(ICategoryService categoryService, ILogger<CategoriesController> logger)
+    {
+        _categoryService = categoryService;
+        _logger = logger;
+    }
     [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WriteCategoryDto>>> GetCategories()
@@ -44,7 +49,7 @@ public class CategoriesController : ControllerBase
         var created = await _categoryService.CreateCategoryAsync(dto);
 
         // Optionally validate the slug here if you want an extra check
-        if (!Regex.IsMatch(created.slug, @"^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$"))
+        if (!Regex.IsMatch(created.Slug, @"^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$"))
         {
             return BadRequest("Generated slug is invalid.");
         }
@@ -68,7 +73,12 @@ public class CategoriesController : ControllerBase
     {
         var success = await _categoryService.DeleteCategoryAsync(id);
         if (!success)
+        {
+            _logger.LogWarning("Delete attempt failed: Category with id {CategoryId} does not exist.", id);
             return NotFound();
+        }
+
+        _logger.LogInformation("Category with id {CategoryId} was deleted by user {User}.", id, User.Identity?.Name ?? "Unknown");
         return NoContent();
     }
 }

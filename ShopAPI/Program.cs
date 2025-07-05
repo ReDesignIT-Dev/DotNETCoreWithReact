@@ -13,7 +13,6 @@ using Serilog;
 DotNetEnv.Env.Load();
 
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
@@ -130,7 +129,7 @@ using (var scope = app.Services.CreateScope())
     // Ensure roles exist
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
     string[] roles = ["Admin", "User"];
-    foreach (var role in roles)
+    foreach (var role in roles) 
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
