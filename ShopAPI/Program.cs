@@ -9,8 +9,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using ShopAPI.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Serilog;
 DotNetEnv.Env.Load();
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
