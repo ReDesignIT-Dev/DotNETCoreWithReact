@@ -368,3 +368,4 @@ FodyWeavers.xsd
 /ShopAPI/shop.db-shm
 /ShopAPI/shop.db-wal
 /ShopAPI/uploads
+/ShopAPI/shop.db
