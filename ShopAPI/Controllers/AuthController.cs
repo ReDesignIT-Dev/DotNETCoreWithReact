@@ -97,7 +97,8 @@ public class AuthController : ControllerBase
         }
         return BadRequest("Email confirmation failed.");
     }
-
+    
+    
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto dto)
     {
