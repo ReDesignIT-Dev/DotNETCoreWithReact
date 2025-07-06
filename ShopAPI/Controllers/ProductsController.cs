@@ -1,17 +1,26 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos.Product;
 using ShopAPI.Interfaces;
 using ShopAPI.Requests;
-
 namespace ShopAPI.Controllers;
 
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
-    public ProductsController(IProductService productService) => _productService = productService;
+    private readonly ILogger<ProductsController> _logger;
 
+    public ProductsController(IProductService productService, ILogger<ProductsController> logger)
+    {
+        _productService = productService;
+        _logger = logger;
+    }
+
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ProductListResponseDto>> GetProducts([FromQuery] ProductQueryParameters query)
     {
@@ -75,6 +84,7 @@ public class ProductsController : ControllerBase
         var success = await _productService.DeleteProductAsync(id);
         if (!success)
             return NotFound();
+        _logger.LogInformation("Product with id {ProductId} was deleted by user {User}.", id, User.Identity?.Name ?? "Unknown");
         return NoContent();
     }
 

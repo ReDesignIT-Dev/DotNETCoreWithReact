@@ -1,22 +1,21 @@
-using ShopAPI.Data;
-using Microsoft.EntityFrameworkCore;
-using ShopAPI.Interfaces;
-using ShopAPI.Services;
-using Microsoft.AspNetCore.Identity;
-using ShopAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using ShopAPI.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using ShopAPI.Authorization;
+using ShopAPI.Data;
+using ShopAPI.Interfaces;
+using ShopAPI.Models;
+using ShopAPI.Services;
+using System.Text;
 DotNetEnv.Env.Load();
 
 Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
-
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,7 +128,7 @@ using (var scope = app.Services.CreateScope())
     // Ensure roles exist
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
     string[] roles = ["Admin", "User"];
-    foreach (var role in roles) 
+    foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
         {

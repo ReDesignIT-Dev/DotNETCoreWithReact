@@ -171,6 +171,13 @@ public class ProductService : IProductService
         product.CategoryId = dto.CategoryId;
         product.Category = category;
 
+        var newSlug = SlugHelper.GenerateSlug(dto.Name, id);
+        if (product.Slug != newSlug)
+        {
+            product.Slug = newSlug;
+        }
+
+
         // Replace all images with new ones
         product.Images.Clear();
         foreach (var url in imageUrls)
