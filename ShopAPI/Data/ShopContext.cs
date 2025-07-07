@@ -14,6 +14,9 @@ public class ShopContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<ProjectImage> ProjectImages => Set<ProjectImage>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,5 +24,8 @@ public class ShopContext : IdentityDbContext<User, IdentityRole<int>, int>
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new ProductImageConfiguration());
         modelBuilder.ApplyConfiguration(new CategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new ProjectConfiguration());
+        modelBuilder.ApplyConfiguration(new ProjectImageConfiguration());
+
     }
 }
