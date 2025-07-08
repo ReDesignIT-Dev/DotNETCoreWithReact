@@ -4,9 +4,9 @@ using ShopAPI.Models;
 
 namespace ShopAPI.EntityConfigurations;
 
-public class ProjectConfiguration : IEntityTypeConfiguration<Project>
+public class ProjectConfiguration : IEntityTypeConfiguration<MyProject>
 {
-    public void Configure(EntityTypeBuilder<Project> builder)
+    public void Configure(EntityTypeBuilder<MyProject> builder)
     {
         builder.Property(p => p.Title)
             .IsRequired()
@@ -17,7 +17,7 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.HasOne(p => p.Image)
             .WithOne(i => i.Project)
-            .HasForeignKey<ProjectImage>(i => i.ProjectId)
+            .HasForeignKey<MyProjectImage>(i => i.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

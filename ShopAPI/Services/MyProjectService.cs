@@ -1,13 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
 using ShopAPI.Dtos;
+using ShopAPI.Interfaces;
 using ShopAPI.Models;
 
-public class ProjectService
+public class MyProjectService: IMyProjectService
 {
     private readonly ShopContext _context;
 
-    public ProjectService(ShopContext context)
+    public MyProjectService(ShopContext context)
     {
         _context = context;
     }
@@ -47,14 +48,14 @@ public class ProjectService
         };
     }
 
-    public async Task<ReadProjectDto> CreateAsync(WriteProjectDto dto)
+    public async Task<ReadProjectDto> CreateAsync(WriteProjectDto dto, string imageUrl)
     {
-        var project = new Project
+        var project = new MyProject
         {
             Title = dto.Title,
             Url = dto.Url,
             Description = dto.Description,
-            Image = dto.ImageUrl != null ? new ProjectImage { Url = dto.ImageUrl } : null
+            Image = imageUrl != null ? new MyProjectImage { Url = imageUrl } : null
         };
 
         _context.Projects.Add(project);
@@ -70,7 +71,7 @@ public class ProjectService
         };
     }
 
-    public async Task<bool> UpdateAsync(int id, WriteProjectDto dto)
+    public async Task<bool> UpdateAsync(int id, WriteProjectDto dto, string imageUrl)
     {
         var project = await _context.Projects
             .Include(p => p.Image)
@@ -83,12 +84,12 @@ public class ProjectService
         project.Url = dto.Url;
         project.Description = dto.Description;
 
-        if (dto.ImageUrl != null)
+        if (imageUrl != null)
         {
             if (project.Image == null)
-                project.Image = new ProjectImage { Url = dto.ImageUrl };
+                project.Image = new MyProjectImage { Url = imageUrl };
             else
-                project.Image.Url = dto.ImageUrl;
+                project.Image.Url = imageUrl;
         }
         else
         {
