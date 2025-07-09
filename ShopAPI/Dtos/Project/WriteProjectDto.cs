@@ -2,9 +2,9 @@
 
 public class WriteProjectDto
 {
-    public int Id { get; set; }
-    public required string Title { get; set; }
-    public string Url { get; set; } = string.Empty;
-    public required string Description { get; set; }
-    public string? ImageUrl { get; set; }
+    public string Title { get; set; } = default!;
+    public string? Url { get; set; }
+    public string Description { get; set; } = default!;
+    public IFormFile? Image { get; set; }
 }
+

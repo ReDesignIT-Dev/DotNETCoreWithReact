@@ -48,7 +48,7 @@ public class MyProjectService: IMyProjectService
         };
     }
 
-    public async Task<ReadProjectDto> CreateAsync(WriteProjectDto dto, string imageUrl)
+    public async Task<ReadProjectDto> CreateAsync(WriteProjectDto dto, string? imageUrl)
     {
         var project = new MyProject
         {
@@ -71,7 +71,7 @@ public class MyProjectService: IMyProjectService
         };
     }
 
-    public async Task<bool> UpdateAsync(int id, WriteProjectDto dto, string imageUrl)
+    public async Task<bool> UpdateAsync(int id, WriteProjectDto dto, string? imageUrl)
     {
         var project = await _context.Projects
             .Include(p => p.Image)

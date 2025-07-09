@@ -14,8 +14,8 @@ public class ShopContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
-    public DbSet<Project> Projects => Set<Project>();
-    public DbSet<ProjectImage> ProjectImages => Set<ProjectImage>();
+    public DbSet<MyProject> Projects => Set<MyProject>();
+    public DbSet<MyProjectImage> ProjectImages => Set<MyProjectImage>();
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

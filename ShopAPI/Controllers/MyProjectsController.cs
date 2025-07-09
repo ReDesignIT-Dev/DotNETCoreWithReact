@@ -37,13 +37,12 @@ public class MyProjectsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ReadProjectDto>> Create(
         [FromForm] WriteProjectDto dto,
-        [FromForm] IFormFile? image,
         [FromServices] IFileStorageService fileStorage)
     {
         string? imageUrl = null;
-        if (image != null)
+        if (dto.Image != null)
         {
-            imageUrl = await fileStorage.SaveFileAsync(image);
+            imageUrl = await fileStorage.SaveFileAsync(dto.Image);
         }
 
         var created = await _service.CreateAsync(dto, imageUrl);
@@ -51,11 +50,18 @@ public class MyProjectsController : ControllerBase
     }
 
 
-
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromForm] WriteProjectDto dto)
+    public async Task<IActionResult> Update(
+        int id,
+        [FromForm] WriteProjectDto dto,
+        [FromServices] IFileStorageService fileStorage)
     {
-        var updated = await _service.UpdateAsync(id, dto);
+        string? imageUrl = null;
+        if (dto.Image != null)
+        {
+            imageUrl = await fileStorage.SaveFileAsync(dto.Image);
+        }
+        var updated = await _service.UpdateAsync(id, dto, imageUrl);
         if (!updated)
             return NotFound();
         return NoContent();
