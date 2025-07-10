@@ -39,15 +39,22 @@ public class ProductsController : ControllerBase
     }
 
 
-
     [HttpPost]
     public async Task<ActionResult<ReadProductDto>> CreateProduct(
         [FromForm] WriteProductDto dto,
-        [FromForm] List<IFormFile> images)
+        [FromServices] IFileStorageService fileStorage)
     {
         try
         {
-            var imageUrls = await SaveImagesAsync(images);
+            var imageUrls = new List<string>();
+            if (dto.Images != null)
+            {
+                foreach (var file in dto.Images)
+                {
+                    var url = await fileStorage.SaveFileAsync(file);
+                    imageUrls.Add(url);
+                }
+            }
             var created = await _productService.CreateProductAsync(dto, imageUrls);
             if (created == null)
                 return BadRequest("Category does not exist.");
@@ -63,20 +70,27 @@ public class ProductsController : ControllerBase
         }
     }
 
-
     [HttpPut("{id}")]
     public async Task<IActionResult> EditProduct(
         int id,
         [FromForm] WriteProductDto dto,
-        [FromForm] List<IFormFile> images)
+        [FromServices] IFileStorageService fileStorage)
     {
-        var imageUrls = await SaveImagesAsync(images);
-
+        var imageUrls = new List<string>();
+        if (dto.Images != null)
+        {
+            foreach (var file in dto.Images)
+            {
+                var url = await fileStorage.SaveFileAsync(file);
+                imageUrls.Add(url);
+            }
+        }
         var success = await _productService.UpdateProductAsync(id, dto, imageUrls);
         if (!success)
             return NotFound();
         return NoContent();
     }
+
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(int id)
