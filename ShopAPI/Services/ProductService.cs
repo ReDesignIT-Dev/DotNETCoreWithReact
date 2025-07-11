@@ -108,7 +108,7 @@ public class ProductService : IProductService
     }
 
 
-    public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, List<string> imageUrls)
+    public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, List<string>? imageUrls)
     {
         var category = await _context.Categories.FindAsync(dto.CategoryId);
         if (category == null)
@@ -152,7 +152,7 @@ public class ProductService : IProductService
 
 
 
-    public async Task<bool> UpdateProductAsync(int id, WriteProductDto dto, List<string> imageUrls)
+    public async Task<bool> UpdateProductAsync(int id, WriteProductDto dto, List<string>? imageUrls)
     {
         var product = await _context.Products
             .Include(p => p.Images)
