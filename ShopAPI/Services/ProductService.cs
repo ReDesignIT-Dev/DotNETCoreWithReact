@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
 using ShopAPI.Dtos.Product;
+using ShopAPI.Enums;
+using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using ShopAPI.Requests;
-using ShopAPI.Enums;
-using ShopAPI.Helpers;
 
 namespace ShopAPI.Services;
 
@@ -130,7 +130,7 @@ public class ProductService : IProductService
         await _context.SaveChangesAsync();
 
         // Generate slug after ID is available
-        
+
         product.Slug = SlugHelper.GenerateSlug(product.Name, product.Id);
         await _context.SaveChangesAsync();
 
@@ -177,14 +177,15 @@ public class ProductService : IProductService
             product.Slug = newSlug;
         }
 
-
-        // Replace all images with new ones
-        product.Images.Clear();
-        foreach (var url in imageUrls)
+        if (imageUrls != null)
         {
-            product.Images.Add(new ProductImage { Url = url });
+            // Replace all images with new ones
+            product.Images.Clear();
+            foreach (var url in imageUrls)
+            {
+                product.Images.Add(new ProductImage { Url = url });
+            }
         }
-
         await _context.SaveChangesAsync();
         return true;
     }
