@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
-using ShopAPI.Dtos;
+using ShopAPI.Dtos.Project;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 
-public class MyProjectService: IMyProjectService
+namespace ShopAPI.Services;
+public class MyProjectService : IMyProjectService
 {
     private readonly ShopContext _context;
 

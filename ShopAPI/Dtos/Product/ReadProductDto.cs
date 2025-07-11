@@ -8,6 +8,6 @@ public class ReadProductDto
     public decimal Price { get; set; }
     public int CategoryId { get; set; }
     public string? Slug { get; set; }
-    public List<ProductImageDto> Images { get; set; } = new();
+    public List<ProductImageDto> Images { get; set; } = [];
 }
 

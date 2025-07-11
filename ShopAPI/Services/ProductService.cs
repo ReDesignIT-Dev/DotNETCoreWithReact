@@ -12,7 +12,10 @@ namespace ShopAPI.Services;
 public class ProductService : IProductService
 {
     private readonly ShopContext _context;
-    public ProductService(ShopContext context) => _context = context;
+    public ProductService(ShopContext context)
+    {
+        _context = context;
+    }
 
     public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query)
     {
@@ -114,7 +117,7 @@ public class ProductService : IProductService
         if (category == null)
             return null;
 
-        var images = imageUrls?.Select(url => new ProductImage { Url = url }).ToList() ?? new List<ProductImage>();
+        var images = imageUrls?.Select(url => new ProductImage { Url = url }).ToList() ?? [];
 
         var product = new Product
         {
