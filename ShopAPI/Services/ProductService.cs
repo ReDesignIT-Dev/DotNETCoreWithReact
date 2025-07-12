@@ -12,10 +12,7 @@ namespace ShopAPI.Services;
 public class ProductService : IProductService
 {
     private readonly ShopContext _context;
-    public ProductService(ShopContext context)
-    {
-        _context = context;
-    }
+    public ProductService(ShopContext context) => _context = context;
 
     public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query)
     {

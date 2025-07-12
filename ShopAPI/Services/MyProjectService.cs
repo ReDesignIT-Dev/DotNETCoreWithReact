@@ -9,10 +9,7 @@ public class MyProjectService : IMyProjectService
 {
     private readonly ShopContext _context;
 
-    public MyProjectService(ShopContext context)
-    {
-        _context = context;
-    }
+    public MyProjectService(ShopContext context) => _context = context;
 
     public async Task<List<ReadProjectDto>> GetAllAsync()
     {
