@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos.Product;
 using ShopAPI.Interfaces;
 using ShopAPI.Requests;
+using ShopAPI.Enums;
+using System.Security.Claims;
 namespace ShopAPI.Controllers;
 
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
@@ -51,7 +53,8 @@ public class ProductsController : ControllerBase
             {
                 foreach (var file in dto.Images)
                 {
-                    var url = await fileStorage.SaveFileAsync(file);
+                    var userId = GetUserId();
+                    var url = await fileStorage.SaveFileAsync(file, ImageType.Product, userId);
                     imageUrls.Add(url);
                 }
             }
@@ -81,7 +84,8 @@ public class ProductsController : ControllerBase
         {
             foreach (var file in dto.Images)
             {
-                var url = await fileStorage.SaveFileAsync(file);
+                var userId = GetUserId();
+                var url = await fileStorage.SaveFileAsync(file, ImageType.Product, userId);
                 imageUrls.Add(url);
             }
         }
@@ -130,5 +134,13 @@ public class ProductsController : ControllerBase
             imageUrls.Add($"/uploads/{fileName}");
         }
         return imageUrls;
+    }
+
+    protected int? GetUserId()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (int.TryParse(userIdString, out var userId))
+            return userId;
+        return null;
     }
 }
