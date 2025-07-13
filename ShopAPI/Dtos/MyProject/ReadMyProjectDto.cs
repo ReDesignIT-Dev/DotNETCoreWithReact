@@ -1,6 +1,6 @@
 ﻿namespace ShopAPI.Dtos.Project;
 
-public class ReadProjectDto
+public class ReadMyProjectDto
 {
     public int Id { get; set; }
     public required string Title { get; set; }

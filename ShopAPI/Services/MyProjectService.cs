@@ -11,13 +11,13 @@ public class MyProjectService : IMyProjectService
 
     public MyProjectService(ShopContext context) => _context = context;
 
-    public async Task<List<ReadProjectDto>> GetAllAsync()
+    public async Task<List<ReadMyProjectDto>> GetAllAsync()
     {
         var projects = await _context.Projects
             .Include(p => p.Image)
             .ToListAsync();
 
-        return projects.Select(p => new ReadProjectDto
+        return projects.Select(p => new ReadMyProjectDto
         {
             Id = p.Id,
             Title = p.Title,
@@ -27,7 +27,7 @@ public class MyProjectService : IMyProjectService
         }).ToList();
     }
 
-    public async Task<ReadProjectDto?> GetByIdAsync(int id)
+    public async Task<ReadMyProjectDto?> GetByIdAsync(int id)
     {
         var project = await _context.Projects
             .Include(p => p.Image)
@@ -36,7 +36,7 @@ public class MyProjectService : IMyProjectService
         if (project == null)
             return null;
 
-        return new ReadProjectDto
+        return new ReadMyProjectDto
         {
             Id = project.Id,
             Title = project.Title,
@@ -46,7 +46,7 @@ public class MyProjectService : IMyProjectService
         };
     }
 
-    public async Task<ReadProjectDto> CreateAsync(WriteProjectDto dto, string? imageUrl)
+    public async Task<ReadMyProjectDto> CreateAsync(WriteMyProjectDto dto, string? imageUrl)
     {
         var project = new MyProject
         {
@@ -59,7 +59,7 @@ public class MyProjectService : IMyProjectService
         _context.Projects.Add(project);
         await _context.SaveChangesAsync();
 
-        return new ReadProjectDto
+        return new ReadMyProjectDto
         {
             Id = project.Id,
             Title = project.Title,
@@ -69,7 +69,7 @@ public class MyProjectService : IMyProjectService
         };
     }
 
-    public async Task<bool> UpdateAsync(int id, WriteProjectDto dto, string? imageUrl)
+    public async Task<bool> UpdateAsync(int id, WriteMyProjectDto dto, string? imageUrl)
     {
         var project = await _context.Projects
             .Include(p => p.Image)

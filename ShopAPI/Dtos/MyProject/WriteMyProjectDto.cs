@@ -1,6 +1,6 @@
 ﻿namespace ShopAPI.Dtos.Project;
 
-public class WriteProjectDto
+public class WriteMyProjectDto
 {
     public string Title { get; set; } = default!;
     public string? Url { get; set; }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos.Project;
+using ShopAPI.Enums;
 using ShopAPI.Interfaces;
 
 namespace ShopAPI.Controllers;
@@ -19,14 +20,14 @@ public class MyProjectsController : ControllerBase
     }
     [AllowAnonymous]
     [HttpGet]
-    public async Task<ActionResult<List<ReadProjectDto>>> GetAll()
+    public async Task<ActionResult<List<ReadMyProjectDto>>> GetAll()
     {
         var projects = await _service.GetAllAsync();
         return Ok(projects);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ReadProjectDto>> GetById(int id)
+    public async Task<ActionResult<ReadMyProjectDto>> GetById(int id)
     {
         var project = await _service.GetByIdAsync(id);
         if (project == null)
@@ -35,14 +36,14 @@ public class MyProjectsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ReadProjectDto>> Create(
-        [FromForm] WriteProjectDto dto,
+    public async Task<ActionResult<ReadMyProjectDto>> Create(
+        [FromForm] WriteMyProjectDto dto,
         [FromServices] IFileStorageService fileStorage)
     {
         string? imageUrl = null;
         if (dto.Image != null)
-        {
-            imageUrl = await fileStorage.SaveFileAsync(dto.Image);
+        {;
+            var url = await fileStorage.SaveFileAsync(dto.Image, ImageType.MyProject, null);
         }
 
         var created = await _service.CreateAsync(dto, imageUrl);
@@ -53,13 +54,13 @@ public class MyProjectsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
         int id,
-        [FromForm] WriteProjectDto dto,
+        [FromForm] WriteMyProjectDto dto,
         [FromServices] IFileStorageService fileStorage)
     {
         string? imageUrl = null;
         if (dto.Image != null)
         {
-            imageUrl = await fileStorage.SaveFileAsync(dto.Image);
+            imageUrl = await fileStorage.SaveFileAsync(dto.Image, ImageType.MyProject, null);
         }
         var updated = await _service.UpdateAsync(id, dto, imageUrl);
         if (!updated)
