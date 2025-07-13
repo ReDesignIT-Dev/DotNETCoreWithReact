@@ -1,4 +1,5 @@
 ﻿using ShopAPI.Interfaces;
+using System.Security.Cryptography;
 
 namespace ShopAPI.Services;
 
@@ -16,16 +17,29 @@ public class FileStorageService : IFileStorageService
         if (file.Length > MaxFileSize)
             throw new InvalidOperationException("File size exceeds limit.");
 
-        var fileName = $"{Guid.NewGuid()}{ext}";
+        // Compute hash
+        string hash;
+        using (var sha256 = SHA256.Create())
+        using (var stream = file.OpenReadStream())
+        {
+            var hashBytes = await sha256.ComputeHashAsync(stream);
+            hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+        }
+
+        var fileName = $"{hash}{ext}";
         var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
         Directory.CreateDirectory(uploadDir);
         var filePath = Path.Combine(uploadDir, fileName);
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        if (!File.Exists(filePath))
         {
-            await file.CopyToAsync(stream);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
         }
         return $"/uploads/{fileName}";
     }
+
 }
 
