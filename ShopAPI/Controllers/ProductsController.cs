@@ -54,6 +54,8 @@ public class ProductsController : ControllerBase
                 foreach (var file in dto.Images)
                 {
                     var userId = GetUserId();
+                    if (userId == null)
+                        return Unauthorized();
                     var url = await fileStorage.SaveFileAsync(file, ImageType.Product, userId);
                     imageUrls.Add(url);
                 }
@@ -85,6 +87,8 @@ public class ProductsController : ControllerBase
             foreach (var file in dto.Images)
             {
                 var userId = GetUserId();
+                if (userId == null)
+                    return Unauthorized();
                 var url = await fileStorage.SaveFileAsync(file, ImageType.Product, userId);
                 imageUrls.Add(url);
             }
