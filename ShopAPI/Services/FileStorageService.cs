@@ -28,15 +28,22 @@ public class FileStorageService : IFileStorageService
         }
 
         string uploadDir;
+        string url;
         switch (type)
         {
             case ImageType.Product:
                 if (userId == null)
                     throw new ArgumentException("userId is required for product images.");
                 uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "products", userId.ToString()!);
+                url = $"/uploads/products/{userId}/{hash}{ext}";
                 break;
             case ImageType.Category:
                 uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "categories");
+                url = $"/uploads/categories/{hash}{ext}";
+                break;
+            case ImageType.MyProject:
+                uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "myprojects");
+                url = $"/uploads/myprojects/{hash}{ext}";
                 break;
             default:
                 throw new ArgumentException("Invalid image type.");
@@ -53,10 +60,8 @@ public class FileStorageService : IFileStorageService
                 await file.CopyToAsync(stream);
             }
         }
-
-        var url = type == ImageType.Product
-            ? $"/uploads/products/{userId}/{fileName}"
-            : $"/uploads/categories/{fileName}";
+        Console.WriteLine($"url: {url}");
         return url;
     }
+
 }
