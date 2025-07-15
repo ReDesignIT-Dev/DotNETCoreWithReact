@@ -10,7 +10,7 @@ namespace ShopAPI.Controllers;
 
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/shop/[controller]")]
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryService _categoryService;

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
-using ShopAPI.Dtos;
+using ShopAPI.Dtos.User;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using ShopAPI.Services;
@@ -14,7 +14,7 @@ using System.Security.Claims;
 namespace ShopAPI.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/shop/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -181,10 +181,13 @@ public class AuthController : ControllerBase
 
         return Ok("Logged out from all sessions.");
     }
+
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
-    [HttpGet("Test")]
-    public IActionResult Test()
+    [HttpGet("users")]
+    public async Task<ActionResult<List<AdminUserDto>>> GetAllUsers()
     {
-        return Ok("Test successful!");
+        var users = await _userService.GetAllUsersWithRolesAsync();
+        return Ok(users);
     }
+
 }

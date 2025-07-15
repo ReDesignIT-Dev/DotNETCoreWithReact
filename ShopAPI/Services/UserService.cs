@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using ShopAPI.Data;
-using ShopAPI.Dtos;
+using ShopAPI.Dtos.User;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 
@@ -12,18 +12,21 @@ public class UserService : IUserService
     private readonly SignInManager<User> _signInManager;
     private readonly ShopContext _dbContext;
     private readonly ITokenService _tokenService;
-
+    private readonly IUserRoleService _userRoleService;
 
     public UserService(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         ShopContext dbContext,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IUserRoleService userRoleService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _dbContext = dbContext;
         _tokenService = tokenService;
+        _userRoleService = userRoleService;
+
 
     }
 
@@ -88,6 +91,28 @@ public class UserService : IUserService
     public async Task<bool> UserExistsAsync(string email)
     {
         return await _userManager.FindByEmailAsync(email) != null;
+    }
+
+        public async Task<List<AdminUserDto>> GetAllUsersWithRolesAsync()
+    {
+        var users = _userManager.Users.ToList();
+        var result = new List<AdminUserDto>();
+
+        foreach (var user in users)
+        {
+            var roles = await _userRoleService.GetUserRolesAsync(user.Id);
+            result.Add(new AdminUserDto
+            {
+                Id = user.Id,
+                Username = user.UserName ?? "",
+                Email = user.Email ?? "",
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                EmailConfirmed = user.EmailConfirmed,
+                Roles = roles.ToList()
+            });
+        }
+        return result;
     }
 
 }
