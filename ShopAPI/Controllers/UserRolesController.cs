@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopAPI.Enums;
 
 namespace ShopAPI.Controllers;
 
@@ -20,9 +21,15 @@ public class UserRolesController : ControllerBase
     [HttpPost("{userId}/add")]
     public async Task<IActionResult> AddRole(int userId, [FromBody] string role)
     {
-        var success = await _userRoleService.AddUserToRoleAsync(userId, role);
-        if (!success) return NotFound("User not found or role invalid.");
-        return Ok("Role added.");
+        var result = await _userRoleService.AddUserToRoleAsync(userId, role);
+        return result switch
+        {
+            AddUserToRoleResult.Success => Ok("Role added."),
+            AddUserToRoleResult.UserNotFound => NotFound("User not found."),
+            AddUserToRoleResult.RoleNotFound => NotFound("Role not found."),
+            AddUserToRoleResult.AlreadyInRole => Conflict("User already has this role."),
+            _ => StatusCode(500, "Unknown error.")
+        };
     }
 
     [HttpPost("{userId}/remove")]
