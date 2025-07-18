@@ -40,26 +40,21 @@ public class CategoryService : ICategoryService
             ParentId = c.ParentId
         };
     }
-
-    // In CategoryService
-    public async Task<ReadCategoryDto> CreateCategoryAsync(WriteCategoryDto dto)
+  public async Task<ReadCategoryDto> CreateCategoryAsync(WriteCategoryDto dto)
     {
-        // Step 1: Create the category with ParentId = null
         var category = new Category
         {
             Name = dto.Name,
             ShortName = dto.ShortName,
-            ParentId = null // Set to null initially
+            ParentId = null 
         };
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
-        // Step 2: Validate ParentId (must exist and not be self)
         int? validParentId = null;
         if (dto.ParentId.HasValue)
         {
-            // Check if parent exists and is not self
             if (dto.ParentId.Value != category.Id &&
                 await _context.Categories.AnyAsync(c => c.Id == dto.ParentId.Value))
             {
@@ -67,18 +62,15 @@ public class CategoryService : ICategoryService
             }
         }
 
-        // Step 3: Update ParentId if valid
         if (validParentId != null)
         {
             category.ParentId = validParentId;
             await _context.SaveChangesAsync();
         }
 
-        // Generate slug after ID is available
         category.Slug = SlugHelper.GenerateSlug(category.Name, category.Id);
         await _context.SaveChangesAsync();
 
-        // Map to ReadCategoryDto and return
         return new ReadCategoryDto
         {
             Id = category.Id,
