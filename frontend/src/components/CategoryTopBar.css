@@ -1,0 +1,6 @@
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "-" !important;
+  }
+.breadcrumb-item span:hover {
+    color:blue;
+}

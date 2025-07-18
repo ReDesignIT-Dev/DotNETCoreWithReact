@@ -1,0 +1,12 @@
+.input-label {
+    color: black;
+    font-size: smaller;
+    font-weight: bold;
+    text-align: left; 
+    width: 100%;
+  }
+
+input::placeholder {
+  color: gray;
+  opacity: 1;
+}

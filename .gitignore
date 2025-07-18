@@ -369,3 +369,5 @@ FodyWeavers.xsd
 /ShopAPI/shop.db-wal
 /ShopAPI/uploads
 /ShopAPI/shop.db
+/frontend/.vscode
+/frontend/.env.production

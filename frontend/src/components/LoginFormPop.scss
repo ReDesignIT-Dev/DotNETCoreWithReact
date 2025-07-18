@@ -1,0 +1,459 @@
+.form-box form {
+  width: 100%;
+}
+
+.login-text {
+  width: 100%;
+  color: white;
+  border-bottom: 2px solid white;
+  line-height: 50px;
+  width: 100%;
+  font-weight: bolder;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 5vh;
+}
+
+.login-box {
+  color: white;
+  border: 1px solid lightgrey;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-radius: 20px;
+  padding: 2px;
+  padding-left: 10px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin: 5px;
+  font-size: 11pt;
+  transition: 1s;
+  outline: none;
+  width: 100%;
+}
+
+.login-btn {
+  width: 75%;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(48, 172, 251);
+  color: white;
+  margin-top: 5px;
+  border-radius: 20px;
+  border: none;
+  font-size: 15pt;
+  font-weight: 700;
+  transition: 1s;
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.login-btn:hover {
+  transform: scale(1.03);
+  letter-spacing: 4px;
+  background-color: #7fffd4;
+  color: #1e90ff;
+}
+
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:300,400,700");
+
+$borderRadius: 20px;
+$offset: 150%;
+$inputHeight: 63px;
+$transitionEasing: cubic-bezier(0.36, 1, 0.62, 0.98);
+
+$background1: #433b7c;
+$background2: #2c497f;
+
+// $yellow: #FF6542;
+$yellow: #ed6a5e;
+
+@mixin box-shadow($props...) {
+  -webkit-box-shadow: $props;
+  -moz-box-shadow: $props;
+  box-shadow: $props;
+}
+
+@mixin border-radius($radius) {
+  -webkit-border-radius: $radius;
+  -moz-border-radius: $radius;
+  border-radius: $radius;
+}
+
+@mixin transition($transition...) {
+  -moz-transition: $transition;
+  -webkit-transition: $transition;
+  transition: $transition;
+}
+
+.form-block-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  @include transition(all 0.85s ease-in-out);
+  &--is-login {
+    opacity: 0.92;
+    background-color: $background2;
+  }
+  &--is-signup {
+    opacity: 0.94;
+    background-color: $background1;
+  }
+}
+
+.form-block {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+  @include box-shadow(0px 0px 16px 9px rgba(0, 0, 0, 0.07));
+}
+
+.form-block__header {
+  margin-bottom: 20px;
+  width: 100%;
+  h1 {
+    font-size: 30px;
+    margin: 0 0 20px;
+  }
+}
+
+.form-block__toggle-block {
+  position: relative;
+  width: 100%;
+  span {
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.65);
+    @media (max-width: 340px) {
+      white-space: normal !important;
+    }
+  }
+}
+
+.form-block__input-wrapper {
+  //min-height: 2 * $inputHeight;
+  height: auto;
+  position: relative;
+  margin-bottom: 2px;
+  display: flex;
+  @include transition(all 0.25s $transitionEasing 0.3s);
+  .form-block--is-signup & {
+    //min-height: 4 * $inputHeight;
+    height: auto;
+    @include transition(all 0.5s $transitionEasing 0.2s);
+  }
+}
+.button--primary {
+  align-self: flex-end; /* Adjust this property as needed */
+  margin-top: 20px; /* Adjust this value */
+}
+.form-group {
+  position: static;
+  width: 100%;
+}
+
+.form-group__input {
+  display: block;
+  font-size: 15px;
+  color: #fff;
+  width: 100%;
+  height: 40px;
+  text-align: center;
+  box-sizing: border-box;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: $borderRadius;
+  &:focus {
+    outline: none;
+    border: 1px solid #fff;
+    background: transparent;
+  }
+  .form-block--is-signup & {
+    //transform: translateX(-$offset);
+  }
+  .form-group--login & {
+    opacity: 1;
+    .form-block--is-signup & {
+      opacity: 0;
+    }
+  }
+
+  .form-group--signup & {
+    opacity: 0;
+    .form-block--is-signup & {
+      opacity: 1;
+    }
+  }
+}
+
+@for $i from 1 through 4 {
+  .form-group__input:nth-of-type(#{$i}) {
+    @include transition(
+      transform 0.35s $transitionEasing $i * 0.085s,
+      opacity 0.3s ease-in-out 0.2s,
+      background 0.15s ease-in-out,
+      border 0.3s ease-in-out
+    );
+  }
+}
+
+.button {
+  display: inline-block;
+  margin-bottom: 0;
+  font-size: 16px;
+  font-weight: 400;
+  height: 40px;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  background-image: none;
+  border: none;
+  border-radius: calc($borderRadius / 2);
+  @include transition(all 0.2s ease-in-out);
+  @include box-shadow(0px 0px 13px 8px rgba(0, 0, 0, 0.1));
+  &--primary {
+    background: $yellow;
+    color: #fff;
+  }
+  &:hover {
+    @include box-shadow(0px 0px 18px 15px rgba(0, 0, 0, 0.15));
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+input[type="checkbox"] {
+  display: none;
+  + label {
+    &:before {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 8px;
+      right: 0;
+      width: 43px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      @include border-radius(50px);
+    }
+    &:after {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 0px;
+      right: 18px;
+      width: 25px;
+      height: 25px;
+      background: $yellow;
+      cursor: pointer;
+      @include border-radius(50%);
+      @include box-shadow(1px 1px 0px 0px rgba(0, 0, 0, 0.15));
+      @include transition(all 0.3s ease-in-out);
+    }
+  }
+  &:checked + label:after {
+    right: 0;
+  }
+}
+
+::-webkit-input-placeholder {
+  /* Chrome/Opera/Safari */
+  font-weight: 300;
+  color: rgba(255, 2505, 255, 0.5);
+}
+::-moz-placeholder {
+  /* Firefox 19+ */
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+}
+:-ms-input-placeholder {
+  /* IE 10+ */
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+}
+:-moz-placeholder {
+  /* Firefox 18- */
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tooltip {
+  padding: 7px;
+  @include border-radius(1px);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  position: absolute;
+  top: -10px;
+  right: 0;
+}
+
+.Login {
+  width: 100vw;
+  height: 100vh;
+  font-family: sans-serif;
+  text-align: center;
+  overflow: hidden;
+}
+
+label {
+  color: white;
+  width: 100%;
+  text-align: center;
+}
+
+.show {
+  display: block;
+  transition: 1000ms;
+  opacity: 1;
+}
+
+.show.active {
+  transform: translate(-50%, -50%) scale(0) rotateY(180deg);
+  transform-origin: center;
+  opacity: 0;
+}
+
+.logPop {
+  height: 100%;
+}
+
+.login-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  border-radius: $borderRadius;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+  box-shadow: 10px 10px 10px 1px rgba(0, 0, 0, 0.6);
+}
+
+.form-box {
+  border-radius: $borderRadius;
+  opacity: 90%;
+  background: black;
+  width: 100%;
+  max-width: 400px;
+}
+
+.mainContainer {
+  height: 100vh;
+  width: 100vw;
+}
+
+.titleContainer {
+  display: flex;
+  flex-direction: column;
+  font-size: 64px;
+  font-weight: bolder;
+  align-items: center;
+  justify-content: center;
+}
+
+.resultContainer,
+.historyItem {
+  flex-direction: row;
+  display: flex;
+  width: 400px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.historyContainer {
+  flex-direction: column;
+  display: flex;
+  height: 200px;
+  align-items: center;
+  flex-grow: 5;
+  justify-content: flex-start;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 260px;
+}
+
+.inputContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.inputContainer > .errorLabel {
+  color: red;
+  font-size: 12px;
+}
+
+.inputBox {
+  height: 48px;
+  width: 400px;
+  font-size: large;
+  border-radius: 4px;
+  border: 1px solid grey;
+  padding-left: 8px;
+}
+
+.close-button-div {
+  border-radius: $borderRadius;
+}
+.close-button {
+  background-color: rgba(255, 255, 255, 0.13);
+  color: white;
+  font-size: large;
+  font-weight: bold;
+  width: calc($borderRadius * 2);
+  height: calc($borderRadius * 2);
+  border-radius: $borderRadius;
+  transition: background-color 0.3s, color 0.3s;
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+    color: darkred;
+  }
+}
+.toggle-slider {
+  min-width: 55px;
+}
+
+.errorLabel {
+  color: red;
+  background-color: rgb(204, 238, 15);
+  border-radius: 12.5px;
+  line-height: 25px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.password-validation {
+  font-size: 0.8rem;
+  .valid {
+    color: green;
+  }
+  .invalid {
+    color: red;
+  }
+}
+

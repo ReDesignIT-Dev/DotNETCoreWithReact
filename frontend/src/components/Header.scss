@@ -1,0 +1,79 @@
+$small-width-collapse: 600px;
+.main-header {
+  width: 100%;
+  background-color: grey;
+
+  .header-nav {
+    a {
+      color: rgb(255, 220, 22);
+      text-decoration: none;
+      font-size: 20px;
+    }
+  }
+
+  .nav-element {
+    height: 30px;
+  }
+}
+.shopping-cart-icon {
+  cursor: pointer;
+  padding: 5px;
+  border: solid;
+  background-color: white;
+  width: 40px; 
+  height: 40px; 
+  border-radius: 20px;
+  margin-left: auto; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  //transition: transform 0.2s ease; /* Smooth transition for scaling */
+
+  &:hover {
+    border: 3px solid green;
+  }
+}
+
+.header-logo {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  min-height: 60px;
+  margin-right: auto;
+  border-radius: 5px;
+  overflow: hidden;
+  img {
+    width: 100%;
+    height: auto;
+    object-fit:contain;
+  }
+}
+.header-searchbar {
+  width: 58%;
+  max-width: 58%;
+  height: 60px;
+}
+.header-signin{
+  margin-left: auto;
+}
+.top-header {
+  @media (max-width: $small-width-collapse) {
+    flex-wrap: wrap;
+
+    .header-logo {
+      order: 1;
+     
+    }
+    .header-signin {
+      order: 2;
+      position: relative;
+    }
+    .header-searchbar {
+      order: 3; // Move the second div to the top
+      width: 100%;
+      max-width: none; // Reset max-width
+      margin-bottom: 0;
+      margin-top: 8px;
+    }
+  }
+}

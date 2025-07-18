@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+      "target": "ES6",
+      "module": "commonjs",
+      "jsx": "react-jsx",
+      "baseUrl": "./src",
+      "allowJs": true,
+      "checkJs": true,
+      "paths": {
+        "*": ["*"],
+        "config": ["config.ts"],
+        "pages/*": ["pages/*"],
+        "components/*": ["components/*"],
+        "services/*": ["services/*"],
+        "hooks/*": ["hooks/*"]
+      },
+      "outDir": "./dist", 
+      "rootDir": "./src",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "typeRoots": ["./node_modules/@types", "./types"]
+    },
+    "include": ["src", "types"],
+    "exclude": ["node_modules", "dist"]
+  }
+  

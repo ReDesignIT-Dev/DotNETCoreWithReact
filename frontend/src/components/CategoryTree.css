@@ -1,0 +1,12 @@
+.category-child, .parent-link {
+    color: black; 
+    cursor: pointer;
+  }
+  
+.category-child:hover, .parent-link:hover {
+  color:rgb(0, 255, 34);
+  }
+  
+.category-child.selected {
+  color:rgb(0, 255, 34);
+  }
