@@ -1,10 +1,10 @@
 // config.ts
 export const BACKEND_BASE_URL: string = process.env.REACT_APP_BACKEND_BASE_URL || "http://localhost:8000";
 export const FRONTEND_BASE_URL: string = process.env.REACT_APP_FRONTEND_BASE_URL || "http://localhost:3000";
-export const BACKEND_SHOP_URL: string =  "/shop";
+export const BACKEND_SHOP_URL: string =  "api/shop";
 export const FRONTEND_SHOP_URL: string = "/shop";
-export const BACKEND_USER_URL: string = "/user";
-export const BACKEND_HOME_URL: string = "/home";
+export const BACKEND_USER_URL: string = "api/auth";
+export const BACKEND_HOME_URL: string = "api/myprojects";
 export const RECAPTCHA_SITEKEY: string = process.env.REACT_APP_RECAPTCHA_SITEKEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 
 // main page
@@ -64,4 +64,4 @@ export const API_UPDATE_CART_URL: string = `${API_CART_URL}/update`
 export const API_DELETE_FROM_CART_URL: string = `${API_CART_URL}/delete`
 
 // API home based
-export const API_PROJECTS_ALL_URL: string = `${BACKEND_HOME_URL}/projects`;
+export const API_PROJECTS_ALL_URL: string = `${BACKEND_HOME_URL}`;

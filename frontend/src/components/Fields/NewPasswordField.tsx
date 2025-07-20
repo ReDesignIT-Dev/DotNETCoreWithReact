@@ -53,7 +53,7 @@ const NewPasswordField: React.FC<NewPasswordFieldProps> = ({ value, customClasse
           onClick={() => setShowPassword(!showPassword)}
         >
           <span>{showPassword ? "Hide password" : "Show password"}</span>
-          <span className='mx-2'>{showPassword ? <FaEyeSlash /> : <FaEye />}</span>
+          <span className='mx-2'>{showPassword ? React.createElement(FaEyeSlash as any) : React.createElement(FaEye as any)}</span>
         </div>
       </div>
       <div className='password-validation d-flex flex-column align-items-center'>

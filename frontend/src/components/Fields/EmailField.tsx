@@ -14,19 +14,13 @@ const EmailField: React.FC<EmailFieldProps> = ({ value, disabled, customClasses,
   const [email, setEmail] = useState<string>("");
 
   useEffect(() => {
-    setEmail(value);
-    validate(value);
-  }, [value]);
+    const isValid = isEmailValid(value);
+    onValidate(isValid);
+  }, [value, onValidate]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    validate(value);
     onChange(value);
-  };
-
-  const validate = (value: string) => {
-    const isValid = isEmailValid(value);
-    onValidate(isValid);
   };
 
   return (

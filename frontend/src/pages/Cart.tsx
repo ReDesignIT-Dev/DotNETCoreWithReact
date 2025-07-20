@@ -10,6 +10,7 @@ import "./Cart.css";
 import shopDefaultImage from "assets/images/shop_default_image.jpg";
 
 export default function Cart() {
+  const FaRegTrashAltIcon = FaRegTrashAlt as React.ComponentType<any>;
   const { getCart, updateCart, deleteFromCart, calculateTotal } = useCart();
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -167,7 +168,7 @@ export default function Cart() {
                   onClick={() => handleRemoveItem(item.product)}
                   className="btn btn-danger d-flex align-items-center"
                 >
-                  <FaRegTrashAlt />
+                  <FaRegTrashAltIcon />
                 </button>
               </div>
             </div>

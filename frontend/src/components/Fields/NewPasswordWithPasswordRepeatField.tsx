@@ -36,9 +36,11 @@ const NewPasswordWithPasswordRepeatField: React.FC<NewPasswordWithPasswordRepeat
     setNewPasswordRepeat(passwordRepeatValue);
   }, [passwordRepeatValue]);
 
-  useEffect(() => {
-    validateFields();
-  }, [newPasswordIsValid, passwordRepeatIsValid]);
+useEffect(() => {
+  const valid = newPasswordIsValid && passwordRepeatIsValid;
+  setIsValid(valid);
+  setPasswordRepeatError(passwordRepeatIsValid ? "" : "Passwords do not match");
+}, [newPasswordIsValid, passwordRepeatIsValid]);
 
   useEffect(() => {
     onValidate(isValid);
@@ -52,13 +54,8 @@ const NewPasswordWithPasswordRepeatField: React.FC<NewPasswordWithPasswordRepeat
     onChangePasswordConfirm(value);
   };
 
-  const validateFields = () => {
-    setIsValid(newPasswordIsValid && passwordRepeatIsValid);
-    setPasswordRepeatError(passwordRepeatIsValid ? "" : "Passwords do not match");
-  };
-
   return (
-    <div className='d-flex flex-column w-100 gap-2'>
+    <div className="d-flex flex-column w-100 gap-2">
       <NewPasswordField
         value={newPassword}
         customClasses={customClassesForNewPassword}

@@ -11,6 +11,7 @@ import { Box, Button } from "@mui/material";
 import { FRONTEND_BASE_URL, FRONTEND_CART_URL, FRONTEND_SHOP_URL } from "config";
 
 const ShopHeader: React.FC = () => {
+  const ShoppingCartIcon = FaShoppingCart as React.ComponentType<any>;
   return (
     <Box
       sx={{
@@ -22,8 +23,7 @@ const ShopHeader: React.FC = () => {
         backgroundColor: "grey",
       }}
     >
-      <Grid2 container spacing={2} alignItems="center" flexWrap="nowrap" sx={{width: "100%"}} >
-        
+      <Grid2 container spacing={2} alignItems="center" flexWrap="nowrap" sx={{ width: "100%" }}>
         {/* First Row: Logo on Left, Leave Button Center, Sign-in & Cart on Right */}
         <Grid2 sx={{ xs: 12, md: 6 }} display="flex" justifyContent="flex-start" alignItems="center">
           {/* Logo */}
@@ -35,32 +35,24 @@ const ShopHeader: React.FC = () => {
         <Grid2 sx={{ xs: 12, md: 6, width: "100%" }} display="flex" alignItems="center">
           {/* Leave Button */}
           <Link to={FRONTEND_BASE_URL}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ArrowLeft />}
-              sx={{ textTransform: "none" }}
-            >
+            <Button variant="contained" color="primary" startIcon={<ArrowLeft />} sx={{ textTransform: "none" }}>
               ReDesignIT
             </Button>
           </Link>
 
           {/* Sign-in and Cart */}
-          <Box display="flex" gap={2} alignItems="center" marginLeft={2} justifyContent="flex-end" sx={{width: "100%"}}>
+          <Box display="flex" gap={2} alignItems="center" marginLeft={2} justifyContent="flex-end" sx={{ width: "100%" }}>
             <Link to={FRONTEND_CART_URL}>
-              <FaShoppingCart size={40} />
+              <ShoppingCartIcon size={40} />
             </Link>
             <SignInButton />
           </Box>
         </Grid2>
-
-        
-        
       </Grid2>
       {/* Second Row: Search Box (Full Width on Small Screens, Moves Below on Large Screens) */}
       <Grid2 sx={{ xs: 12, md: 12, marginTop: "10px" }} display="flex" justifyContent="center">
-          <SearchBox />
-        </Grid2>
+        <SearchBox />
+      </Grid2>
       {/* Always at Bottom: Category Dropdown */}
       <Grid2 sx={{ xs: 12, mt: "auto" }}>
         <CategoryDropdown />

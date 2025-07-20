@@ -60,17 +60,25 @@ export const selectCategoryAncestors = createSelector(
       return ancestorsCache.get(categoryId);
     }
 
-    let currentCategory = categories.find((category) => category.id === categoryId);
+    const findCategory = (id: number) => categories.find((category) => category.id === id);
+    
+    let currentCategory = findCategory(categoryId);
     if (!currentCategory) return [];
 
     const ancestors: CategoryAncestor[] = [];
+    let currentId = currentCategory.parentId;
 
-    while (currentCategory.parentId !== null) {
-      const parentCategory = categories.find((category) => category.id === currentCategory?.parentId);
+    while (currentId !== null) {
+      const parentCategory = findCategory(currentId);
       if (!parentCategory) break;
 
-      ancestors.unshift({ name: parentCategory.name, shortName: parentCategory.shortName, slug: parentCategory.slug });
-      currentCategory = parentCategory;
+      ancestors.unshift({ 
+        name: parentCategory.name, 
+        shortName: parentCategory.shortName, 
+        slug: parentCategory.slug 
+      });
+      
+      currentId = parentCategory.parentId;
     }
 
     // Cache the ancestors

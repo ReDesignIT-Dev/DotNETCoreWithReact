@@ -11,6 +11,8 @@ import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { isTokenValid } from "utils/cookies";
 
 const SignInButton: React.FC = () => {
+  const FaUserCircleIcon = FaUserCircle as React.ComponentType<any>;
+  const FaRegUserCircleIcon = FaRegUserCircle as React.ComponentType<any>;
   const user = useUser();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -37,11 +39,11 @@ const SignInButton: React.FC = () => {
       {user?.isAdmin && isTokenValid() && (
         <Tooltip title="Admin Panel">
           <IconButton size="small" sx={{ color: "#fff" }} onClick={() => navigate(FRONTEND_ADMIN_PANEL_URL)}>
-            <FaUserCircle size={28} />
+            <FaUserCircleIcon size={28} />
           </IconButton>
         </Tooltip>
       )}
-
+      
       {/* Sign In / Log Out */}
       <Box onClick={handleClick} className="loginicon" sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
         {user?.isLoggedIn ? (
@@ -49,7 +51,7 @@ const SignInButton: React.FC = () => {
             Log Out
           </Typography>
         ) : (
-          <FaRegUserCircle size={40} />
+          <FaRegUserCircleIcon size={40} />
         )}
       </Box>
     </Box>
