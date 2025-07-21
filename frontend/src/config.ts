@@ -1,8 +1,9 @@
 // config.ts
+export const FRONTEND_SHOP_URL: string = "/shop";
+
 export const BACKEND_BASE_URL: string = process.env.REACT_APP_BACKEND_BASE_URL || "http://localhost:8000";
 export const FRONTEND_BASE_URL: string = process.env.REACT_APP_FRONTEND_BASE_URL || "http://localhost:3000";
 export const BACKEND_SHOP_URL: string =  "api/shop";
-export const FRONTEND_SHOP_URL: string = "/shop";
 export const BACKEND_USER_URL: string = "api/auth";
 export const BACKEND_HOME_URL: string = "api/myprojects";
 export const RECAPTCHA_SITEKEY: string = process.env.REACT_APP_RECAPTCHA_SITEKEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
@@ -50,11 +51,10 @@ export const API_REGISTER_USER_URL: string = `${BACKEND_USER_URL}/register`;
 export const API_PASSWORD_RESET_URL: string = `${BACKEND_USER_URL}/password-reset`;
 
 // API shop based
-export const API_PRODUCT_URL: string = `${BACKEND_SHOP_URL}/product`;
 export const API_PRODUCTS_QUERY_URL: string = `${BACKEND_SHOP_URL}/products`;
+export const API_PRODUCT_URL: string = `${BACKEND_SHOP_URL}/products/`;
 export const API_PRODUCT_ADD_URL: string = `${API_PRODUCT_URL}/create`;
 export const API_CATEGORY_URL: string = `${BACKEND_SHOP_URL}/category`;
-export const API_ALL_CATEGORIES_TREE: string = `${API_CATEGORY_URL}/tree`;
 export const API_ALL_CATEGORIES_FLAT: string = `${API_CATEGORY_URL}/flat`;
 export const API_SEARCH_URL: string = `${BACKEND_SHOP_URL}/search?string=`;
 export const API_SEARCH_ASSOCIATED_CATEGORIES_URL: string = `${BACKEND_SHOP_URL}/search-associated-categories?string=`;
