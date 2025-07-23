@@ -22,7 +22,9 @@ public class CategoryService : ICategoryService
                 Name = c.Name,
                 Slug = c.Slug,
                 ShortName = c.ShortName,
-                ParentId = c.ParentId
+                ParentId = c.ParentId,
+                ChildrenIds = c.Children.Select(child => child.Id).ToList()
+
             })
             .ToListAsync();
     }

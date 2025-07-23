@@ -8,4 +8,6 @@ public class ReadCategoryDto
     public string? ImageUrl { get; set; }
     public int? ParentId { get; set; }
     public required string ShortName { get; set; }
+    public List<int> ChildrenIds { get; set; } = new();
+
 }
