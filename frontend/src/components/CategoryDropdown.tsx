@@ -11,15 +11,15 @@ import {
 } from "mdb-react-ui-kit";
 import { FRONTEND_CATEGORY_URL } from "config";
 import {
-  selectIsTreeLoading,
+  selectCategoriesIsLoading,
   selectTreeCategories,
-  selectTreeCategoriesError,
+  selectCategoriesError,
 } from "reduxComponents/reduxShop/Categories/selectors";
 
 const CategoryDropdown: React.FC = () => {
   const categories = useSelector(selectTreeCategories);
-  const isLoading = useSelector(selectIsTreeLoading);
-  const error = useSelector(selectTreeCategoriesError);
+  const isLoading = useSelector(selectCategoriesIsLoading);
+  const error = useSelector(selectCategoriesError);
 
   const navigate = useNavigate();
 
@@ -34,7 +34,7 @@ const CategoryDropdown: React.FC = () => {
   if (error) return <p>Error loading categories.</p>;
 
   const renderCategories = () => {
-    if (!categories || categories.length === 0 || !categories[0].children) {
+    if (!categories || categories.length === 0 || !categories[0].childrenIds) {
       return null;
     }
     return (

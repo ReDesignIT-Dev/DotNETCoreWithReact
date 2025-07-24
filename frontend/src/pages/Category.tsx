@@ -8,7 +8,7 @@ import { Box, Grid2 } from "@mui/material";
 import { getIdFromSlug } from "utils/utils";
 import { useSelector } from "react-redux";
 import { RootState } from "reduxComponents/store";
-import { selectFlatCategoryById, selectParentCategoryById, selectTreeCategoryById } from "reduxComponents/reduxShop/Categories/selectors";
+import { selectCategoryById, selectCategoryNodeById } from "reduxComponents/reduxShop/Categories/selectors";
 import { getAllProductsInCategory } from "services/shopServices/apiRequestsShop";
 import Loading from "components/Loading";
 import PaginationComponent from "components/PaginationComponent";
@@ -18,22 +18,22 @@ export default function Category() {
   const { slug } = useParams() as { slug: string };
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const categoryId = getIdFromSlug(slug);
-  const category = useSelector((state: RootState) => (categoryId !== null ? selectFlatCategoryById(state, categoryId) : null));
+  const category = useSelector((state: RootState) => (categoryId !== null ? selectCategoryById(state, categoryId) : null));
   const categoryTree = useSelector((state: RootState) => {
 
     if (categoryId === null) return null;
-    const currentCategoryTree = selectTreeCategoryById(state, categoryId);
-    if (currentCategoryTree?.children?.length) {
+    const currentCategoryTree = selectCategoryNodeById(state, categoryId);
+    if (currentCategoryTree?.childrenIds?.length) {
       return currentCategoryTree;
     }
-    const parentCategoryId = selectFlatCategoryById(state, categoryId)?.parentId;
+    const parentCategoryId = selectCategoryById(state, categoryId)?.parentId;
     if (parentCategoryId) {
-      return selectTreeCategoryById(state, parentCategoryId);
+      return selectCategoryNodeById(state, parentCategoryId);
     }
 
     return null; 
   });
-  const parentCategory = useSelector((state: RootState) => (category?.parentId ? selectFlatCategoryById(state, category.parentId) : null));
+  const parentCategory = useSelector((state: RootState) => (category?.parentId ? selectCategoryById(state, category.parentId) : null));
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState<number>(1);
