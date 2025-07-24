@@ -29,7 +29,7 @@ import {
 } from "config";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
-import { fetchCategoryFlat, fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
+import { fetchCategoryFlat } from "reduxComponents/reduxShop/Categories/thunks";
 import { AppDispatch } from "reduxComponents/store";
 import { ProductAdd } from "../components/ProductAdd";
 import AdminPanel from "./AdminPanel";
@@ -38,7 +38,6 @@ function Shop() {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    dispatch(fetchCategoryTree());
     dispatch(fetchCategoryFlat());
   }, [dispatch]);
 

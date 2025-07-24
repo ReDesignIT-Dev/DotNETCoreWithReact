@@ -10,13 +10,13 @@ import {
   Box,
 } from "@mui/material";
 import { FRONTEND_CATEGORY_URL } from "config";
-import { selectIsTreeLoading, selectTreeCategories, selectTreeCategoriesError } from "reduxComponents/reduxShop/Categories/selectors";
+import { selectCategoriesIsLoading, selectTreeCategories, selectCategoriesError } from "reduxComponents/reduxShop/Categories/selectors";
 
 export default function ShopHome() {
   const navigate = useNavigate();
   const categories = useSelector(selectTreeCategories);
-  const isLoading = useSelector(selectIsTreeLoading);
-  const error = useSelector(selectTreeCategoriesError);
+  const isLoading = useSelector(selectCategoriesIsLoading);
+  const error = useSelector(selectCategoriesError);
 
  
   const handleCategoryClick = (slug: string) => {
