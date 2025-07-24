@@ -5,7 +5,6 @@ import {
   API_SEARCH_ASSOCIATED_CATEGORIES_URL,
   API_SEARCH_URL,
   API_CATEGORY_URL,
-  API_ALL_CATEGORIES_TREE,
   API_ALL_CATEGORIES_FLAT,
   API_PRODUCT_ADD_URL,
   API_PRODUCTS_QUERY_URL,
@@ -27,14 +26,6 @@ export async function getAllProductsInCategory(categoryId: number, page: number 
 export async function getAllSearchProducts(searchString: string, page: number = 1): Promise<AxiosResponse | undefined> {
   try {
     const response = await apiClient.get(`${API_SEARCH_URL}${searchString}&page=${page}`);
-    return response;
-  } catch (error) {
-    apiErrorHandler(error);
-  }
-}
-export async function getCategoriesTree(): Promise<AxiosResponse | undefined> {
-  try {
-    const response = await apiClient.get(API_ALL_CATEGORIES_TREE);
     return response;
   } catch (error) {
     apiErrorHandler(error);
@@ -70,7 +61,7 @@ export async function getAllParentsOfCategory(categoryId: number): Promise<Axios
 
 export async function getProduct(productId: number): Promise<AxiosResponse | undefined> {
   try {
-    const response = await apiClient.get(`${API_PRODUCT_URL}/${productId}`);
+    const response = await apiClient.get(`${API_PRODUCT_URL}${productId}`);
     return response;
   } catch (error) {
     apiErrorHandler(error);
@@ -88,7 +79,7 @@ export async function getCategory(categoryId: number): Promise<AxiosResponse | u
 
 export async function getProductParentCategory(productId: number): Promise<AxiosResponse | undefined> {
   try {
-    const response = await apiClient.get(`${API_PRODUCT_URL}/${productId}/parent-category`);
+    const response = await apiClient.get(`${API_PRODUCT_URL}${productId}/parent-category`);
     return response;
   } catch (error) {
     apiErrorHandler(error);
