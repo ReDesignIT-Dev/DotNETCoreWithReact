@@ -42,7 +42,7 @@ interface BaseCategory {
 
 interface Category extends BaseCategory {
   readonly image?: Image;
-  readonly children: number[] | null;
+  readonly childrenIds: number[] | null;
   readonly ancestors: CategoryAncestor[];
   readonly parentId: number | null;
 }
@@ -51,16 +51,16 @@ interface CategoryNode extends BaseCategory {
   readonly children: CategoryNode[] | null;
 }
 
-interface CategoryTreeStore {
-  readonly categories: CategoryNode[];
+interface CategoryState {
+  readonly flat: Category[];
+  readonly tree: CategoryWithChildren[];
   readonly isLoading: boolean;
   readonly error: boolean;
+  readonly lastUpdated: number | null;
 }
 
-interface CategoryStore {
-  readonly categories: Category[];
-  readonly isLoading: boolean;
-  readonly error: boolean;
+interface CategoryWithChildren extends Category {
+  readonly children: CategoryWithChildren[];
 }
 
 interface CategoryAncestor {
