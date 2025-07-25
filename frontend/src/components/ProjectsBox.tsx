@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Typography,
-  Card,
-  CardContent,
-  CardMedia,
-  Container,
-  Box,
-  Grid2,
-} from "@mui/material";
+import { Typography, Card, CardContent, CardMedia, Container, Box, Grid2 } from "@mui/material";
 import { getAllProjects } from "services/homeServices/apiRequestsHome";
 import shopDefaultImage from "assets/images/shop_default_image.jpg";
 
@@ -52,7 +44,13 @@ const ProjectsBox: React.FC = () => {
       </Typography>
     );
   }
-
+  const formatUrl = (url: string): string => {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      var formattedUrl = url.startsWith("www.") ? url.substring(4, url.length) : url;
+      return `https://${formattedUrl}`;
+    }
+    return url;
+  };
   return (
     <Container maxWidth="lg">
       <Typography variant="h4" component="h2" align="center" gutterBottom>
@@ -60,15 +58,10 @@ const ProjectsBox: React.FC = () => {
       </Typography>
       <Grid2 container spacing={4} sx={{ display: "flex", flexWrap: "wrap" }}>
         {projects.map((project) => (
-          <Grid2
-            container
-            size={{ xs: 12, sm: 6, md: 4 }}
-            sx={{ display: "flex" }}
-            key={project.id}
-          >
+          <Grid2 container size={{ xs: 12, sm: 6, md: 4 }} sx={{ display: "flex" }} key={project.id}>
             <Card
               component="a"
-              href={project.url}
+              href={formatUrl(project.url)}
               rel="noopener noreferrer"
               sx={{
                 maxWidth: "282px",
@@ -78,10 +71,10 @@ const ProjectsBox: React.FC = () => {
                 height: "auto",
                 padding: 2,
                 textDecoration: "none",
-                color: "inherit", 
-                transition: "transform 0.3s, box-shadow 0.3s", 
+                color: "inherit",
+                transition: "transform 0.3s, box-shadow 0.3s",
                 "&:hover": {
-                  transform: "scale(1.05)", 
+                  transform: "scale(1.05)",
                   boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.2)",
                   backgroundColor: "#f9f9f9",
                 },
