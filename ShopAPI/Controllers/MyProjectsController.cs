@@ -42,7 +42,8 @@ public class MyProjectsController : ControllerBase
     {
         string? imageUrl = null;
         if (dto.Image != null)
-        {;
+        {
+            ;
             imageUrl = await fileStorage.SaveFileAsync(dto.Image, ImageType.MyProject, null);
         }
 
@@ -76,29 +77,4 @@ public class MyProjectsController : ControllerBase
             return NotFound();
         return NoContent();
     }
-
-    private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
-    private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
-
-    private async Task<string> SaveImageAsync(IFormFile image)
-    {
-        var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
-        if (!AllowedExtensions.Contains(ext))
-            throw new InvalidOperationException("Unsupported file type.");
-
-        if (image.Length > MaxFileSize)
-            throw new InvalidOperationException("File size exceeds limit.");
-
-        var fileName = $"{Guid.NewGuid()}{ext}";
-        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-        Directory.CreateDirectory(uploadDir);
-        var filePath = Path.Combine(uploadDir, fileName);
-
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await image.CopyToAsync(stream);
-        }
-        return $"/uploads/{fileName}";
-    }
-
 }
