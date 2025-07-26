@@ -56,7 +56,7 @@ public class ProductsController : ControllerBase
                     var userId = GetUserId();
                     if (userId == null)
                         return Unauthorized();
-                    var url = await fileStorage.SaveFileAsync(file, ImageType.Product, userId);
+                    var url = await fileStorage.SaveImageAsync(file, ImageType.Product, userId);
                     imageUrls.Add(url);
                 }
             }
@@ -89,7 +89,7 @@ public class ProductsController : ControllerBase
                 var userId = GetUserId();
                 if (userId == null)
                     return Unauthorized();
-                var url = await fileStorage.SaveFileAsync(file, ImageType.Product, userId);
+                var url = await fileStorage.SaveImageAsync(file, ImageType.Product, userId);
                 imageUrls.Add(url);
             }
         }

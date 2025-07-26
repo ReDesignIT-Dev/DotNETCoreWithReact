@@ -44,7 +44,7 @@ public class MyProjectsController : ControllerBase
         if (dto.Image != null)
         {
             ;
-            imageUrl = await fileStorage.SaveFileAsync(dto.Image, ImageType.MyProject, null);
+            imageUrl = await fileStorage.SaveImageAsync(dto.Image, ImageType.MyProject, null);
         }
 
         var created = await _service.CreateAsync(dto, imageUrl);
@@ -61,7 +61,7 @@ public class MyProjectsController : ControllerBase
         string? imageUrl = null;
         if (dto.Image != null)
         {
-            imageUrl = await fileStorage.SaveFileAsync(dto.Image, ImageType.MyProject, null);
+            imageUrl = await fileStorage.SaveImageAsync(dto.Image, ImageType.MyProject, null);
         }
         var updated = await _service.UpdateAsync(id, dto, imageUrl);
         if (!updated)

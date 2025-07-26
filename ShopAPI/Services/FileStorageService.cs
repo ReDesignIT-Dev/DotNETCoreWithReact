@@ -9,19 +9,19 @@ public class FileStorageService : IFileStorageService
     private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
 
-    public async Task<string> SaveFileAsync(IFormFile file, ImageType type, int? userId = null)
+    public async Task<string> SaveImageAsync(IFormFile image, ImageType type, int? userId = null)
     {
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(ext))
             throw new InvalidOperationException("Unsupported file type.");
 
-        if (file.Length > MaxFileSize)
+        if (image.Length > MaxFileSize)
             throw new InvalidOperationException("File size exceeds limit.");
 
         // Compute hash
         string hash;
         using (var sha256 = SHA256.Create())
-        using (var stream = file.OpenReadStream())
+        using (var stream = image.OpenReadStream())
         {
             var hashBytes = await sha256.ComputeHashAsync(stream);
             hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
@@ -57,7 +57,7 @@ public class FileStorageService : IFileStorageService
         {
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                await image.CopyToAsync(stream);
             }
         }
         Console.WriteLine($"url: {url}");
