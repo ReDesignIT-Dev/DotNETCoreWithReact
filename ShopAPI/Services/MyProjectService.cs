@@ -1,16 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
 using ShopAPI.Dtos.Project;
+using ShopAPI.Enums;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
+using static ShopAPI.Services.FileStorageService;
 
 namespace ShopAPI.Services;
 public class MyProjectService : IMyProjectService
 {
     private readonly ShopContext _context;
 
-    public MyProjectService(ShopContext context) => _context = context;
+    private readonly IFileStorageService _fileStorage;
 
+    public MyProjectService(ShopContext context, IFileStorageService fileStorage)
+    {
+        _context = context;
+        _fileStorage = fileStorage;
+    }
     public async Task<List<ReadMyProjectDto>> GetAllAsync()
     {
         var projects = await _context.Projects
@@ -23,7 +30,8 @@ public class MyProjectService : IMyProjectService
             Title = p.Title,
             Url = p.Url,
             Description = p.Description,
-            ImageUrl = p.Image?.Url
+            ImageUrl = p.Image?.Url,
+            ThumbnailUrl = p.Image?.ThumbnailUrl
         }).ToList();
     }
 
@@ -46,14 +54,20 @@ public class MyProjectService : IMyProjectService
         };
     }
 
-    public async Task<ReadMyProjectDto> CreateAsync(WriteMyProjectDto dto, string? imageUrl)
+    public async Task<ReadMyProjectDto> CreateAsync(WriteMyProjectDto dto)
     {
+        ImageSaveResult? imageResult = null;
+        if (dto.Image != null)
+            imageResult = await _fileStorage.SaveImageAsync(dto.Image, ImageType.MyProject, null);
+
         var project = new MyProject
         {
             Title = dto.Title,
             Url = dto.Url,
             Description = dto.Description,
-            Image = imageUrl != null ? new MyProjectImage { Url = imageUrl } : null
+            Image = imageResult != null
+                ? new MyProjectImage { Url = imageResult.Url, ThumbnailUrl = imageResult.ThumbnailUrl }
+                : null
         };
 
         _context.Projects.Add(project);
@@ -65,11 +79,13 @@ public class MyProjectService : IMyProjectService
             Title = project.Title,
             Url = project.Url,
             Description = project.Description,
-            ImageUrl = project.Image?.Url
+            ImageUrl = project.Image?.Url,
+            ThumbnailUrl = project.Image?.ThumbnailUrl
         };
     }
 
-    public async Task<bool> UpdateAsync(int id, WriteMyProjectDto dto, string? imageUrl)
+    // In UpdateAsync:
+    public async Task<bool> UpdateAsync(int id, WriteMyProjectDto dto)
     {
         var project = await _context.Projects
             .Include(p => p.Image)
@@ -82,12 +98,16 @@ public class MyProjectService : IMyProjectService
         project.Url = dto.Url;
         project.Description = dto.Description;
 
-        if (imageUrl != null)
+        if (dto.Image != null)
         {
+            var imageResult = await _fileStorage.SaveImageAsync(dto.Image, ImageType.MyProject, null);
             if (project.Image == null)
-                project.Image = new MyProjectImage { Url = imageUrl };
+                project.Image = new MyProjectImage { Url = imageResult.Url, ThumbnailUrl = imageResult.ThumbnailUrl };
             else
-                project.Image.Url = imageUrl;
+            {
+                project.Image.Url = imageResult.Url;
+                project.Image.ThumbnailUrl = imageResult.ThumbnailUrl;
+            }
         }
         else
         {

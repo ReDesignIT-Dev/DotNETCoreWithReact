@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos.Project;
-using ShopAPI.Enums;
 using ShopAPI.Interfaces;
 
 namespace ShopAPI.Controllers;
@@ -36,34 +35,18 @@ public class MyProjectsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ReadMyProjectDto>> Create(
-        [FromForm] WriteMyProjectDto dto,
-        [FromServices] IFileStorageService fileStorage)
+    public async Task<ActionResult<ReadMyProjectDto>> Create([FromForm] WriteMyProjectDto dto)
     {
-        string? imageUrl = null;
-        if (dto.Image != null)
-        {
-            ;
-            imageUrl = await fileStorage.SaveImageAsync(dto.Image, ImageType.MyProject, null);
-        }
-
-        var created = await _service.CreateAsync(dto, imageUrl);
+        var created = await _service.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
-
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
         int id,
-        [FromForm] WriteMyProjectDto dto,
-        [FromServices] IFileStorageService fileStorage)
+        [FromForm] WriteMyProjectDto dto)
     {
-        string? imageUrl = null;
-        if (dto.Image != null)
-        {
-            imageUrl = await fileStorage.SaveImageAsync(dto.Image, ImageType.MyProject, null);
-        }
-        var updated = await _service.UpdateAsync(id, dto, imageUrl);
+        var updated = await _service.UpdateAsync(id, dto);
         if (!updated)
             return NotFound();
         return NoContent();
