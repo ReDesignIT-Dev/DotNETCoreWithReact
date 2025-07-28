@@ -42,62 +42,26 @@ public class ProductsController : ControllerBase
 
 
     [HttpPost]
-    public async Task<ActionResult<ReadProductDto>> CreateProduct(
-        [FromForm] WriteProductDto dto,
-        [FromServices] IFileStorageService fileStorage)
+    public async Task<ActionResult<ReadProductDto>> CreateProduct([FromForm] WriteProductDto dto)
     {
-        try
-        {
-            var imageUrls = new List<string>();
-            if (dto.Images != null)
-            {
-                foreach (var file in dto.Images)
-                {
-                    var userId = GetUserId();
-                    if (userId == null)
-                        return Unauthorized();
-                    var url = await fileStorage.SaveImageAsync(file, ImageType.Product, userId);
-                    imageUrls.Add(url);
-                }
-            }
-            var created = await _productService.CreateProductAsync(dto, imageUrls);
-            if (created == null)
-                return BadRequest("Category does not exist.");
-            return CreatedAtAction(nameof(GetProducts), new { id = created.Id }, created);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, "An error occurred while processing your request.");
-        }
+        var created = await _productService.CreateProductAsync(dto, GetUserId());
+        if (created == null)
+            return BadRequest("Category does not exist.");
+        return CreatedAtAction(nameof(GetProducts), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> EditProduct(
-        int id,
-        [FromForm] WriteProductDto dto,
-        [FromServices] IFileStorageService fileStorage)
+    int id,
+    [FromForm] WriteProductDto dto)
     {
-        var imageUrls = new List<string>();
-        if (dto.Images != null)
-        {
-            foreach (var file in dto.Images)
-            {
-                var userId = GetUserId();
-                if (userId == null)
-                    return Unauthorized();
-                var url = await fileStorage.SaveImageAsync(file, ImageType.Product, userId);
-                imageUrls.Add(url);
-            }
-        }
-        var success = await _productService.UpdateProductAsync(id, dto, imageUrls);
+        var success = await _productService.UpdateProductAsync(id, dto, GetUserId());
         if (!success)
             return NotFound();
         return NoContent();
     }
+
+
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(int id)

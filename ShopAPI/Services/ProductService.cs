@@ -6,14 +6,21 @@ using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using ShopAPI.Requests;
+using static ShopAPI.Services.FileStorageService;
 
 namespace ShopAPI.Services;
 
 public class ProductService : IProductService
 {
     private readonly ShopContext _context;
-    public ProductService(ShopContext context) => _context = context;
 
+    private readonly IFileStorageService _fileStorage;
+
+    public ProductService(ShopContext context, IFileStorageService fileStorage)
+    {
+        _context = context;
+        _fileStorage = fileStorage;
+    }
     public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query)
     {
         var productsQuery = _context.Products
@@ -76,7 +83,8 @@ public class ProductService : IProductService
                 Images = p.Images.Select(img => new ProductImageDto
                 {
                     Id = img.Id,
-                    Url = img.Url
+                    Url = img.Url,
+                    ThumbnailUrl = img.ThumbnailUrl
                 }).ToList()
             })
             .ToListAsync();
@@ -108,13 +116,27 @@ public class ProductService : IProductService
     }
 
 
-    public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, List<string>? imageUrls)
+    public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, int? userId)
     {
         var category = await _context.Categories.FindAsync(dto.CategoryId);
         if (category == null)
             return null;
 
-        var images = imageUrls?.Select(url => new ProductImage { Url = url }).ToList() ?? [];
+        var imageResults = new List<ImageSaveResult>();
+        if (dto.Images != null)
+        {
+            foreach (var file in dto.Images)
+            {
+                var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
+                imageResults.Add(result);
+            }
+        }
+
+        var images = imageResults.Select(res => new ProductImage
+        {
+            Url = res.Url,
+            ThumbnailUrl = res.ThumbnailUrl
+        }).ToList();
 
         var product = new Product
         {
@@ -130,7 +152,6 @@ public class ProductService : IProductService
         await _context.SaveChangesAsync();
 
         // Generate slug after ID is available
-
         product.Slug = SlugHelper.GenerateSlug(product.Name, product.Id);
         await _context.SaveChangesAsync();
 
@@ -145,14 +166,16 @@ public class ProductService : IProductService
             Images = product.Images.Select(img => new ProductImageDto
             {
                 Id = img.Id,
-                Url = img.Url
+                Url = img.Url,
+                ThumbnailUrl = img.ThumbnailUrl
             }).ToList()
         };
     }
 
 
 
-    public async Task<bool> UpdateProductAsync(int id, WriteProductDto dto, List<string>? imageUrls)
+
+    public async Task<bool> UpdateProductAsync(int id, WriteProductDto dto, int? userId)
     {
         var product = await _context.Products
             .Include(p => p.Images)
@@ -177,18 +200,28 @@ public class ProductService : IProductService
             product.Slug = newSlug;
         }
 
-        if (imageUrls != null)
+        if (dto.Images != null)
         {
-            // Replace all images with new ones
-            product.Images.Clear();
-            foreach (var url in imageUrls)
+            var imageResults = new List<ImageSaveResult>();
+            foreach (var file in dto.Images)
             {
-                product.Images.Add(new ProductImage { Url = url });
+                var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
+                imageResults.Add(result);
+            }
+            product.Images.Clear();
+            foreach (var res in imageResults)
+            {
+                product.Images.Add(new ProductImage
+                {
+                    Url = res.Url,
+                    ThumbnailUrl = res.ThumbnailUrl
+                });
             }
         }
         await _context.SaveChangesAsync();
         return true;
     }
+
 
 
     public async Task<bool> DeleteProductAsync(int id)
