@@ -9,6 +9,7 @@ interface Project {
   description: string;
   url: string;
   imageUrl: string;
+  thumbnailUrl: string;
 }
 
 const ProjectsBox: React.FC = () => {
@@ -90,7 +91,7 @@ const ProjectsBox: React.FC = () => {
               >
                 <CardMedia
                   component="img"
-                  image={project.imageUrl || shopDefaultImage}
+                  image={project.thumbnailUrl || shopDefaultImage}
                   alt={project.title}
                   sx={{
                     maxHeight: "250px",
