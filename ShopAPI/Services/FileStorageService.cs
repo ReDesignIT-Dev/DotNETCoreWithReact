@@ -1,4 +1,10 @@
-﻿using ShopAPI.Enums;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Gif;
+using ShopAPI.Enums;
 using ShopAPI.Interfaces;
 using System.Security.Cryptography;
 
@@ -8,8 +14,10 @@ public class FileStorageService : IFileStorageService
 {
     private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
+    private const int ThumbnailMaxSize = 250;
+    public record ImageSaveResult(string Url, string ThumbnailUrl);
 
-    public async Task<string> SaveImageAsync(IFormFile image, ImageType type, int? userId = null)
+    public async Task<ImageSaveResult> SaveImageAsync(IFormFile image, ImageType type, int? userId = null)
     {
         var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(ext))
@@ -53,6 +61,7 @@ public class FileStorageService : IFileStorageService
         var fileName = $"{hash}{ext}";
         var filePath = Path.Combine(uploadDir, fileName);
 
+        // Save original image if not exists
         if (!File.Exists(filePath))
         {
             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -60,8 +69,35 @@ public class FileStorageService : IFileStorageService
                 await image.CopyToAsync(stream);
             }
         }
-        Console.WriteLine($"url: {url}");
-        return url;
-    }
 
+        // Save thumbnail
+        var thumbFileName = $"{hash}_thumb{ext}";
+        var thumbFilePath = Path.Combine(uploadDir, thumbFileName);
+        var thumbnailUrl = url.Replace($"{hash}{ext}", $"{hash}_thumb{ext}");
+
+        if (!File.Exists(thumbFilePath))
+        {
+            using (var thumbStream = image.OpenReadStream())
+            using (var img = await Image.LoadAsync(thumbStream))
+            {
+                img.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(ThumbnailMaxSize, ThumbnailMaxSize)
+                }));
+
+                IImageEncoder encoder = ext switch
+                {
+                    ".jpg" or ".jpeg" => new JpegEncoder(),
+                    ".png" => new PngEncoder(),
+                    ".gif" => new GifEncoder(),
+                    _ => throw new InvalidOperationException("Unsupported file type.")
+                };
+
+                await img.SaveAsync(thumbFilePath, encoder);
+            }
+        }
+
+        return new ImageSaveResult(url, thumbnailUrl);
+    }
 }
