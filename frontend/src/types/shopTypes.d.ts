@@ -1,6 +1,7 @@
 interface Image {
   id: number;
-  src: string;
+  url: string;
+  thumbnailUrl: string;
   altText?: string;
   position?: number;
 }

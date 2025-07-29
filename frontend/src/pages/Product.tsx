@@ -39,7 +39,7 @@ export default function Product() {
     saleStart: null,
     saleEnd: null,
     isOnSale: false,
-    images: [{ id: 0, src: shopDefaultImage }],
+    images: [{ id: 0, url: shopDefaultImage, thumbnailUrl: shopDefaultImage, altText: "", position: 0 }],
     slug: "",
   });
 
@@ -68,16 +68,16 @@ export default function Product() {
         } else {
           const response = await getProduct(productId);
           const productData = response?.data;
-
+          console.log("Fetched product data:", productData);
           if (productData) {
             const images = productData.images;
-            const selectedImage = images?.[0]?.src || shopDefaultImage;
+            const selectedImage = images?.[0]?.url || shopDefaultImage;
 
             setSelectedImage(selectedImage);
             setProduct({
               ...productData,
               categoryId: productData.category,
-              images: images.length > 0 ? images : [{ src: shopDefaultImage }],
+              images: images.length > 0 ? images : [{ url: shopDefaultImage }],
             });
             if (productData.category) {
               const foundCategory = categories.find((cat) => cat.id === product.categoryId);
@@ -99,7 +99,7 @@ export default function Product() {
         <SwiperSlide key={index} style={{ backgroundColor: "transparent" }}>
           <Card
             onClick={() => {
-              setSelectedImage(img.src);
+              setSelectedImage(img.url);
               setCurrentImageIndex(index);
             }}
             sx={{
@@ -114,7 +114,7 @@ export default function Product() {
           >
             <CardMedia
               component="img"
-              image={img.src}
+              image={img.url}
               alt={`Product image ${index + 1}`}
               sx={{
                 width: "100%",
@@ -273,14 +273,14 @@ export default function Product() {
 
       {/* Lightbox for fullscreen images */}
       {isLightboxOpen && (
-        <Lightbox open={isLightboxOpen} close={() => setIsLightboxOpen(false)} slides={product.images.map((img) => ({ src: img.src }))} />
+        <Lightbox open={isLightboxOpen} close={() => setIsLightboxOpen(false)} slides={product.images.map((img) => ({ src: img.url }))} />
       )}
       {isLightboxOpen && (
         <Lightbox
           plugins={[Inline]}
           open={isLightboxOpen}
           close={() => setIsLightboxOpen(false)}
-          slides={product.images.map((img) => ({ src: img.src }))}
+          slides={product.images.map((img) => ({ src: img.url }))}
           inline={{
             style: {
               width: "80%", // Set desired width

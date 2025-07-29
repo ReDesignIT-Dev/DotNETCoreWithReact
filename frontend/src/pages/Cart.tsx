@@ -121,8 +121,8 @@ export default function Cart() {
           >
             <img
               src={
-                item.product.images.length > 0 && item.product.images[0].src
-                  ? item.product.images[0].src
+                item.product.images.length > 0 && item.product.images[0].url
+                  ? item.product.images[0].url
                   : shopDefaultImage
               }
               alt={
