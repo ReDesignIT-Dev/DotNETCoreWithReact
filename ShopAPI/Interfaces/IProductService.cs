@@ -7,6 +7,7 @@ namespace ShopAPI.Interfaces;
 public interface IProductService
 {
     Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query);
+    Task<ReadProductDto?> GetProductByIdAsync(int id);
     Task<int> GetProductsCountAsync(int? categoryId, string? search);
     Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, int? userId);
     Task<bool> UpdateProductAsync(int id, WriteProductDto dto, int? userId);

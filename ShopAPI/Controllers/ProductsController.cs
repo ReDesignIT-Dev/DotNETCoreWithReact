@@ -40,6 +40,16 @@ public class ProductsController : ControllerBase
         return Ok(response);
     }
 
+    [AllowAnonymous]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ReadProductDto>> GetProductById(int id)
+    {
+        var product = await _productService.GetProductByIdAsync(id);
+        if (product == null)
+            return NotFound();
+        return Ok(product);
+    }
+
 
     [HttpPost]
     public async Task<ActionResult<ReadProductDto>> CreateProduct([FromForm] WriteProductDto dto)

@@ -90,6 +90,32 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 
+    public async Task<ReadProductDto?> GetProductByIdAsync(int id)
+    {
+        var product = await _context.Products
+            .Include(p => p.Images)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (product == null)
+            return null;
+
+        return new ReadProductDto
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            Price = product.Price,
+            CategoryId = product.CategoryId,
+            Slug = product.Slug,
+            Images = product.Images.Select(img => new ProductImageDto
+            {
+                Id = img.Id,
+                Url = img.Url,
+                ThumbnailUrl = img.ThumbnailUrl
+            }).ToList()
+        };
+    }
+
 
     public async Task<int> GetProductsCountAsync(int? categoryId, string? search)
     {
