@@ -30,7 +30,7 @@ export default function ProductList({ products }: {products: Product[]}) {
     <Box sx={{ opacity: products.length === 0 ? 0.5 : 1, transition: "opacity 0.3s" }}>
       <div className="product-list-container d-flex flex-column gap-3 w-100 p-3">
         {products.map((product) => {
-          const imageSrc = product.images?.[0]?.url || shopDefaultImage;
+          const imageSrc = product.images?.[0]?.thumbnailUrl || shopDefaultImage;
           const imageAlt = product.images?.[0]?.altText || product.name;
 
           return (
