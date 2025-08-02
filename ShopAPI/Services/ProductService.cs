@@ -35,12 +35,12 @@ public class ProductService : IProductService
                 .ToListAsync();
             productsQuery = productsQuery.Where(p => categoryIds.Contains(p.CategoryId));
         }
-
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
+            var searchLower = query.Search.ToLower();
             productsQuery = productsQuery.Where(p =>
-                p.Name.Contains(query.Search) ||
-                (p.Description != null && p.Description.Contains(query.Search))
+                p.Name.ToLower().Contains(searchLower) ||
+                (p.Description != null && p.Description.ToLower().Contains(searchLower))
             );
         }
 
