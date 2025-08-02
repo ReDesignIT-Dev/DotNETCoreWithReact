@@ -1,4 +1,4 @@
-﻿namespace ShopAPI.Dtos.Project;
+﻿namespace ShopAPI.Dtos.MyProject;
 
 public class WriteMyProjectDto
 {

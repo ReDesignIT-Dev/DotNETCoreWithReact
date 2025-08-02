@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShopAPI.Dtos.Project;
+using ShopAPI.Dtos.MyProject;
 using ShopAPI.Interfaces;
 
 namespace ShopAPI.Controllers;

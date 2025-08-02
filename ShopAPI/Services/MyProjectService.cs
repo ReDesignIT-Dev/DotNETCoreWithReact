@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
-using ShopAPI.Dtos.Project;
+using ShopAPI.Dtos.MyProject;
 using ShopAPI.Enums;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
@@ -30,7 +30,15 @@ public class MyProjectService : IMyProjectService
             Title = p.Title,
             Url = p.Url,
             Description = p.Description,
-            ImageUrl = p.Image?.Url,
+            Image = p.Image == null
+    ? null
+    : new MyProjectImageDto
+    {
+        Id = p.Image.Id,
+        Url = p.Image.Url,
+        ThumbnailUrl = p.Image.ThumbnailUrl
+    },
+
             ThumbnailUrl = p.Image?.ThumbnailUrl
         }).ToList();
     }
@@ -50,7 +58,14 @@ public class MyProjectService : IMyProjectService
             Title = project.Title,
             Url = project.Url,
             Description = project.Description,
-            ImageUrl = project.Image?.Url
+            Image = project.Image == null
+    ? null
+    : new MyProjectImageDto
+    {
+        Id = project.Image.Id,
+        Url = project.Image.Url,
+        ThumbnailUrl = project.Image.ThumbnailUrl
+    },
         };
     }
 
@@ -79,12 +94,18 @@ public class MyProjectService : IMyProjectService
             Title = project.Title,
             Url = project.Url,
             Description = project.Description,
-            ImageUrl = project.Image?.Url,
+            Image = project.Image == null
+                    ? null
+                    : new MyProjectImageDto
+                    {
+        Id = project.Image.Id,
+        Url = project.Image.Url,
+        ThumbnailUrl = project.Image.ThumbnailUrl
+    },
             ThumbnailUrl = project.Image?.ThumbnailUrl
         };
     }
 
-    // In UpdateAsync:
     public async Task<bool> UpdateAsync(int id, WriteMyProjectDto dto)
     {
         var project = await _context.Projects

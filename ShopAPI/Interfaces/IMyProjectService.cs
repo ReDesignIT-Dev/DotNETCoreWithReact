@@ -1,4 +1,4 @@
-﻿using ShopAPI.Dtos.Project;
+﻿using ShopAPI.Dtos.MyProject;
 
 namespace ShopAPI.Interfaces;
 
