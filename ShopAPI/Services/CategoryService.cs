@@ -1,17 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using ShopAPI.Data;
 using ShopAPI.Dtos;
 using ShopAPI.Dtos.Category;
+using ShopAPI.Dtos.Product;
+using ShopAPI.Enums;
 using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
+using static ShopAPI.Services.FileStorageService;
 
 namespace ShopAPI.Services;
 
 public class CategoryService : ICategoryService
 {
     private readonly ShopContext _context;
-    public CategoryService(ShopContext context) => _context = context;
+    private readonly IFileStorageService _fileStorage;
+
+    public CategoryService(ShopContext context, IFileStorageService fileStorage)
+    {
+        _context = context;
+        _fileStorage = fileStorage;
+    }
 
     public async Task<IEnumerable<ReadCategoryDto>> GetCategoriesAsync()
     {
@@ -23,8 +33,8 @@ public class CategoryService : ICategoryService
                 Slug = c.Slug,
                 ShortName = c.ShortName,
                 ParentId = c.ParentId,
-                ChildrenIds = c.Children.Select(child => child.Id).ToList()
-
+                ChildrenIds = c.Children.Select(child => child.Id).ToList(),
+                ProductCount = c.Products.Count
             })
             .ToListAsync();
     }
@@ -39,17 +49,67 @@ public class CategoryService : ICategoryService
             Name = c.Name,
             Slug = c.Slug,
             ShortName = c.ShortName,
-            ParentId = c.ParentId
+            ParentId = c.ParentId,
+            ProductCount = c.Products.Count
         };
     }
-  public async Task<ReadCategoryDto> CreateCategoryAsync(WriteCategoryDto dto)
+
+    public async Task<IEnumerable<ReadCategoryDto>> GetCategoriesByIdsAsync(IEnumerable<int> categoryIds)
     {
+        return await _context.Categories
+            .Where(c => categoryIds.Contains(c.Id))
+            .Select(c => new ReadCategoryDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Slug = c.Slug,
+                ShortName = c.ShortName,
+                ParentId = c.ParentId,
+                ChildrenIds = c.Children.Select(child => child.Id).ToList()
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<CategoryTreeDto>> GetCategoryTreeAsync()
+    {
+        var categories = await GetCategoriesAsync();
+        return BuildCategoryTree(categories.ToList());
+    }
+
+    private List<CategoryTreeDto> BuildCategoryTree(List<ReadCategoryDto> categories, int? parentId = null)
+    {
+
+        return categories
+            .Where(c => c.ParentId == parentId)
+            .Select(c => new CategoryTreeDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Slug = c.Slug,
+                Image = c.Image,
+                ParentId = c.ParentId,
+                ShortName = c.ShortName,
+                ProductCount = c.ProductCount,
+                Children = BuildCategoryTree(categories, c.Id)
+            })
+            .ToList();
+    }
+
+    public async Task<ReadCategoryDto> CreateCategoryAsync(WriteCategoryDto dto)
+    {
+        ImageSaveResult? imageResult = null;
+        if (dto.Image != null)
+            imageResult = await _fileStorage.SaveImageAsync(dto.Image, ImageType.Category, null);
         var category = new Category
         {
             Name = dto.Name,
             ShortName = dto.ShortName,
-            ParentId = null 
+            ParentId = null,
+            Image = imageResult != null
+                ? new CategoryImage { Url = imageResult.Url, ThumbnailUrl = imageResult.ThumbnailUrl }
+                : null
         };
+    
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
@@ -79,7 +139,15 @@ public class CategoryService : ICategoryService
             Name = category.Name,
             Slug = category.Slug,
             ParentId = category.ParentId,
-            ShortName = category.ShortName
+            ShortName = category.ShortName,
+            Image = category.Image != null
+                ? new CategoryImageDto
+                {
+                    Id = category.Image.Id,
+                    Url = category.Image.Url,
+                    ThumbnailUrl = category.Image.ThumbnailUrl
+                }
+                : null,
         };
     }
 

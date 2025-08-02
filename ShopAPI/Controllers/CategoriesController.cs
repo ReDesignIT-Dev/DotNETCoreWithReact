@@ -38,8 +38,16 @@ public class CategoriesController : ControllerBase
         return Ok(category);
     }
 
+    [AllowAnonymous]
+    [HttpGet("tree")]
+    public async Task<ActionResult<IEnumerable<CategoryTreeDto>>> GetCategoryTree()
+    {
+        var tree = await _categoryService.GetCategoryTreeAsync();
+        return Ok(tree);
+    }
+
     [HttpPost]
-    public async Task<ActionResult<ReadCategoryDto>> CreateCategory([FromBody] WriteCategoryDto dto)
+    public async Task<ActionResult<ReadCategoryDto>> CreateCategory([FromForm] WriteCategoryDto dto)
     {
         if (!Regex.IsMatch(dto.Name, @"^[A-Za-z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ \-]+$"))
         {
