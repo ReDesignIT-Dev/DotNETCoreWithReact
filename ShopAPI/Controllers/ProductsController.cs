@@ -6,6 +6,7 @@ using ShopAPI.Interfaces;
 using ShopAPI.Requests;
 using ShopAPI.Enums;
 using System.Security.Claims;
+using ShopAPI.Services;
 namespace ShopAPI.Controllers;
 
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
@@ -27,14 +28,13 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<ProductListResponseDto>> GetProducts([FromQuery] ProductQueryParameters query)
     {
         var products = await _productService.GetProductsAsync(query);
-
         var total = await _productService.GetProductsCountAsync(query.Category, query.Search);
 
         var response = new ProductListResponseDto
         {
             Count = total,
             TotalPages = (int)Math.Ceiling(total / (double)query.PageSize),
-            Products = products
+            Products = products,
         };
 
         return Ok(response);

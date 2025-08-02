@@ -9,7 +9,7 @@ public class ProductQueryParameters
     public int Page { get; set; } = 1;
     public string? Search { get; set; }
     public int? Category { get; set; }
-
+    public bool IncludeCategories { get; set; } = false;
     public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }
     public string? SortBy { get; set; } = "Name"; // Default sorting by Name
