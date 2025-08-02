@@ -3,15 +3,6 @@ import { Typography, Card, CardContent, CardMedia, Container, Box, Grid2 } from 
 import { getAllProjects } from "services/homeServices/apiRequestsHome";
 import shopDefaultImage from "assets/images/shop_default_image.jpg";
 
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  url: string;
-  imageUrl: string;
-  thumbnailUrl: string;
-}
-
 const ProjectsBox: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -91,7 +82,7 @@ const ProjectsBox: React.FC = () => {
               >
                 <CardMedia
                   component="img"
-                  image={project.thumbnailUrl || shopDefaultImage}
+                  image={project.image && project.image.thumbnailUrl ? project.image.thumbnailUrl : shopDefaultImage}
                   alt={project.title}
                   sx={{
                     maxHeight: "250px",
