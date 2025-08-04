@@ -1,11 +1,29 @@
 module.exports = {
-  extends: ["react-app", "react-app/jest"],
+  env: {
+    browser: true,
+    es6: true,
+    node: true,
+  },
+  extends: ["eslint:recommended", "plugin:react/recommended", 'plugin:@typescript-eslint/recommended'],
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 2020,
+    sourceType: "module",
+  },
+  plugins: ["react"],
   rules: {
-    "react-hooks/exhaustive-deps": "off",
-    "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/no-inferrable-types": "off",
-    "@typescript-eslint/no-unused-vars": "off",
-    "@typescript-eslint/no-explicit-any": "off",
+    "no-unused-vars": "off",
+    //"no-unused-vars": ["error", { varsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-unused-vars" : "off",
+    "@typescript-eslint/no-explicit-any": ["off"],
+    "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
+  },
+  settings: {
+    react: {
+      version: "detect",
+    },
   },
 };
