@@ -177,7 +177,6 @@ const RegisterFormComponent: React.FC = () => {
           <div className='input-group-register'>
             <EmailField
               value={email}
-              customClasses='text-center w-100'
               onChange={setEmail}
               onValidate={setIsEmailValid}
               disabled={false}

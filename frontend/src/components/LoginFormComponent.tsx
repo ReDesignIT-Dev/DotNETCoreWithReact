@@ -1,7 +1,7 @@
 import EmailField from "components/Fields/EmailField";
 import PasswordField from "components/Fields/PasswordField";
 import RecaptchaField from "components/Fields/RecaptchaField";
-import { useEffect, useState, FormEvent } from "react";
+import React, { useEffect, useState, FormEvent } from "react";
 import Loading from "components/Loading";
 import "./LoginFormComponent.css"; 
 import { loginUser } from "reduxComponents/reduxUser/Auth/authReducer";
@@ -46,10 +46,9 @@ const LoginFormComponent: React.FC = () => {
           <div className="input-group-login">
             <EmailField
               value={email}
-              customClasses="w-100"
               onChange={setEmail}
               onValidate={setIsEmailValid}
-              disabled={false} // Add the missing disabled prop
+              disabled={false}
             />
           </div>
           <div className="input-group-login">
@@ -63,7 +62,7 @@ const LoginFormComponent: React.FC = () => {
           <RecaptchaField
             onValidate={setIsValidRecaptchaToken}
             setReturnToken={setReCaptchaToken}
-            customClasses="w-100" // Add the missing customClasses prop
+            customClasses="w-100" 
           />
           <button type="submit" className="btn btn-primary mt-3" disabled={!isValid}>
             Submit

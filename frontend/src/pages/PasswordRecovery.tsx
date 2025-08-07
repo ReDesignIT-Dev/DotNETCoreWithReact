@@ -70,7 +70,6 @@ const PasswordRecovery: React.FC = () => {
           <EmailField
             value={email}
             disabled={false}
-            customClasses='my-2 text-center'
             onChange={setEmail}
             onValidate={setIsEmailValid}
           />
