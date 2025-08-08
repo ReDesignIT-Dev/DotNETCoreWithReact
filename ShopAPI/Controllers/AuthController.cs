@@ -23,9 +23,8 @@ public class AuthController : ControllerBase
     private readonly EmailService _emailService;
     private readonly IWebHostEnvironment _env;
     private readonly ShopContext _dbContext;
+    private readonly IConfiguration _config;
     
-
-
     public AuthController(
         IUserService userService,
         RecaptchaService reCaptchaService,
@@ -33,6 +32,7 @@ public class AuthController : ControllerBase
         EmailService emailService,
         IWebHostEnvironment env,
         ShopContext dbContext,
+        IConfiguration config,
         ILogger<AuthController> logger)
     {
         _userService = userService;
@@ -41,6 +41,7 @@ public class AuthController : ControllerBase
         _emailService = emailService;
         _env = env;
         _dbContext = dbContext;
+        _config = config;
     }
 
     [HttpPost("register")]
@@ -57,20 +58,18 @@ public class AuthController : ControllerBase
         if (userDto == null)
             return BadRequest("Username or email is already taken.");
 
+        if (dto.Password != dto.PasswordConfirm)
+            return BadRequest("Passwords do not match.");
+
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
             return StatusCode(500, "User creation failed.");
 
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var confirmationLink = Url.Action(
-            nameof(ConfirmEmail),
-            "Auth",
-            new { userId = user.Id, token = WebUtility.UrlEncode(token) },
-            protocol: Request.Scheme);
-
+        var frontendBaseUrl = _config["Frontend:BaseUrl"];
+        var confirmationLink = $"{frontendBaseUrl}/shop/activate/{user.Id}/{WebUtility.UrlEncode(token)}";
         var subject = "Activate Your Account";
         var body = _emailService.GetActivationEmailBody(user.UserName ?? user.Email!, confirmationLink!);
-
         await _emailService.SendAsync(user.Email!, subject, body);
 
         return Ok(new { user = userDto });
@@ -85,9 +84,8 @@ public class AuthController : ControllerBase
             return BadRequest("Invalid user.");
         if (user.IsActive)
             return BadRequest("Email already confirmed.");
-
-        var decodedToken = WebUtility.UrlDecode(token);
-        var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+        
+        var result = await _userManager.ConfirmEmailAsync(user, token); // Use token directly
 
         if (result.Succeeded)
         {
@@ -95,21 +93,43 @@ public class AuthController : ControllerBase
             await _userManager.UpdateAsync(user);
             return Ok("Email confirmed!");
         }
-        return BadRequest("Email confirmation failed.");
+
+        var errorDescriptions = string.Join("; ", result.Errors.Select(e => e.Description));
+        return BadRequest($"Email confirmation failed: {errorDescriptions}");
     }
-    
-    
+
+
     [HttpPost("login")]
-    public async Task<ActionResult<UserDto>> Login(LoginDto dto)
+    public async Task<ActionResult<UserDto>> Login([FromBody] LoginDto? dto)
     {
+        string? email = dto?.Email;
+        string? password = dto?.Password;
+        string? recaptchaToken = dto?.RecaptchaToken;
+
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        {
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Basic "))
+            {
+                var encoded = authHeader.Substring("Basic ".Length).Trim();
+                var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+                var parts = decoded.Split(':', 2);
+                if (parts.Length == 2)
+                {
+                    email = parts[0];
+                    password = parts[1];
+                }
+            }
+        }
+
         if (!_env.IsDevelopment())
         {
-            var recaptchaValid = await _reCaptchaService.VerifyAsync(dto.RecaptchaToken);
+            var recaptchaValid = await _reCaptchaService.VerifyAsync(recaptchaToken ?? "");
             if (!recaptchaValid)
                 return BadRequest("reCAPTCHA validation failed.");
         }
 
-        var user = await _userManager.FindByEmailAsync(dto.Email);
+        var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
             return Unauthorized("Invalid email or password.");
 
@@ -121,7 +141,6 @@ public class AuthController : ControllerBase
 
         if (await _userManager.IsLockedOutAsync(user))
         {
-            // user.LockoutEnd is a nullable DateTimeOffset
             var lockoutEnd = user.LockoutEnd?.UtcDateTime;
             return Unauthorized(new
             {
@@ -130,7 +149,14 @@ public class AuthController : ControllerBase
             });
         }
 
-        var userDto = await _userService.LoginAsync(dto);
+        var loginDto = new LoginDto
+        {
+            Email = email!,
+            Password = password!,
+            RecaptchaToken = recaptchaToken ?? ""
+        };
+
+        var userDto = await _userService.LoginAsync(loginDto);
 
         if (userDto == null)
             return Unauthorized("Invalid email or password.");

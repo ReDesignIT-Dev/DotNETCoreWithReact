@@ -77,7 +77,9 @@ public class UserService : IUserService
             ExpiresAt = expiresAt
         });
         await _dbContext.SaveChangesAsync();
-        var token = _tokenService.CreateToken(user, sessionId, expiresAt);
+        var roles = await _userRoleService.GetUserRolesAsync(user.Id);
+
+        var token = _tokenService.CreateToken(user, sessionId, expiresAt, roles);
         return new UserDto
         {
             Id = user.Id,
