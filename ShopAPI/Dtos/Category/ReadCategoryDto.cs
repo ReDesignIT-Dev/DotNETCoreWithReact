@@ -8,6 +8,5 @@ public class ReadCategoryDto
     public CategoryImageDto? Image { get; set; }
     public int? ParentId { get; set; }
     public required string ShortName { get; set; }
-    public List<int> ChildrenIds { get; set; } = new();
     public int ProductCount { get; set; }
 }

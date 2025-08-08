@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShopAPI.Dtos;
 using ShopAPI.Dtos.Category;
 using ShopAPI.Interfaces;
 using System.Text.RegularExpressions;
@@ -45,6 +44,49 @@ public class CategoriesController : ControllerBase
         var tree = await _categoryService.GetCategoryTreeAsync();
         return Ok(tree);
     }
+
+    [AllowAnonymous]
+    [HttpGet("path/{categoryId}")]
+    public async Task<ActionResult<List<CategoryPathDto>>> GetCategoryPathForCategory(
+        int categoryId, [FromQuery] bool includeSelf = true)
+    {
+        var category = await _categoryService.GetCategoryByIdAsync(categoryId);
+        if (category == null)
+            return NotFound();
+
+        var path = new List<CategoryPathDto>();
+
+        // If includeSelf is true, add the starting category
+        if (includeSelf)
+        {
+            path.Insert(0, new CategoryPathDto
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Slug = category.Slug,
+                ShortName = category.ShortName
+            });
+        }
+
+        // Traverse up the tree
+        while (category.ParentId != null)
+        {
+            category = await _categoryService.GetCategoryByIdAsync(category.ParentId.Value);
+            if (category == null)
+                break;
+            path.Insert(0, new CategoryPathDto
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Slug = category.Slug,
+                ShortName = category.ShortName
+            });
+        }
+
+        return Ok(path);
+    }
+
+
 
     [HttpPost]
     public async Task<ActionResult<ReadCategoryDto>> CreateCategory([FromForm] WriteCategoryDto dto)
