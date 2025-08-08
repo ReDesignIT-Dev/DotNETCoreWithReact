@@ -17,10 +17,13 @@ DotNetEnv.Env.Load();
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Infrastructure", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Migrations", Serilog.Events.LogEventLevel.Warning)
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
@@ -85,8 +88,10 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:3000", "https://localhost:3000")
-               .AllowCredentials();
+        builder.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:8000", "https://localhost:8000")
+               .AllowCredentials()
+               .AllowAnyHeader()
+               .AllowAnyMethod();
     });
 });
 
