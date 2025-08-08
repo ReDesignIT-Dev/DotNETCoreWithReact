@@ -24,7 +24,7 @@ export default function ShopHome() {
     navigate(categoryPath);
   };
 
-  const renderCategoryTree = (categories: CategoryNode[]) => (
+  const renderCategoryTree = (categories: CategoryTree[]) => (
     <>
       {categories.map((category) => (
         <Grid2 container key={category.slug} sx={{ display: "flex", flexDirection: "column" }} gap={5}>

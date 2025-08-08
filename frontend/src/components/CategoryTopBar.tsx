@@ -2,7 +2,7 @@ import "./CategoryTopBar.css";
 import CategoryBreadcrumb from "./CategoryBreadcrumb";
 
 interface CategoryTopBarProps{
-  category: Category | null;
+  category: CategoryTree | null;
 }
 
 export default function CategoryTopBar({category}: CategoryTopBarProps) {
@@ -10,7 +10,7 @@ export default function CategoryTopBar({category}: CategoryTopBarProps) {
   return (
     <div>
       <h1>{category? category.name: "Missing Category info :("}</h1>
-      {category? <CategoryBreadcrumb category={category} includeSelf={true} /> : "Category missing"}
+      {category? <CategoryBreadcrumb categoryId={category.id} includeSelf={true} /> : "Category missing"}
     </div>
   );
 }

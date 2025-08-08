@@ -26,7 +26,7 @@ const PasswordRecovery: React.FC = () => {
       setLoading(true);
       setErrorMessage("");
       try {
-        const response = await postPasswordRecovery({ email, recaptcha: reCaptchaToken });
+        const response = await postPasswordRecovery({ email, recaptchaToken: reCaptchaToken });
         if (response && response.data) {
           const returnMessage = response.data.message;
           if (response.status === 200) {

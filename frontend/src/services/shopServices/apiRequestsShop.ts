@@ -8,12 +8,22 @@ import {
   API_ALL_CATEGORIES_FLAT,
   API_PRODUCT_ADD_URL,
   API_PRODUCTS_QUERY_URL,
+  API_CATEGORY_PATH_URL
 } from "config";
 import { AxiosResponse } from "axios";
-import { getToken, getValidatedToken } from "utils/cookies";
+import { getValidatedToken } from "utils/cookies";
 
+export async function getAllProducts(): Promise<AxiosResponse | undefined> {
+  try {
+    const url = `${API_PRODUCTS_QUERY_URL}`;
+    const response = await apiClient.get(url);
+    return response;
+  } catch (error) {
+    apiErrorHandler(error);
+  }
+}
 
-export async function getAllProductsInCategory(categoryId: number, page: number = 1): Promise<AxiosResponse | undefined> {
+export async function getAllProductsInCategory(categoryId: number, page = 1): Promise<AxiosResponse | undefined> {
   try {
     const url = `${API_PRODUCTS_QUERY_URL}?category=${categoryId}&page=${page}`;
     const response = await apiClient.get(url);
@@ -23,7 +33,7 @@ export async function getAllProductsInCategory(categoryId: number, page: number 
   }
 }
 
-export async function getAllSearchProducts(searchString: string, page: number = 1): Promise<AxiosResponse | undefined> {
+export async function getAllSearchProducts(searchString: string, page = 1): Promise<AxiosResponse | undefined> {
   try {
     const response = await apiClient.get(`${API_SEARCH_URL}${searchString}&page=${page}`);
     return response;
@@ -32,7 +42,7 @@ export async function getAllSearchProducts(searchString: string, page: number = 
   }
 }
 
-export async function getAllCategories(): Promise<AxiosResponse | undefined> {
+export async function getAllCategoriesTree(): Promise<AxiosResponse | undefined> {
   try {
     const response = await apiClient.get(API_ALL_CATEGORIES_FLAT);
     return response;
@@ -77,6 +87,15 @@ export async function getCategory(categoryId: number): Promise<AxiosResponse | u
   }
 }
 
+export async function getCategoryPath(categoryId: number, includeSelf: boolean): Promise<AxiosResponse | undefined> {
+  try {
+    const response = await apiClient.get(`${API_CATEGORY_PATH_URL}${categoryId}?include_self=${includeSelf}`);
+    return response;
+  } catch (error) {
+    apiErrorHandler(error);
+  }
+}
+
 export async function getProductParentCategory(productId: number): Promise<AxiosResponse | undefined> {
   try {
     const response = await apiClient.get(`${API_PRODUCT_URL}${productId}/parent-category`);
@@ -88,25 +107,9 @@ export async function getProductParentCategory(productId: number): Promise<Axios
 
 export async function getAllSearchAssociatedCategories(
   searchString: string
-): Promise<AxiosResponse<CategoryNode[]> | undefined> {
+): Promise<AxiosResponse<CategoryTree[]> | undefined> {
   try {
     const response = await apiClient.get(`${API_SEARCH_ASSOCIATED_CATEGORIES_URL}${searchString}`);
-
-    if (response.data) {
-      const remapCategoryNode = (category: any): CategoryNode => ({
-        id: category.id,
-        shortName: category.shortName,
-        slug: category.slug,
-        name: category.name,
-        productCount: category.product_count,
-        children: category.children ? category.children.map(remapCategoryNode) : [], // Recursively remap children
-      });
-
-      // Transform data and return the modified response
-      const transformedData = response.data.map(remapCategoryNode);
-      return { ...response, data: transformedData };
-    }
-
     return response;
   } catch (error) {
     apiErrorHandler(error);
@@ -121,10 +124,39 @@ export async function addProduct(formData : FormData): Promise<AxiosResponse | u
     const response = await apiClient.post(`${API_PRODUCT_ADD_URL}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        Authorization: `Token ${token}`
+        Authorization: `Bearer ${token}`
       }});
     return response;
   } catch (error) {
     apiErrorHandler(error);
   }
 }
+
+ export const updateProduct = async (productId: number, formData: FormData): Promise<AxiosResponse | undefined> => {
+    try {
+      const token = getValidatedToken();
+      const response = await apiClient.put(`${API_PRODUCT_URL}${productId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response;
+    } catch (error) {
+      apiErrorHandler(error);
+    }
+  };
+
+  export const deleteProduct = async (productId: number): Promise<AxiosResponse | undefined> => {
+    try {
+      const token = getValidatedToken();
+      const response = await apiClient.delete(`${API_PRODUCT_URL}${productId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response;
+    } catch (error) {
+      apiErrorHandler(error);
+    }
+  }

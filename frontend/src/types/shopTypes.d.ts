@@ -2,8 +2,8 @@ interface Image {
   id: number;
   url: string;
   thumbnailUrl: string;
-  altText?: string;
-  position?: number;
+  altText?: string | null;
+  position?: number | null;
 }
 
 interface BaseProductFields {
@@ -32,40 +32,26 @@ interface CartItem {
   quantity: number;
 }
 
-interface BaseCategory {
+interface Category {
   readonly id: number;
   readonly slug: string;
   readonly name: string;
   readonly shortName: string;
   readonly productCount: number;
-
-}
-
-interface Category extends BaseCategory {
   readonly image?: Image;
-  readonly childrenIds: number[] | null;
-  readonly ancestors: CategoryAncestor[];
   readonly parentId: number | null;
 }
 
-interface CategoryNode extends BaseCategory {
-  readonly children: CategoryNode[] | null;
+interface CategoryTree extends Category {
+  readonly children: CategoryTree[];
 }
 
-interface CategoryState {
-  readonly flat: Category[];
-  readonly tree: CategoryWithChildren[];
-  readonly isLoading: boolean;
-  readonly error: boolean;
-  readonly lastUpdated: number | null;
+interface CategoryPath {
+  id: number;
+  name: string;
+  slug: string;
+  shortName: string;
 }
-
-interface CategoryWithChildren extends Category {
-  readonly children: CategoryWithChildren[];
-}
-
-interface CategoryAncestor {
-  readonly name: string;
-  readonly shortName: string;
-  readonly slug: string;
+interface CategoryPaths {
+  categoryPaths: CategoryPath[];
 }

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { postLogin, logoutUser } from "services/apiRequestsUser"; // Import your API functions
-import { getToken, getValidatedToken, isTokenValid, isUserAdmin, setIsUserAdmin, setToken } from "utils/cookies"; // Import cookie functions
+import { getToken, getValidatedToken, isTokenValid, isUserAdmin, setToken, getIsAdminFromJwt } from "utils/cookies"; // Import cookie functions
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -18,16 +18,16 @@ interface LoginResponse {
   isAdmin: boolean;
 }
 
-export const loginUser = createAsyncThunk<LoginResponse, { username: string; password: string; recaptcha: string | null }>(
+export const loginUser = createAsyncThunk<LoginResponse, { username: string; password: string; recaptchaToken: string | null }>(
   "auth/loginUser",
-  async ({ username, password, recaptcha }, { rejectWithValue }) => {
+  async ({ username, password, recaptchaToken }, { rejectWithValue }) => {
     try {
-      const response = await postLogin({ username, password, recaptcha });
+      const response = await postLogin({ username, password, recaptchaToken });
       if (response && response.status === 200) {
-        const { token, expiry, user, isAdmin } = response.data as LoginResponse;
-        setToken(token, expiry);
-        setIsUserAdmin(isAdmin);
-        return { token, expiry, user, isAdmin };
+        const { token, user } = response.data as LoginResponse;
+        setToken(token);
+        const isAdmin = getIsAdminFromJwt(token);
+        return { token, user, isAdmin, expiry: "" };
       } else {
         return rejectWithValue("Unexpected response status");
       }

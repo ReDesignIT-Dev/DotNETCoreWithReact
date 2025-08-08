@@ -3,8 +3,8 @@ import { FRONTEND_CATEGORY_URL } from "config";
 import { Box, Typography, Button, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 
 interface CategoryTreeProps {
-  categoryTree: CategoryNode | null;
-  parentCategory?: Category | null;
+  categoryTree: CategoryTree | null;
+  parentCategory?: CategoryTree | null;
   highlightedCategoryId?: number | null;
 }
 export default function CategoryTree({ categoryTree, parentCategory, highlightedCategoryId }: CategoryTreeProps) {
@@ -21,7 +21,7 @@ export default function CategoryTree({ categoryTree, parentCategory, highlighted
     if (!categoryTree?.children) return null;
     return (
       <List>
-        {categoryTree.children.map((child) => (
+        {categoryTree.children.map((child: CategoryTree) => (
           <ListItem key={child.id} disablePadding>
             <ListItemButton selected={highlightedId === child.id} onClick={(event) => handleNavigationClick(child.slug, event)}>
               <ListItemText primary={<span style={{ fontWeight: highlightedId === child.id ? "bold" : "normal" }}>{child.name}</span>} />

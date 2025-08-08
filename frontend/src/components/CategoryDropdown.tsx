@@ -34,7 +34,7 @@ const CategoryDropdown: React.FC = () => {
   if (error) return <p>Error loading categories.</p>;
 
   const renderCategories = () => {
-    if (!categories || categories.length === 0 || !categories[0].childrenIds) {
+    if (!categories || categories.length === 0 || !categories[0].children) {
       return null;
     }
     return (
@@ -49,7 +49,7 @@ const CategoryDropdown: React.FC = () => {
     );
   };
 
-  const renderCategoryTree = (categories: CategoryNode[]): JSX.Element => {
+  const renderCategoryTree = (categories: CategoryTree[]): JSX.Element => {
     return (
       <>
         {categories.map((category) => (
@@ -68,7 +68,7 @@ const CategoryDropdown: React.FC = () => {
             </span>
             {category.children && category.children.length > 0 && (
               <ul className="dropdown-menu dropdown-submenu">
-                {category.children.map((child) => (
+                {category.children.map((child: CategoryTree) => (
                   <MDBDropdownItem
                     key={child.slug}
                     className="dropdown-item"

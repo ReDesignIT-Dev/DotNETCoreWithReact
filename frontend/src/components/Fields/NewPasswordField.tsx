@@ -7,8 +7,15 @@ import {
   isSpecialCharValid,
   isUppercaseValid,
 } from "utils/validation";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import "./CommonStyles.css";
+import {
+  TextField,
+  Typography,
+  IconButton,
+  InputAdornment,
+  Box,
+  Stack
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface NewPasswordFieldProps {
   value: string;
@@ -37,43 +44,88 @@ const NewPasswordField: React.FC<NewPasswordFieldProps> = ({ value, customClasse
   };
 
   return (
-    <div className={`d-flex flex-column ${customClasses}`}>
-      <label className='input-label' htmlFor='newPasswordField'>Password</label>
-      <input
+    <Box className={`d-flex flex-column ${customClasses}`}>
+      <TextField
+        label="Password"
         type={showPassword ? "text" : "password"}
-        id='newPasswordField'
+        id="newPasswordField"
         value={newPassword}
         onChange={handleChange}
-        className='text-center w-100'
-        placeholder='password'
+        placeholder="password"
+        fullWidth
+        variant="outlined"
+        size="small"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => setShowPassword(!showPassword)}
+                edge="end"
+                size="small"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+        sx={{
+          '& .MuiInputBase-input': {
+            textAlign: 'center'
+          }
+        }}
       />
-      <div className='text-center'>
-        <div
-          className='d-inline-flex justify-content-center align-items-center p-1 mt-1 btn btn-link text-black text-decoration-none'
-          onClick={() => setShowPassword(!showPassword)}
+      
+      <Stack spacing={0.5} alignItems="center" sx={{ mt: 2 }}>
+        <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+          Password Requirements:
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontSize: '0.8rem',
+            color: isLengthValid(newPassword) ? 'success.main' : 'error.main'
+          }}
         >
-          <span>{showPassword ? "Hide password" : "Show password"}</span>
-          <span className='mx-2'>{showPassword ? React.createElement(FaEyeSlash as any) : React.createElement(FaEye as any)}</span>
-        </div>
-      </div>
-      <div className='password-validation d-flex flex-column align-items-center'>
-        <div className={isLengthValid(newPassword) ? "valid" : "invalid"}>
           Minimum length - 8 characters
-        </div>
-        <div className={isUppercaseValid(newPassword) ? "valid" : "invalid"}>
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontSize: '0.8rem',
+            color: isUppercaseValid(newPassword) ? 'success.main' : 'error.main'
+          }}
+        >
           At least one uppercase letter
-        </div>
-        <div className={isLowercaseValid(newPassword) ? "valid" : "invalid"}>
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontSize: '0.8rem',
+            color: isLowercaseValid(newPassword) ? 'success.main' : 'error.main'
+          }}
+        >
           At least one lowercase letter
-        </div>
-        <div className={isDigitValid(newPassword) ? "valid" : "invalid"}>
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontSize: '0.8rem',
+            color: isDigitValid(newPassword) ? 'success.main' : 'error.main'
+          }}
+        >
           At least one numeric digit
-        </div>
-        <div className={isSpecialCharValid(newPassword) ? "valid" : "invalid"}>
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontSize: '0.8rem',
+            color: isSpecialCharValid(newPassword) ? 'success.main' : 'error.main'
+          }}
+        >
           At least one special character
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Stack>
+    </Box>
   );
 };
 

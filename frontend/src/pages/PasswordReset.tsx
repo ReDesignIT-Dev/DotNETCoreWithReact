@@ -24,8 +24,15 @@ const PasswordReset: React.FC = () => {
 
   useEffect(() => {
     const checkTokenValidity = async () => {
+      if (!token) {
+        setErrorMessage("Invalid token.");
+        setIsValidToken(false);
+        setLoading(false);    
+        return;
+      }
+      
       try {
-        const response = await validatePasswordResetToken(token!);
+        const response = await validatePasswordResetToken(token);
         if (response && response.status === 200) {
           setIsValidToken(true);
         }
@@ -51,11 +58,16 @@ const PasswordReset: React.FC = () => {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!token) {
+      setErrorMessage("Invalid token.");
+      return;
+    }
+    
     if (isValid) {
       try {
         const response = await postPasswordReset(
-          token!,
-          { password: newPassword, password_confirm: newPasswordRepeat, recaptcha: reCaptchaToken }
+          token,
+          { password: newPassword, passwordConfirm: newPasswordRepeat, recaptchaToken: reCaptchaToken }
         );
 
         if (response && response.status === 200) {

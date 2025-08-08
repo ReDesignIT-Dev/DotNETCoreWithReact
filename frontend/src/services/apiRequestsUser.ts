@@ -6,13 +6,13 @@ import {
   API_LOGIN_USER_URL,
   API_LOGOUT_USER_URL,
 } from "config";
-import { getToken, getValidatedToken, removeToken, removeUserData, setToken } from "utils/cookies";
+import { getValidatedToken, removeToken, removeUserData, setToken } from "utils/cookies";
 import { apiErrorHandler } from "./apiErrorHandler";
 import { AxiosResponse, AxiosError } from "axios";
 import { getHeaders } from "utils/utils";
 
 interface ReCaptchaData {
-  recaptcha: string | null;
+  recaptchaToken: string | null;
 }
 
 interface UsernameData {
@@ -21,7 +21,7 @@ interface UsernameData {
 
 interface PasswordData {
   password: string;
-  password_confirm: string;
+  passwordConfirm: string;
 }
 
 interface EmailData {
@@ -40,7 +40,6 @@ interface PasswordRecoveryData extends ReCaptchaData, EmailData {}
 
 interface AuthTokenResponse {
   token: string;
-  expiry: string;
 }
 
 type ApiResponse<T = any> = AxiosResponse<T>;
@@ -70,26 +69,32 @@ export async function postData(endpoint: string, data: Record<string, any>): Pro
   return makePostRequest(endpoint, data);
 }
 
-export async function postLogin({ username, password, recaptcha }: LoginData): Promise<ApiResponse<AuthTokenResponse> | undefined> {
+export async function postLogin({ username, password, recaptchaToken }: LoginData): Promise<ApiResponse<AuthTokenResponse> | undefined> {
   const authString = `${username}:${password}`;
   const encodedAuthString = btoa(authString);
 
   const response = await makePostRequest<AuthTokenResponse>(
     API_LOGIN_USER_URL,
-    { recaptcha },
+    { recaptchaToken },
     { Authorization: `Basic ${encodedAuthString}` }
   );
 
   if (response?.status === 200) {
-    const { token, expiry } = response.data;
-    const expire = new Date(expiry);
-    setToken(token, expire);
+    const token = response.data.token;
+    setToken(token);
   }
   return response;
 }
 
 export async function registerUser(data: RegisterData): Promise<ApiResponse | undefined> {
-  return makePostRequest(API_REGISTER_USER_URL, data);
+  const payload = {
+    username: data.username,
+    email: data.email,
+    password: data.password,
+    passwordConfirm: data.passwordConfirm, 
+    recaptchaToken: data.recaptchaToken, 
+  };
+  return makePostRequest(API_REGISTER_USER_URL, payload);
 }
 
 export async function getData(endpoint: string): Promise<ApiResponse | undefined> {
@@ -105,7 +110,7 @@ export async function getDataUsingUserToken(endpoint: string, token: string): Pr
   try {
     const response = await apiClient.get(endpoint, {
       headers: getHeaders({
-        Authorization: `Token ${token}`
+        Authorization: `Bearer ${token}`
       })
     });
     return response;
@@ -114,8 +119,9 @@ export async function getDataUsingUserToken(endpoint: string, token: string): Pr
   }
 }
 
-export async function activateUser(token: string): Promise<ApiResponse | undefined> {
-  return makePostRequest(`${API_ACTIVATE_USER_URL}/${token}`, {});
+export async function activateUser(userId: number, token: string): Promise<ApiResponse | undefined> {
+    const url = `${API_ACTIVATE_USER_URL}?userId=${userId}&token=${encodeURIComponent(token)}`;
+    return getData(url);
 }
 
 export async function validatePasswordResetToken(token: string): Promise<ApiResponse | undefined> {
@@ -141,7 +147,7 @@ export async function logoutUser(): Promise<void> {
   const token = getValidatedToken();
   try {
     if (token) {
-      await makePostRequest(API_LOGOUT_USER_URL, {}, { Authorization: `Token ${token}` });
+      await makePostRequest(API_LOGOUT_USER_URL, {}, { Authorization: `Bearer ${token}` });
       console.log("Logged out successfully");
     }
   } catch (error: unknown) {

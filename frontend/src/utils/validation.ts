@@ -6,7 +6,7 @@ export function isEmailValid(emailToTest: string): boolean {
   return emailRegex.test(emailToTest);
 }
 
-export function isLengthValid(password: string, minLength: number = 8): boolean {
+export function isLengthValid(password: string, minLength = 12): boolean {
   return password.length >= minLength;
 }
 

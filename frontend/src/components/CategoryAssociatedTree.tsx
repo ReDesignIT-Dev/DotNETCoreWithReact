@@ -6,7 +6,7 @@ import { getAllSearchAssociatedCategories } from "services/shopServices/apiReque
 import { Box, Typography, List, ListItem, ListItemText } from "@mui/material";
 
 const CategoryAssociatedTree: React.FC = () => {
-  const [categories, setCategories] = useState<CategoryNode[]>([]);
+  const [categories, setCategories] = useState<CategoryTree[]>([]);
   const navigate = useNavigate();
   const queryParams = useQueryParams();
 
@@ -33,7 +33,7 @@ const CategoryAssociatedTree: React.FC = () => {
     navigate(categoryPath);
   };
 
-  const CategoryTree: React.FC<{ category: CategoryNode }> = ({ category }) => {
+  const CategoryTree: React.FC<{ category: CategoryTree }> = ({ category }) => {
     return (
       <Box ml={2}>
         <ListItem component="div" onClick={(event) => handleNavigationClick(category.slug, event)}>
@@ -47,7 +47,7 @@ const CategoryAssociatedTree: React.FC = () => {
         </ListItem>
         {category.children && category.children.length > 0 && (
           <List component="div" disablePadding>
-            {category.children.map((childCategory) => (
+            {category.children.map((childCategory: CategoryTree) => (
               <CategoryTree key={childCategory.slug} category={childCategory} />
             ))}
           </List>

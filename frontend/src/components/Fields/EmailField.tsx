@@ -1,6 +1,6 @@
 import { isEmailValid } from "utils/validation";
 import { useEffect, ChangeEvent } from "react";
-import "./CommonStyles.css";
+import { TextField, Box } from "@mui/material";
 
 interface EmailFieldProps {
   value: string;
@@ -20,19 +20,28 @@ const EmailField: React.FC<EmailFieldProps> = ({ value, disabled, onChange, onVa
   };
 
   return (
-    <div>
-      <label className='input-label' htmlFor='emailField'>Email</label>
-      <input
-        className='text-center w-100'
+    <Box>
+      <TextField
+        label="Email"
+        type="email"
+        id="emailField"
         value={value}
-        type='email'
-        id='emailField'
-        placeholder='email'
-        autoComplete='email'
         onChange={handleChange}
+        placeholder="email"
+        autoComplete="email"
         disabled={disabled}
+        fullWidth
+        variant="outlined"
+        size="small"
+        error={value !== "" && !isEmailValid(value)}
+        helperText={value !== "" && !isEmailValid(value) ? "Please enter a valid email address" : ""}
+        sx={{
+          '& .MuiInputBase-input': {
+            textAlign: 'center'
+          }
+        }}
       />
-    </div>
+    </Box>
   );
 };
 

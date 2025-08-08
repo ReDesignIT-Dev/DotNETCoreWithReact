@@ -1,15 +1,12 @@
-import { FRONTEND_LOGIN_URL, FRONTEND_SHOP_URL } from 'config';
+import { FRONTEND_LOGIN_URL } from 'config';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { activateUser } from 'services/apiRequestsUser';
 import Loading from "components/Loading";
 
-interface Params {
-  token: string;
-}
 
 const UserActivation: React.FC = () => {
-  const { token } = useParams<Record<string, string>>();
+  const { userId, token } = useParams<Record<string, string>>();
   const [message, setMessage] = useState<string>("");
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false);
@@ -17,10 +14,12 @@ const UserActivation: React.FC = () => {
 
   useEffect(() => {
     const activate = async () => {
-      if (token && !success) {
+      console.log()
+      const parsedUserId = userId ? Number(userId) : NaN;
+      if (token && !success && !isNaN(parsedUserId)) {
         setLoading(true);
         try {
-          const response = await activateUser(token);
+          const response = await activateUser(parsedUserId, token);
           if (response && response.status === 200) {
             setSuccess(true);
             navigate(`${FRONTEND_LOGIN_URL}`, { replace: true });
@@ -32,6 +31,8 @@ const UserActivation: React.FC = () => {
         } finally {
           setLoading(false);
         }
+      } else if (isNaN(parsedUserId)) {
+        setMessage("Invalid user ID.");
       }
     };
 

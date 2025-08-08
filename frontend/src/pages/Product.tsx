@@ -15,7 +15,7 @@ import "yet-another-react-lightbox/styles.css";
 import shopDefaultImage from "assets/images/shop_default_image.jpg";
 import { getIdFromSlug } from "utils/utils";
 import { useSelector } from "react-redux";
-import { selectFlatCategories } from "reduxComponents/reduxShop/Categories/selectors";
+import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selectors";
 import NotFound from "./NotFound";
 import CategoryBreadcrumb from "components/CategoryBreadcrumb";
 import { useMemo } from "react";
@@ -43,8 +43,8 @@ export default function Product() {
     slug: "",
   });
 
-  const [category, setCategory] = useState<Category | null>(null);
-  const categories = useSelector(selectFlatCategories);
+  const [category, setCategory] = useState<CategoryTree | null>(null);
+  const categories = useSelector(selectTreeCategories);
   const [notFound, setNotFound] = useState<boolean>(false);
 
   useEffect(() => {
@@ -167,7 +167,7 @@ export default function Product() {
           {confirmationMessage}
         </Box>
       )}
-      {category ? <CategoryBreadcrumb category={category} includeSelf={true} /> : "Category missing"}
+      {category ? <CategoryBreadcrumb categoryId={category.id} includeSelf={true} /> : "Category missing"}
 
       {/* Main product info */}
       <Grid2 container direction="column" sx={{ width: "100%" }}>

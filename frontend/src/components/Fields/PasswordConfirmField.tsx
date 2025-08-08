@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import "./CommonStyles.css";
+import { TextField, Box } from "@mui/material";
 
 interface PasswordRepeatFieldProps {
   value: string;
@@ -32,17 +32,30 @@ const PasswordRepeatField: React.FC<PasswordRepeatFieldProps> = ({ value, custom
   };
 
   return (
-    <div className={`${customClasses}`}>
-      <label className='input-label' htmlFor='passwordConfirmField'>Confirm Password</label>
-      <input
-        type='password'
-        id='passwordConfirmField'
-        placeholder='repeat password'
+    <Box className={`${customClasses}`}>
+      <TextField
+        label="Confirm Password"
+        type="password"
+        id="passwordConfirmField"
         value={repeatPassword}
         onChange={handleChange}
-        className='text-center w-100'
+        placeholder="repeat password"
+        fullWidth
+        variant="outlined"
+        size="small"
+        error={repeatPassword !== "" && !validateRepeatPassword(repeatPassword)}
+        helperText={
+          repeatPassword !== "" && !validateRepeatPassword(repeatPassword) 
+            ? "Passwords do not match" 
+            : ""
+        }
+        sx={{
+          '& .MuiInputBase-input': {
+            textAlign: 'center'
+          }
+        }}
       />
-    </div>
+    </Box>
   );
 };
 

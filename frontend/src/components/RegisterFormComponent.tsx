@@ -29,6 +29,7 @@ const RegisterFormComponent: React.FC = () => {
     useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>(localStorage.getItem("detailError") || "");
   const [loading, setLoading] = useState<boolean>(false);
+  const [registrationSuccessful, setRegistrationSuccessful] = useState<boolean>(false);
 
   const isLoggedIn = useAuth();
 
@@ -102,14 +103,15 @@ const RegisterFormComponent: React.FC = () => {
           username,
           email,
           password,
-          password_confirm: passwordConfirm,
-          recaptcha: reCaptchaToken
+          passwordConfirm: passwordConfirm,
+          recaptchaToken: reCaptchaToken
         });
         if (response && response.data) {
           const returnMessage = response.data.message;
           if (response.status === 200) {
             clearUsedLocalStorage();
             setErrorMessage("");
+            setRegistrationSuccessful(true);
           } else {
             setErrorMessage(returnMessage);
             console.log(returnMessage);
@@ -157,6 +159,11 @@ const RegisterFormComponent: React.FC = () => {
         <label className='alert alert-success'>
           {"You are logged in, you cannot register. Log Out to register"}
         </label>
+      ) : registrationSuccessful ? (
+        <div className='alert alert-success text-center'>
+          <h4>Successful registration, check your email</h4>
+          <p>Please check your email inbox for activation instructions.</p>
+        </div>
       ) : loading ? (
         <Loading />
       ) : (

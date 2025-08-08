@@ -1,14 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getAllCategories } from "services/shopServices/apiRequestsShop";
+import { getAllCategoriesTree } from "services/shopServices/apiRequestsShop";
 
 
 
-export const fetchCategoryFlat = createAsyncThunk(
-  "categories/fetchCategoryFlat",
+export const fetchCategoryTree = createAsyncThunk(
+  "categories/fetchCategoryTree",
   async () => {
-    const response = await getAllCategories();
+    const response = await getAllCategoriesTree();
     if (response && response.data) {
-      console.log("Fetched categories:", response.data);
       return response.data;
     } else {
       throw new Error("Failed to fetch categories");
@@ -16,8 +15,8 @@ export const fetchCategoryFlat = createAsyncThunk(
   },
   {
 condition: (_, { getState }) => {
-  const state = getState() as { categories: CategoryState };
-  return !state.categories.isLoading;
+      const state = getState() as { categories: { isLoading: boolean } };
+      return !state.categories.isLoading; 
 },
   }
 );

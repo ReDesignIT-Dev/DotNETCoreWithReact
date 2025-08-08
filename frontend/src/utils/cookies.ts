@@ -22,10 +22,14 @@ export const removeToken = (): void => {
   Cookies.remove("tokenExpiry");
 };
 
-export const setToken = (token: string, expiry: string | Date): void => {
-  const expiryDate = new Date(expiry);
+export const setToken = (token: string): void => {
+    const expiryDate = getJwtExpiry(token)
+    if (!expiryDate) {
+    console.error("Failed to get expiry date from token.");
+    throw new Error("Invalid token format or missing expiry date");
+  }
   if (isNaN(expiryDate.getTime())) {
-    console.error("Invalid expiry date:", expiry);
+    console.error("Invalid expiry date:", expiryDate);
     throw new Error("Invalid expiry date format");
   }
 
@@ -38,7 +42,10 @@ export const setToken = (token: string, expiry: string | Date): void => {
 };
 
 export const isUserAdmin = (): boolean => {
-  return Cookies.get("isAdmin") === "true";
+  const token = getToken();
+  if (!token) return false;
+  
+  return getIsAdminFromJwt(token);
 };
 
 export const setIsUserAdmin = (isUserAdmin: boolean): void => {
@@ -74,3 +81,51 @@ export const isTokenValid = (): boolean => {
 
   return true; // Token is valid
 };
+
+export function getJwtExpiry(token: string): Date | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    if (decoded.exp) {
+      // exp is in seconds since epoch
+      return new Date(decoded.exp * 1000);
+    }
+    return null;
+  } catch (e) {
+    console.error("Failed to decode JWT:", e);
+    return null;
+  }
+}
+
+export function decodeJwtPayload(token: string): any | null {
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch (e) {
+    console.error("Failed to decode JWT payload:", e);
+    return null;
+  }
+}
+
+export function getIsAdminFromJwt(token: string): boolean {
+  try {
+    const payload = decodeJwtPayload(token);
+    if (!payload) return false;
+    
+    // Check if the role array contains "Admin"
+    if (Array.isArray(payload.role)) {
+      return payload.role.includes("Admin");
+    }
+    
+    // Fallback: check if role is a single string
+    if (typeof payload.role === "string") {
+      return payload.role === "Admin";
+    }
+    
+    return false;
+  } catch (e) {
+    console.error("Failed to get admin status from JWT:", e);
+    return false;
+  }
+}

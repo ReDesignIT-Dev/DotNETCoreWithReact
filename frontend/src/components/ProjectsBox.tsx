@@ -38,7 +38,7 @@ const ProjectsBox: React.FC = () => {
   }
   const formatUrl = (url: string): string => {
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      var formattedUrl = url.startsWith("www.") ? url.substring(4, url.length) : url;
+      const formattedUrl = url.startsWith("www.") ? url.substring(4, url.length) : url;
       return `https://${formattedUrl}`;
     }
     return url;

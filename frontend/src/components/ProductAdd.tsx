@@ -18,7 +18,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { addProduct } from "services/shopServices/apiRequestsShop";
-import { selectFlatCategories } from "reduxComponents/reduxShop/Categories/selectors";
+import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selectors";
 
 export const ProductAdd = () => {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export const ProductAdd = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // Use the selector to get flat categories from the Redux store
-  const categories = useSelector(selectFlatCategories);
+  const categories = useSelector(selectTreeCategories);
 
   const {
     control,

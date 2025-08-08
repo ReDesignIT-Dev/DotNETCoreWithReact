@@ -28,7 +28,7 @@ const LoginFormComponent: React.FC = () => {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (isValid) {
-      dispatch(loginUser({ username: email, password, recaptcha: reCaptchaToken }));
+      dispatch(loginUser({ username: email, password, recaptchaToken: reCaptchaToken }));
     }
   };
 
