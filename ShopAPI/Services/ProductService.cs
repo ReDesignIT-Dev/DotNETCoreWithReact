@@ -201,7 +201,7 @@ public class ProductService : IProductService
 
 
 
-    public async Task<bool> UpdateProductAsync(int id, WriteProductDto dto, int? userId)
+    public async Task<bool> UpdateProductAsync(int id, UpdateProductDto dto, int? userId)
     {
         var product = await _context.Products
             .Include(p => p.Images)
@@ -210,23 +210,32 @@ public class ProductService : IProductService
         if (product == null)
             return false;
 
-        var category = await _context.Categories.FindAsync(dto.CategoryId);
-        if (category == null)
-            return false;
-
-        product.Name = dto.Name;
-        product.Description = dto.Description;
-        product.Price = dto.Price;
-        product.CategoryId = dto.CategoryId;
-        product.Category = category;
-
-        var newSlug = SlugHelper.GenerateSlug(dto.Name, id);
-        if (product.Slug != newSlug)
+        // Update only provided fields
+        if (!string.IsNullOrEmpty(dto.Name))
         {
-            product.Slug = newSlug;
+            product.Name = dto.Name;
+            // Regenerate slug if name changed
+            product.Slug = SlugHelper.GenerateSlug(dto.Name, id);
         }
 
-        if (dto.Images != null)
+        if (!string.IsNullOrEmpty(dto.Description))
+            product.Description = dto.Description;
+
+        if (dto.Price.HasValue)
+            product.Price = dto.Price.Value;
+
+        if (dto.CategoryId.HasValue)
+        {
+            var category = await _context.Categories.FindAsync(dto.CategoryId.Value);
+            if (category == null)
+                return false;
+            
+            product.CategoryId = dto.CategoryId.Value;
+            product.Category = category;
+        }
+
+        // Handle images - only if provided
+        if (dto.Images != null && dto.Images.Any())
         {
             var imageResults = new List<ImageSaveResult>();
             foreach (var file in dto.Images)
@@ -234,16 +243,34 @@ public class ProductService : IProductService
                 var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
                 imageResults.Add(result);
             }
-            product.Images.Clear();
-            foreach (var res in imageResults)
+
+            if (dto.ReplaceAllImages == true)
             {
-                product.Images.Add(new ProductImage
+                // Replace all images
+                product.Images.Clear();
+                foreach (var res in imageResults)
                 {
-                    Url = res.Url,
-                    ThumbnailUrl = res.ThumbnailUrl
-                });
+                    product.Images.Add(new ProductImage
+                    {
+                        Url = res.Url,
+                        ThumbnailUrl = res.ThumbnailUrl
+                    });
+                }
+            }
+            else
+            {
+                // Add new images to existing ones
+                foreach (var res in imageResults)
+                {
+                    product.Images.Add(new ProductImage
+                    {
+                        Url = res.Url,
+                        ThumbnailUrl = res.ThumbnailUrl
+                    });
+                }
             }
         }
+
         await _context.SaveChangesAsync();
         return true;
     }

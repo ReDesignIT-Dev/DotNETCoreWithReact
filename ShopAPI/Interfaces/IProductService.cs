@@ -10,6 +10,6 @@ public interface IProductService
     Task<ReadProductDto?> GetProductByIdAsync(int id);
     Task<int> GetProductsCountAsync(int? categoryId, string? search);
     Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, int? userId);
-    Task<bool> UpdateProductAsync(int id, WriteProductDto dto, int? userId);
+    Task<bool> UpdateProductAsync(int id, UpdateProductDto dto, int? userId);
     Task<bool> DeleteProductAsync(int id);
 }

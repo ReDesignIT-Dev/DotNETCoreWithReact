@@ -63,7 +63,7 @@ public class ProductsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> EditProduct(
     int id,
-    [FromForm] WriteProductDto dto)
+    [FromForm] UpdateProductDto dto)
     {
         var success = await _productService.UpdateProductAsync(id, dto, GetUserId());
         if (!success)
