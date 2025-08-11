@@ -20,7 +20,6 @@ const CategoryDropdown: React.FC = () => {
   const categories = useSelector(selectTreeCategories);
   const isLoading = useSelector(selectCategoriesIsLoading);
   const error = useSelector(selectCategoriesError);
-
   const navigate = useNavigate();
 
   const handleItemClick = (slug: string, event: MouseEvent<HTMLLIElement>) => {
@@ -53,6 +52,7 @@ const CategoryDropdown: React.FC = () => {
     return (
       <>
         {categories.map((category) => (
+          
           <MDBDropdownItem
             key={category.slug}
             className="dropdown-item"
