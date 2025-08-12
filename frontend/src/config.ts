@@ -53,10 +53,9 @@ export const API_PASSWORD_RESET_URL = `${BACKEND_USER_URL}/password-reset`;
 // API shop based
 export const API_PRODUCTS_QUERY_URL = `${BACKEND_SHOP_URL}/products`;
 export const API_PRODUCT_URL = `${BACKEND_SHOP_URL}/products/`;
-export const API_PRODUCT_ADD_URL = `${API_PRODUCT_URL}/create`;
-export const API_CATEGORY_URL = `${BACKEND_SHOP_URL}/categories`;
-export const API_CATEGORY_PATH_URL = `${BACKEND_SHOP_URL}/path/`;
-export const API_ALL_CATEGORIES_FLAT = `${API_CATEGORY_URL}`;
+export const API_CATEGORY_URL = `${BACKEND_SHOP_URL}/categories/`;
+export const API_CATEGORY_PATH_URL = `${API_CATEGORY_URL}path/`;
+export const API_ALL_CATEGORIES_TREE = `${API_CATEGORY_URL}tree`;
 export const API_SEARCH_URL = `${BACKEND_SHOP_URL}/products?string=`;
 export const API_SEARCH_ASSOCIATED_CATEGORIES_URL = `${BACKEND_SHOP_URL}/search-associated-categories?string=`;
 export const API_CART_URL = `${BACKEND_SHOP_URL}/cart`;
