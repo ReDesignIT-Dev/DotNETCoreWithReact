@@ -65,27 +65,22 @@ const CategoryBreadcrumb: React.FC<CategoryBreadcrumbProps> = ({ categoryId, inc
     );
   }
 
-  return (
-    <nav aria-label="breadcrumb">
-      <ol className="breadcrumb">
-        {breadcrumb.map((pathItem, index) => {
-          const isLast = index === breadcrumb.length - 1;
+return (
+  <nav aria-label="breadcrumb">
+    <ol className="breadcrumb">
+      {breadcrumb.map((pathItem, index) => {
+        const isLast = index === breadcrumb.length - 1;
 
-          return (
-            <li key={pathItem.id} className={`breadcrumb-item ${isLast ? "active" : ""}`} {...(isLast && { "aria-current": "page" })}>
-              {isLast ? (
-                <span>{pathItem.shortName}</span>
-              ) : (
-                <span role="button" className="text-primary cursor-pointer" onClick={(event) => handleNavigationClick(pathItem.slug, event)}>
-                  {pathItem.shortName}
-                </span>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-};
-
+        return (
+          <li key={pathItem.id} className={`breadcrumb-item ${isLast ? "active" : ""}`} {...(isLast && { "aria-current": "page" })}>
+            <span role="button" className="text-primary cursor-pointer" onClick={(event) => handleNavigationClick(pathItem.slug, event)}>
+              {pathItem.shortName}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  </nav>
+);
+}
 export default CategoryBreadcrumb;
