@@ -23,7 +23,7 @@ import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selec
 export const ProductAdd = () => {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
-  const [productSummary, setProductSummary] = useState<ProductFormData | null>(null);
+  const [productSummary, setProductSummary] = useState<CreateProductRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -35,18 +35,17 @@ export const ProductAdd = () => {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<ProductFormData>({
+  } = useForm<CreateProductRequest>({
     defaultValues: {
       categoryId: 1,
       price: 1,
       name: "",
       description: "",
-      isOnSale: false,
       images: [],
     },
   });
 
-  const onSubmit = async (data: ProductFormData) => {
+  const onSubmit = async (data: CreateProductRequest) => {
     setLoading(true);
 
     const formData = new FormData();
@@ -54,7 +53,6 @@ export const ProductAdd = () => {
     formData.append("category", String(data.categoryId));
     formData.append("description", data.description || "");
     formData.append("price", String(data.price));
-    formData.append("isOnSale", String(data.isOnSale ?? false));
 
     if (data.images && data.images.length > 0) {
       data.images.forEach((file) => {
@@ -82,7 +80,6 @@ export const ProductAdd = () => {
       categoryId: 1,
       description: "",
       price: 1,
-      isOnSale: false,
       images: [],
     });
     setSubmitted(false);
@@ -130,9 +127,6 @@ export const ProductAdd = () => {
                   <strong>Price:</strong> ${productSummary.price}
                 </Typography>
                 <Typography>
-                  <strong>On Sale:</strong> {productSummary.isOnSale ? "Yes" : "No"}
-                </Typography>
-                <Typography>
                   <strong>Images:</strong> {productSummary.images?.length ?? 0} file(s)
                 </Typography>
               </CardContent>
@@ -166,7 +160,6 @@ export const ProductAdd = () => {
                 fullWidth
                 margin="normal"
                 error={!!errors.name}
-                helperText={errors.name?.message}
               />
             )}
           />
@@ -221,7 +214,6 @@ export const ProductAdd = () => {
                 fullWidth
                 margin="normal"
                 error={!!errors.price}
-                helperText={errors.price?.message}
                 onChange={(e) => field.onChange(Number(e.target.value))}
               />
             )}

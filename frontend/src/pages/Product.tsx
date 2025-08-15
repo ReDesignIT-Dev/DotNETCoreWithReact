@@ -36,23 +36,11 @@ export default function Product() {
     categoryId: 0,
     description: "",
     price: 0,
-    saleStart: null,
-    saleEnd: null,
-    isOnSale: false,
     images: [{ id: 0, url: shopDefaultImage, thumbnailUrl: shopDefaultImage, altText: "", position: 0 }],
     slug: "",
   });
 
-  const [category, setCategory] = useState<CategoryTree | null>(null);
-  const categories = useSelector(selectTreeCategories);
   const [notFound, setNotFound] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (product.categoryId) {
-      const foundCategory = categories.find((cat) => cat.id === product.categoryId);
-      setCategory(foundCategory || null);
-    }
-  }, [product, categories]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -76,13 +64,8 @@ export default function Product() {
             setSelectedImage(selectedImage);
             setProduct({
               ...productData,
-              categoryId: productData.category,
               images: images.length > 0 ? images : [{ url: shopDefaultImage }],
             });
-            if (productData.category) {
-              const foundCategory = categories.find((cat) => cat.id === product.categoryId);
-              setCategory(foundCategory || null);
-            }
           }
         }
       } catch (error) {
@@ -167,7 +150,7 @@ export default function Product() {
           {confirmationMessage}
         </Box>
       )}
-      {category ? <CategoryBreadcrumb categoryId={category.id} includeSelf={true} /> : "Category missing"}
+      {product.categoryId ? <CategoryBreadcrumb categoryId={product.categoryId} includeSelf={true} /> : "Category missing"}
 
       {/* Main product info */}
       <Grid2 container direction="column" sx={{ width: "100%" }}>
