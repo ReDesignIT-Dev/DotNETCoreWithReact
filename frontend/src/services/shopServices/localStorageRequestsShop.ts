@@ -24,7 +24,7 @@ export const saveState = (state: CartItem[]) => {
   }
 };
 
-export const addItemToCart = (product: Product, quantity: number = 1) => {
+export const addItemToCart = (product: Product, quantity = 1) => {
   const cart = loadState() || [];
   const existingItemIndex = cart.findIndex(item => item.product.slug === product.slug);
 

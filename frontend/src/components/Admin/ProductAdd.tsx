@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   TextField,
@@ -14,11 +14,32 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  Box,
+  IconButton,
+  Grid,
+  Paper,
 } from "@mui/material";
+import { Delete as DeleteIcon, CloudUpload as CloudUploadIcon, DragIndicator as DragIndicatorIcon } from "@mui/icons-material";
+import { useDropzone } from "react-dropzone";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { addProduct } from "services/shopServices/apiRequestsShop";
 import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selectors";
+
+interface ImageFile extends File {
+  preview: string;
+  id: string;
+  position: number;
+}
+
+interface CreateProductRequest {
+  name: string;
+  categoryId: number;
+  description: string;
+  price: number;
+  images: File[];
+}
 
 export const ProductAdd = () => {
   const navigate = useNavigate();
@@ -26,6 +47,7 @@ export const ProductAdd = () => {
   const [productSummary, setProductSummary] = useState<CreateProductRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
 
   // Use the selector to get flat categories from the Redux store
   const categories = useSelector(selectTreeCategories);
@@ -34,6 +56,7 @@ export const ProductAdd = () => {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CreateProductRequest>({
     defaultValues: {
@@ -45,6 +68,81 @@ export const ProductAdd = () => {
     },
   });
 
+  // Dropzone configuration
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const newImageFiles = acceptedFiles.map((file, index) => {
+      const imageFile = Object.assign(file, {
+        preview: URL.createObjectURL(file),
+        id: `${Date.now()}-${index}`,
+        position: imageFiles.length + index + 1,
+      }) as ImageFile;
+      return imageFile;
+    });
+
+    setImageFiles(prev => {
+      const updated = [...prev, ...newImageFiles];
+      // Update form value
+      setValue("images", updated.map(img => img as File));
+      return updated;
+    });
+  }, [imageFiles.length, setValue]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+    },
+    multiple: true,
+    maxSize: 5 * 1024 * 1024, // 5MB max file size
+  });
+
+  // Handle drag-and-drop reordering
+  const handleOnDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(imageFiles);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update positions
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      position: index + 1
+    }));
+
+    setImageFiles(updatedItems);
+    setValue("images", updatedItems.map(img => img as File));
+  };
+
+  // Remove image
+  const removeImage = (imageId: string) => {
+    setImageFiles(prev => {
+      const filtered = prev.filter(img => img.id !== imageId);
+      // Recalculate positions
+      const updated = filtered.map((img, index) => ({
+        ...img,
+        position: index + 1
+      }));
+      
+      // Clean up URL to prevent memory leaks
+      const imageToRemove = prev.find(img => img.id === imageId);
+      if (imageToRemove) {
+        URL.revokeObjectURL(imageToRemove.preview);
+      }
+      
+      // Update form value
+      setValue("images", updated.map(img => img as File));
+      return updated;
+    });
+  };
+
+  // Clean up URLs on component unmount
+  useEffect(() => {
+    return () => {
+      imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
+    };
+  }, []);
+
   const onSubmit = async (data: CreateProductRequest) => {
     setLoading(true);
 
@@ -54,18 +152,22 @@ export const ProductAdd = () => {
     formData.append("description", data.description || "");
     formData.append("price", String(data.price));
 
-    if (data.images && data.images.length > 0) {
-      data.images.forEach((file) => {
-        formData.append("uploaded_images", file);
-      });
-    }
+    // Add images in order
+    const sortedImages = imageFiles.sort((a, b) => a.position - b.position);
+    sortedImages.forEach((file) => {
+      formData.append("uploaded_images", file as File);
+    });
 
     try {
       const response = await addProduct(formData);  
       if (response && response.status === 201) {
         setSubmitted(true);
         setSnackbarOpen(true);
-        setProductSummary(data); // Save for summary display
+        setProductSummary(data);
+        
+        // Clean up image previews
+        imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
+        setImageFiles([]);
       }
     } catch (error) {
       console.error("Error adding product:", error);
@@ -75,6 +177,10 @@ export const ProductAdd = () => {
   };
 
   const handleAddAnother = () => {
+    // Clean up existing previews
+    imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
+    setImageFiles([]);
+    
     reset({
       name: "",
       categoryId: 1,
@@ -87,11 +193,13 @@ export const ProductAdd = () => {
   };
 
   const handleGoHome = () => {
+    // Clean up previews before navigating
+    imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
     navigate("/");
   };
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="md">
       <Typography variant="h4" gutterBottom>
         Add Product
       </Typography>
@@ -160,9 +268,11 @@ export const ProductAdd = () => {
                 fullWidth
                 margin="normal"
                 error={!!errors.name}
+                helperText={errors.name?.message}
               />
             )}
           />
+
           <Controller
             name="categoryId"
             control={control}
@@ -186,6 +296,7 @@ export const ProductAdd = () => {
               </FormControl>
             )}
           />
+
           <Controller
             name="description"
             control={control}
@@ -201,11 +312,12 @@ export const ProductAdd = () => {
               />
             )}
           />
+
           <Controller
             name="price"
             control={control}
             defaultValue={1}
-            rules={{ required: "Price is required" }}
+            rules={{ required: "Price is required", min: { value: 0.01, message: "Price must be greater than 0" } }}
             render={({ field }) => (
               <TextField
                 {...field}
@@ -214,28 +326,208 @@ export const ProductAdd = () => {
                 fullWidth
                 margin="normal"
                 error={!!errors.price}
+                helperText={errors.price?.message}
                 onChange={(e) => field.onChange(Number(e.target.value))}
+                inputProps={{ step: "0.01", min: "0.01" }}
               />
             )}
           />
-          <Controller
-            name="images"
-            control={control}
-            defaultValue={[]}
-            render={({ field }) => (
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(e) => {
-                  const files = e.target.files;
-                  if (files) {
-                    field.onChange(Array.from(files));
-                  }
-                }}
-              />
-            )}
-          />
+
+          {/* Image Upload Section */}
+          <Box sx={{ mt: 3, mb: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Product Images
+            </Typography>
+            
+            {/* Dropzone */}
+            <Paper
+              {...getRootProps()}
+              sx={{
+                p: 3,
+                border: '2px dashed',
+                borderColor: isDragActive ? 'primary.main' : 'grey.300',
+                borderRadius: 2,
+                textAlign: 'center',
+                cursor: 'pointer',
+                bgcolor: isDragActive ? 'action.hover' : 'background.paper',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  bgcolor: 'action.hover',
+                }
+              }}
+            >
+              <input {...getInputProps()} />
+              <CloudUploadIcon sx={{ fontSize: 48, color: 'grey.400', mb: 1 }} />
+              {isDragActive ? (
+                <Typography>Drop images here...</Typography>
+              ) : (
+                <Box>
+                  <Typography variant="body1" gutterBottom>
+                    Drag & drop images here, or click to select
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Accepted formats: JPEG, PNG, GIF, WebP (Max 5MB each)
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
+
+            {/* Always render DragDropContext - Move it outside the conditional */}
+            <DragDropContext onDragEnd={handleOnDragEnd}>
+              <Box sx={{ mt: 2 }}>
+                {imageFiles.length > 0 ? (
+                  <>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Selected Images ({imageFiles.length}) - Drag to reorder:
+                    </Typography>
+                    
+                    <Droppable droppableId="images" direction="horizontal">
+                      {(provided) => (
+                        <Grid 
+                          container 
+                          spacing={2}
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                        >
+                          {imageFiles.map((file, index) => (
+                            <Draggable key={file.id} draggableId={file.id} index={index}>
+                              {(provided, snapshot) => (
+                                <Grid 
+                                  item 
+                                  xs={6} 
+                                  sm={4} 
+                                  md={3}
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                >
+                                  <Card 
+                                    sx={{ 
+                                      position: 'relative',
+                                      transform: snapshot.isDragging ? 'rotate(5deg)' : 'none',
+                                      boxShadow: snapshot.isDragging ? 4 : 1,
+                                      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        position: 'relative',
+                                        paddingTop: '100%', // 1:1 aspect ratio
+                                        overflow: 'hidden',
+                                      }}
+                                    >
+                                      <Box
+                                        component="img"
+                                        src={file.preview}
+                                        alt={`Preview ${index + 1}`}
+                                        sx={{
+                                          position: 'absolute',
+                                          top: 0,
+                                          left: 0,
+                                          width: '100%',
+                                          height: '100%',
+                                          objectFit: 'cover',
+                                        }}
+                                      />
+                                    
+                                      {/* Position indicator */}
+                                      <Box
+                                        sx={{
+                                          position: 'absolute',
+                                          top: 4,
+                                          left: 4,
+                                          bgcolor: 'primary.main',
+                                          color: 'white',
+                                          borderRadius: '50%',
+                                          width: 24,
+                                          height: 24,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          fontSize: '0.75rem',
+                                          fontWeight: 'bold',
+                                        }}
+                                      >
+                                        {index + 1}
+                                      </Box>
+
+                                      {/* Drag handle */}
+                                      <Box
+                                        {...provided.dragHandleProps}
+                                        sx={{
+                                          position: 'absolute',
+                                          top: 4,
+                                          left: '50%',
+                                          transform: 'translateX(-50%)',
+                                          bgcolor: 'rgba(0,0,0,0.7)',
+                                          color: 'white',
+                                          borderRadius: 1,
+                                          p: 0.5,
+                                          cursor: 'grab',
+                                          '&:active': {
+                                            cursor: 'grabbing'
+                                          }
+                                        }}
+                                      >
+                                        <DragIndicatorIcon sx={{ fontSize: 16 }} />
+                                      </Box>
+
+                                      {/* Remove button */}
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => removeImage(file.id)}
+                                        sx={{
+                                          position: 'absolute',
+                                          top: 4,
+                                          right: 4,
+                                          bgcolor: 'error.main',
+                                          color: 'white',
+                                          '&:hover': {
+                                            bgcolor: 'error.dark',
+                                          },
+                                          width: 24,
+                                          height: 24,
+                                        }}
+                                      >
+                                        <DeleteIcon sx={{ fontSize: 16 }} />
+                                      </IconButton>
+                                    </Box>
+                                    
+                                    <CardContent sx={{ py: 1 }}>
+                                      <Typography variant="caption" noWrap>
+                                        {file.name}
+                                      </Typography>
+                                      <Typography variant="caption" display="block" color="textSecondary">
+                                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                                      </Typography>
+                                    </CardContent>
+                                  </Card>
+                                </Grid>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </Grid>
+                      )}
+                    </Droppable>
+                  </>
+                ) : (
+                  // Always render a droppable, even when empty
+                  <Droppable droppableId="images" direction="horizontal">
+                    {(provided) => (
+                      <Box 
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        sx={{ display: 'none' }} // Hide when no images
+                      >
+                        {provided.placeholder}
+                      </Box>
+                    )}
+                  </Droppable>
+                )}
+              </Box>
+            </DragDropContext>
+          </Box>
 
           <Button
             type="submit"
