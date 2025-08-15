@@ -198,9 +198,6 @@ public class ProductService : IProductService
         };
     }
 
-
-
-
     public async Task<bool> UpdateProductAsync(int id, UpdateProductDto dto, int? userId)
     {
         var product = await _context.Products
@@ -210,11 +207,10 @@ public class ProductService : IProductService
         if (product == null)
             return false;
 
-        // Update only provided fields
+        // Update basic fields
         if (!string.IsNullOrEmpty(dto.Name))
         {
             product.Name = dto.Name;
-            // Regenerate slug if name changed
             product.Slug = SlugHelper.GenerateSlug(dto.Name, id);
         }
 
@@ -234,40 +230,30 @@ public class ProductService : IProductService
             product.Category = category;
         }
 
-        // Handle images - only if provided
-        if (dto.Images != null && dto.Images.Any())
+        // Handle image deletions
+        if (dto.ImagesToDelete != null && dto.ImagesToDelete.Any())
         {
-            var imageResults = new List<ImageSaveResult>();
-            foreach (var file in dto.Images)
+            var imagesToRemove = product.Images
+                .Where(img => dto.ImagesToDelete.Contains(img.Id))
+                .ToList();
+
+            foreach (var imageToRemove in imagesToRemove)
+            {
+                product.Images.Remove(imageToRemove);
+            }
+        }
+
+        // Handle new images
+        if (dto.NewImages != null && dto.NewImages.Any())
+        {
+            foreach (var file in dto.NewImages)
             {
                 var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
-                imageResults.Add(result);
-            }
-
-            if (dto.ReplaceAllImages == true)
-            {
-                // Replace all images
-                product.Images.Clear();
-                foreach (var res in imageResults)
+                product.Images.Add(new ProductImage
                 {
-                    product.Images.Add(new ProductImage
-                    {
-                        Url = res.Url,
-                        ThumbnailUrl = res.ThumbnailUrl
-                    });
-                }
-            }
-            else
-            {
-                // Add new images to existing ones
-                foreach (var res in imageResults)
-                {
-                    product.Images.Add(new ProductImage
-                    {
-                        Url = res.Url,
-                        ThumbnailUrl = res.ThumbnailUrl
-                    });
-                }
+                    Url = result.Url,
+                    ThumbnailUrl = result.ThumbnailUrl
+                });
             }
         }
 
