@@ -80,12 +80,15 @@ public class ProductService : IProductService
                 Price = p.Price,
                 CategoryId = p.CategoryId,
                 Slug = p.Slug,
-                Images = p.Images.Select(img => new ProductImageDto
-                {
-                    Id = img.Id,
-                    Url = img.Url,
-                    ThumbnailUrl = img.ThumbnailUrl
-                }).ToList()
+                Images = p.Images
+                    .OrderBy(img => img.Position)
+                    .Select(img => new ProductImageDto
+                    {
+                        Id = img.Id,
+                        Url = img.Url,
+                        ThumbnailUrl = img.ThumbnailUrl,
+                        Position = img.Position
+                    }).ToList()
             })
             .ToListAsync();
     }
@@ -107,12 +110,15 @@ public class ProductService : IProductService
             Price = product.Price,
             CategoryId = product.CategoryId,
             Slug = product.Slug,
-            Images = product.Images.Select(img => new ProductImageDto
-            {
-                Id = img.Id,
-                Url = img.Url,
-                ThumbnailUrl = img.ThumbnailUrl
-            }).ToList()
+            Images = product.Images
+                .OrderBy(img => img.Position)
+                .Select(img => new ProductImageDto
+                {
+                    Id = img.Id,
+                    Url = img.Url,
+                    ThumbnailUrl = img.ThumbnailUrl,
+                    Position = img.Position
+                }).ToList()
         };
     }
 
@@ -158,10 +164,11 @@ public class ProductService : IProductService
             }
         }
 
-        var images = imageResults.Select(res => new ProductImage
+        var images = imageResults.Select((res, index) => new ProductImage
         {
             Url = res.Url,
-            ThumbnailUrl = res.ThumbnailUrl
+            ThumbnailUrl = res.ThumbnailUrl,
+            Position = index + 1 // Start positions from 1
         }).ToList();
 
         var product = new Product
@@ -189,12 +196,15 @@ public class ProductService : IProductService
             Price = product.Price,
             CategoryId = product.CategoryId,
             Slug = product.Slug,
-            Images = product.Images.Select(img => new ProductImageDto
-            {
-                Id = img.Id,
-                Url = img.Url,
-                ThumbnailUrl = img.ThumbnailUrl
-            }).ToList()
+            Images = product.Images
+                .OrderBy(img => img.Position)
+                .Select(img => new ProductImageDto
+                {
+                    Id = img.Id,
+                    Url = img.Url,
+                    ThumbnailUrl = img.ThumbnailUrl,
+                    Position = img.Position
+                }).ToList()
         };
     }
 
@@ -246,13 +256,17 @@ public class ProductService : IProductService
         // Handle new images
         if (dto.NewImages != null && dto.NewImages.Any())
         {
+            // Get the highest existing position
+            var maxPosition = product.Images.Any() ? product.Images.Max(img => img.Position) : 0;
+
             foreach (var file in dto.NewImages)
             {
                 var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
                 product.Images.Add(new ProductImage
                 {
                     Url = result.Url,
-                    ThumbnailUrl = result.ThumbnailUrl
+                    ThumbnailUrl = result.ThumbnailUrl,
+                    Position = ++maxPosition // Increment position for each new image
                 });
             }
         }
