@@ -61,7 +61,6 @@ export const isTokenValid = (): boolean => {
   const tokenExpiry = Cookies.get("tokenExpiry");
 
   if (!token) {
-    console.warn("Token is missing.");
     return false;
   }
 
