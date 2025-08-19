@@ -51,14 +51,7 @@ interface CreateProductRequest {  // corresponds to WriteProductDto
     description: string;
     price: number;
     categoryId: number;
-    images?: File[];
-}
-
-interface CreateCategoryRequest {
-    name: string;
-    shortName: string;
-    parentId?: number | null;
-    image?: File | null;
+    images: File[]; // Remove the optional ? since it's required in form
 }
 
 interface UpdateProductRequest {
@@ -68,6 +61,21 @@ interface UpdateProductRequest {
     categoryId?: number;
     imagesToDelete?: number[];
     newImages?: File[];
+}
+
+interface CreateCategoryRequest {
+    name: string;
+    shortName: string;
+    parentId?: number | null;
+    image?: File | null;
+}
+
+interface UpdateCategoryRequest {
+    name?: string;
+    shortName?: string;
+    parentId?: number | null;
+    newImage?: File | null;
+    removeCurrentImage?: boolean;
 }
 
 // ============= SPECIALIZED FRONTEND TYPES =============
