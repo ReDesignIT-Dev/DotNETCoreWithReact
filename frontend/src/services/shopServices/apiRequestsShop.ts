@@ -12,6 +12,106 @@ import {
 import { AxiosResponse } from "axios";
 import { getValidatedToken } from "utils/cookies";
 
+// No local interfaces - all are in shopTypes.d.ts
+
+export async function addProduct(productData: CreateProductRequest): Promise<AxiosResponse | undefined> {
+    try {
+        const token = getValidatedToken();
+        
+        // Create FormData from the typed object
+        const formData = new FormData();
+        formData.append('name', productData.name);
+        formData.append('categoryId', String(productData.categoryId));
+        formData.append('description', productData.description || '');
+        formData.append('price', String(productData.price));
+        
+        // Append images
+        productData.images.forEach((image) => {
+            formData.append('images', image);
+        });
+        
+        const response = await apiClient.post(`${API_PRODUCT_URL}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response;
+    } catch (error) {
+        apiErrorHandler(error);
+    }
+}
+
+export async function addCategory(data: CreateCategoryRequest): Promise<AxiosResponse | undefined> {
+    try {
+        const token = getValidatedToken();
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('shortName', data.shortName);
+
+        if (data.parentId !== null && data.parentId !== undefined) {
+            formData.append('parentId', data.parentId.toString());
+        }
+
+        if (data.image) {
+            formData.append('image', data.image);
+        }
+        
+        const response = await apiClient.post(`${API_CATEGORY_URL}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response;
+    } catch (error) {
+        apiErrorHandler(error);
+    }
+}
+
+export const updateProduct = async (productId: number, productData: UpdateProductRequest): Promise<AxiosResponse | undefined> => {
+    try {
+        const token = getValidatedToken();
+        
+        const formData = new FormData();
+        
+        // Only append fields that are being updated
+        if (productData.name !== undefined) {
+            formData.append('name', productData.name);
+        }
+        if (productData.categoryId !== undefined) {
+            formData.append('categoryId', String(productData.categoryId));
+        }
+        if (productData.description !== undefined) {
+            formData.append('description', productData.description);
+        }
+        if (productData.price !== undefined) {
+            formData.append('price', String(productData.price));
+        }
+        if (productData.imagesToDelete && productData.imagesToDelete.length > 0) {
+            productData.imagesToDelete.forEach(id => {
+                formData.append('imagesToDelete', String(id));
+            });
+        }
+        if (productData.newImages && productData.newImages.length > 0) {
+            productData.newImages.forEach(image => {
+                formData.append('newImages', image);
+            });
+        }
+        
+        const response = await apiClient.put(`${API_PRODUCT_URL}${productId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response;
+    } catch (error) {
+        apiErrorHandler(error);
+    }
+};
+
+
 export async function getAllProducts(): Promise<AxiosResponse | undefined> {
     try {
         const url = `${API_PRODUCTS_QUERY_URL}`;
@@ -98,63 +198,6 @@ export async function getAllSearchAssociatedCategories(
 }
 
 
-
-export async function addProduct(formData: FormData): Promise<AxiosResponse | undefined> {
-    try {
-        const token = getValidatedToken();
-        const response = await apiClient.post(`${API_PRODUCT_URL}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response;
-    } catch (error) {
-        apiErrorHandler(error);
-    }
-}
-
-export async function addCategory(data: CreateCategoryData): Promise<AxiosResponse | undefined> {
-    try {
-        const token = getValidatedToken();
-        const formData = new FormData();
-        formData.append('name', data.name);
-        formData.append('shortName', data.shortName);
-
-        if (data.parentId !== null && data.parentId !== undefined) {
-            formData.append('parentId', data.parentId.toString());
-        }
-
-        if (data.image) {
-            formData.append('image', data.image);
-        }
-        const response = await apiClient.post(`${API_CATEGORY_URL}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response;
-    } catch (error) {
-        apiErrorHandler(error);
-    }
-}
-
-export const updateProduct = async (productId: number, formData: FormData): Promise<AxiosResponse | undefined> => {
-    try {
-        const token = getValidatedToken();
-        const response = await apiClient.put(`${API_PRODUCT_URL}${productId}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${token}`
-            }
-        });
-        return response;
-    } catch (error) {
-        apiErrorHandler(error);
-    }
-};
-
 export const deleteProduct = async (productId: number): Promise<AxiosResponse | undefined> => {
     try {
         const token = getValidatedToken();
@@ -182,7 +225,6 @@ export const deleteCategory = async (categoryId: number): Promise<AxiosResponse 
         apiErrorHandler(error);
     }
 }
-
 export const updateCategory = async (categoryId: number, formData: FormData): Promise<AxiosResponse | undefined> => {
     try {
         const token = getValidatedToken();
