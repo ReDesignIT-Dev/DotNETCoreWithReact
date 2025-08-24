@@ -1,12 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, TextField, Typography, Alert, CircularProgress, Card, CardMedia, IconButton, Chip } from '@mui/material';
-import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Box, Button, Typography, Alert, CircularProgress } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { getProduct, updateProduct } from 'services/shopServices/apiRequestsShop';
+import { selectFlatCategories } from 'reduxComponents/reduxShop/Categories/selectors';
+import { 
+  NameField, 
+  PriceField, 
+  DescriptionField, 
+  CategorySelector, 
+  ImageUploadDropzone,
+  ImageGallery 
+} from 'components/Admin/FormFields';
 
 interface ProductUpdateProps {
   productId: number;
   onSuccess?: () => void;
   onCancel?: () => void;
+}
+
+interface ImageFile extends File {
+  preview: string;
+  id: string;
+  position: number;
 }
 
 export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSuccess, onCancel }) => {
@@ -15,27 +31,30 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<{ name?: string; price?: string; description?: string }>({});
+  
+  const categories = useSelector(selectFlatCategories);
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UpdateProductRequest>({
     name: '',
     description: '',
     price: 0,
     categoryId: 1,
-    imagesToDelete: [] as number[],
-    newImages: [] as File[]
+    imagesToDelete: [],
+    newImages: []
   });
 
-  const [originalData, setOriginalData] = useState({
+  const [originalData, setOriginalData] = useState<UpdateProductRequest>({
     name: '',
     description: '',
     price: 0,
     categoryId: 1,
-    imagesToDelete: [] as number[],
-    newImages: [] as File[]
+    imagesToDelete: [],
+    newImages: []
   });
 
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
+  const [newImageFiles, setNewImageFiles] = useState<ImageFile[]>([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -45,9 +64,9 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         const response = await getProduct(productId);
         
         if (response?.data) {
-          const productData = response.data;
+          const productData: Product = response.data;
           setProduct(productData);
-          const initialData = {
+          const initialData: UpdateProductRequest = {
             name: productData.name || '',
             description: productData.description || '',
             price: Number(productData.price) || 0,
@@ -74,14 +93,14 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
     }
   }, [productId]);
 
-  const handleChange = (field: string, value: string | number | number[] | File[]) => {
+  const handleFieldChange = (field: keyof UpdateProductRequest, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
 
     // Track if this field has been modified from original
-    const isModified = JSON.stringify(value) !== JSON.stringify(originalData[field as keyof typeof originalData]);
+    const isModified = JSON.stringify(value) !== JSON.stringify(originalData[field]);
     setModifiedFields(prev => {
       const newSet = new Set(prev);
       if (isModified) {
@@ -98,38 +117,64 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
     }
   };
 
-  const handleImageDelete = (imageId: number) => {
-    const newImagesToDelete = [...formData.imagesToDelete, imageId];
-    handleChange('imagesToDelete', newImagesToDelete);
+  const handleImageDelete = (imageId: string | number) => {
+    const numericId = typeof imageId === 'string' ? parseInt(imageId, 10) : imageId;
+    const newImagesToDelete = [...(formData.imagesToDelete || []), numericId];
+    handleFieldChange('imagesToDelete', newImagesToDelete);
   };
 
-  const handleImageRestore = (imageId: number) => {
-    const newImagesToDelete = formData.imagesToDelete.filter(id => id !== imageId);
-    handleChange('imagesToDelete', newImagesToDelete);
+  const handleImageRestore = (imageId: string | number) => {
+    const newImagesToDelete = (formData.imagesToDelete || []).filter(id => id !== Number(imageId));
+    handleFieldChange('imagesToDelete', newImagesToDelete);
   };
 
-  const handleNewImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    handleChange('newImages', [...formData.newImages, ...files]);
+  const onDrop = (acceptedFiles: File[]) => {
+    const newImageFiles = acceptedFiles.map((file, index) => {
+      const imageFile = Object.assign(file, {
+        preview: URL.createObjectURL(file),
+        id: `new-${Date.now()}-${index}`,
+        position: newImageFiles.length + index + 1,
+      }) as ImageFile;
+      return imageFile;
+    });
+
+    setNewImageFiles(prev => {
+      const updated = [...prev, ...newImageFiles];
+      handleFieldChange('newImages', updated.map(img => img as File));
+      return updated;
+    });
   };
 
-  const handleRemoveNewImage = (index: number) => {
-    const newImages = formData.newImages.filter((_, i) => i !== index);
-    handleChange('newImages', newImages);
+  const removeNewImage = (imageId: string | number) => {
+    setNewImageFiles(prev => {
+      const filtered = prev.filter(img => img.id !== imageId);
+      const updated = filtered.map((img, index) => ({
+        ...img,
+        position: index + 1
+      }));
+      
+      const imageToRemove = prev.find(img => img.id === imageId);
+      if (imageToRemove) {
+        URL.revokeObjectURL(imageToRemove.preview);
+      }
+      
+      handleFieldChange('newImages', updated.map(img => img as File));
+      return updated;
+    });
   };
 
   const validate = () => {
     const errors: { name?: string; price?: string; description?: string } = {};
     
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       errors.name = 'Name is required';
     }
     
-    if (!formData.description.trim()) {
+    if (!formData.description?.trim()) {
       errors.description = 'Description is required';
     }
     
-    if (isNaN(Number(formData.price)) || Number(formData.price) < 0) {
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) < 0) {
       errors.price = 'Price must be a valid positive number';
     }
     
@@ -151,39 +196,35 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
       setSaving(true);
       setError(null);
       
-      const updateData = new FormData();
+      // Build the update request with only modified fields
+      const updateData: UpdateProductRequest = {};
       
-      // Only append modified fields
       if (modifiedFields.has('name')) {
-        updateData.append('name', formData.name.trim());
+        updateData.name = formData.name?.trim();
       }
       if (modifiedFields.has('description')) {
-        updateData.append('description', formData.description.trim());
+        updateData.description = formData.description?.trim();
       }
       if (modifiedFields.has('price')) {
-        updateData.append('price', formData.price.toString());
+        updateData.price = formData.price;
       }
       if (modifiedFields.has('categoryId')) {
-        updateData.append('categoryId', formData.categoryId.toString());
+        updateData.categoryId = formData.categoryId;
       }
-      
-      // Handle image deletions
-      if (modifiedFields.has('imagesToDelete') && formData.imagesToDelete.length > 0) {
-        formData.imagesToDelete.forEach(imageId => {
-          updateData.append('imagesToDelete', imageId.toString());
-        });
+      if (modifiedFields.has('imagesToDelete') && formData.imagesToDelete && formData.imagesToDelete.length > 0) {
+        updateData.imagesToDelete = formData.imagesToDelete;
       }
-      
-      // Handle new images
-      if (modifiedFields.has('newImages') && formData.newImages.length > 0) {
-        formData.newImages.forEach(file => {
-          updateData.append('newImages', file);
-        });
+      if (modifiedFields.has('newImages') && formData.newImages && formData.newImages.length > 0) {
+        updateData.newImages = formData.newImages;
       }
       
       const response = await updateProduct(productId, updateData);
       
       if (response?.status === 204) {
+        // Clean up new image previews
+        newImageFiles.forEach(file => URL.revokeObjectURL(file.preview));
+        setNewImageFiles([]);
+        
         if (onSuccess) {
           onSuccess();
         }
@@ -197,6 +238,13 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
       setSaving(false);
     }
   };
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      newImageFiles.forEach(file => URL.revokeObjectURL(file.preview));
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -233,8 +281,24 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
     );
   }
 
-  // Filter current images to show only non-deleted ones
-  const currentImages = product.images?.filter(img => !formData.imagesToDelete.includes(img.id)) || [];
+  // Convert existing product images to gallery format
+  const existingImages = product.images?.map(image => ({
+    id: image.id,
+    url: image.url,
+    altText: image.altText || undefined,
+    position: image.position || undefined,
+    name: `Image ${image.id}`,
+    size: undefined
+  })) || [];
+
+  // Convert new images to gallery format
+  const newGalleryImages = newImageFiles.map(file => ({
+    id: file.id,
+    preview: file.preview,
+    name: file.name,
+    size: file.size,
+    position: file.position
+  }));
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 600 }}>
@@ -248,96 +312,49 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         </Alert>
       )}
 
-      <TextField
-        fullWidth
-        label="Product Name"
-        value={formData.name}
-        onChange={(e) => handleChange('name', e.target.value)}
-        margin="normal"
-        required
+      <NameField
+        value={formData.name || ''}
+        onChange={(value) => handleFieldChange('name', value)}
+        error={formErrors.name}
         disabled={saving}
-        error={!!formErrors.name}
-        helperText={formErrors.name}
       />
 
-      <TextField
-        fullWidth
-        label="Price"
-        type="number"
-        inputProps={{ step: "0.01", min: "0" }}
-        value={formData.price}
-        onChange={(e) => handleChange('price', parseFloat(e.target.value) || 0)}
-        margin="normal"
-        required
+      <CategorySelector
+        value={formData.categoryId || null}
+        onChange={(value) => handleFieldChange('categoryId', value)}
+        categories={categories}
         disabled={saving}
-        error={!!formErrors.price}
-        helperText={formErrors.price}
+        allowEmpty={false}
       />
 
-      <TextField
-        fullWidth
-        label="Description"
-        multiline
-        rows={4}
-        value={formData.description}
-        onChange={(e) => handleChange('description', e.target.value)}
-        margin="normal"
-        required
+      <PriceField
+        value={formData.price || 0}
+        onChange={(value) => handleFieldChange('price', value)}
+        error={formErrors.price}
         disabled={saving}
-        error={!!formErrors.description}
-        helperText={formErrors.description}
+      />
+
+      <DescriptionField
+        value={formData.description || ''}
+        onChange={(value) => handleFieldChange('description', value)}
+        error={formErrors.description}
+        disabled={saving}
       />
 
       {/* Current Images Section */}
-      {product.images && product.images.length > 0 && (
+      {existingImages.length > 0 && (
         <Box mt={3} mb={2}>
-          <Typography variant="h6" mb={2}>Current Images</Typography>
-          <Box display="flex" flexWrap="wrap" gap={2}>
-            {product.images.map((image) => (
-              <Card key={image.id} sx={{ width: 150, position: 'relative' }}>
-                <CardMedia
-                  component="img"
-                  height="120"
-                  image={image.url}
-                  alt={image.altText || 'Product image'}
-                  sx={{ 
-                    opacity: formData.imagesToDelete.includes(image.id) ? 0.5 : 1,
-                    filter: formData.imagesToDelete.includes(image.id) ? 'grayscale(100%)' : 'none'
-                  }}
-                />
-                {formData.imagesToDelete.includes(image.id) ? (
-                  <Box sx={{ position: 'absolute', top: 4, right: 4 }}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="success"
-                      onClick={() => handleImageRestore(image.id)}
-                      disabled={saving}
-                    >
-                      Restore
-                    </Button>
-                  </Box>
-                ) : (
-                  <IconButton
-                    sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)' }}
-                    onClick={() => handleImageDelete(image.id)}
-                    disabled={saving}
-                    size="small"
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                )}
-                {image.position && (
-                  <Chip
-                    label={`Pos: ${image.position}`}
-                    size="small"
-                    sx={{ position: 'absolute', bottom: 4, left: 4 }}
-                  />
-                )}
-              </Card>
-            ))}
-          </Box>
+          <ImageGallery
+            images={existingImages}
+            onRemove={handleImageDelete}
+            onRestore={handleImageRestore}
+            markedForDeletion={formData.imagesToDelete || []}
+            title="Current Images"
+            showDragHandle={false}
+            showPosition={true}
+            showFileInfo={false}
+            disabled={saving}
+          />
         </Box>
       )}
 
@@ -345,40 +362,23 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
       <Box mt={3} mb={2}>
         <Typography variant="h6" mb={2}>Add New Images</Typography>
         
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<AddIcon />}
+        <ImageUploadDropzone
+          onDrop={onDrop}
           disabled={saving}
-          sx={{ mb: 2 }}
-        >
-          Select Images
-          <input
-            type="file"
-            hidden
-            multiple
-            accept="image/*"
-            onChange={handleNewImagesChange}
-          />
-        </Button>
+          multiple={true}
+        />
 
-        {formData.newImages.length > 0 && (
-          <Box>
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              New images to be added:
-            </Typography>
-            <Box display="flex" flexWrap="wrap" gap={1}>
-              {formData.newImages.map((file, index) => (
-                <Chip
-                  key={index}
-                  label={file.name}
-                  onDelete={() => handleRemoveNewImage(index)}
-                  disabled={saving}
-                  variant="outlined"
-                  color="primary"
-                />
-              ))}
-            </Box>
+        {newGalleryImages.length > 0 && (
+          <Box sx={{ mt: 2 }}>
+            <ImageGallery
+              images={newGalleryImages}
+              onRemove={removeNewImage}
+              title="New Images to be Added"
+              showDragHandle={false}
+              showPosition={true}
+              showFileInfo={true}
+              disabled={saving}
+            />
           </Box>
         )}
       </Box>

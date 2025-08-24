@@ -11,11 +11,11 @@ import {
   CardContent,
   Box,
 } from "@mui/material";
-import { DragDropContext, DropResult } from "react-beautiful-dnd";
+import { DropResult } from "react-beautiful-dnd";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { addProduct } from "services/shopServices/apiRequestsShop";
-import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selectors";
+import { selectFlatCategories } from "reduxComponents/reduxShop/Categories/selectors";
 import { 
   NameField, 
   PriceField, 
@@ -31,14 +31,6 @@ interface ImageFile extends File {
   position: number;
 }
 
-interface CreateProductRequest {
-  name: string;
-  categoryId: number;
-  description: string;
-  price: number;
-  images: File[];
-}
-
 export const ProductAdd = () => {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
@@ -47,7 +39,10 @@ export const ProductAdd = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
 
-  const categories = useSelector(selectTreeCategories);
+  const categories = useSelector(selectFlatCategories);
+
+  // Get the first available category ID, or null if none available
+  const defaultCategoryId = categories.length > 0 ? categories[0].id : null;
 
   const {
     control,
@@ -57,7 +52,7 @@ export const ProductAdd = () => {
     formState: { errors },
   } = useForm<CreateProductRequest>({
     defaultValues: {
-      categoryId: 1,
+      categoryId: defaultCategoryId || 0, // Use 0 as fallback if no categories
       price: 1,
       name: "",
       description: "",
@@ -134,19 +129,18 @@ export const ProductAdd = () => {
   const onSubmit = async (data: CreateProductRequest) => {
     setLoading(true);
 
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("category", String(data.categoryId));
-    formData.append("description", data.description || "");
-    formData.append("price", String(data.price));
-
     const sortedImages = imageFiles.sort((a, b) => a.position - b.position);
-    sortedImages.forEach((file) => {
-      formData.append("uploaded_images", file as File);
-    });
+    
+    const productData: CreateProductRequest = {
+      name: data.name,
+      categoryId: data.categoryId,
+      description: data.description || "",
+      price: data.price,
+      images: sortedImages.map(file => file as File)
+    };
 
     try {
-      const response = await addProduct(formData);  
+      const response = await addProduct(productData);  
       if (response && response.status === 201) {
         setSubmitted(true);
         setSnackbarOpen(true);
@@ -168,7 +162,7 @@ export const ProductAdd = () => {
     
     reset({
       name: "",
-      categoryId: 1,
+      categoryId: defaultCategoryId || 0,
       description: "",
       price: 1,
       images: [],

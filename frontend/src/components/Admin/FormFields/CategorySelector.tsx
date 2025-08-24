@@ -19,7 +19,6 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   categories,
   disabled = false,
   label = "Category",
-  required = true,
   allowEmpty = true,
   emptyLabel = "None (Top Level Category)",
   excludeId

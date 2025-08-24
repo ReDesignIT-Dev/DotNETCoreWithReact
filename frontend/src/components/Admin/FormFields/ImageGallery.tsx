@@ -1,30 +1,49 @@
 import React from 'react';
 import { 
   Box, 
-  Grid, 
   Card, 
   CardContent, 
   CardMedia, 
   IconButton, 
   Typography, 
-  Chip 
+  Chip,
+  Grid2
 } from '@mui/material';
 import { Delete as DeleteIcon, DragIndicator as DragIndicatorIcon } from '@mui/icons-material';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import {
+  CSS,
+} from '@dnd-kit/utilities';
 
+// Define the ImageItem interface
 interface ImageItem {
   id: string | number;
   url?: string;
   preview?: string;
+  altText?: string;
+  position?: number;
   name?: string;
   size?: number;
-  position?: number;
-  altText?: string;
 }
 
+// Define the ImageGalleryProps interface
 interface ImageGalleryProps {
   images: ImageItem[];
-  onReorder?: (result: DropResult) => void;
+  onReorder?: (result: any) => void;
   onRemove: (id: string | number) => void;
   title?: string;
   showDragHandle?: boolean;
@@ -34,6 +53,177 @@ interface ImageGalleryProps {
   markedForDeletion?: (string | number)[];
   onRestore?: (id: string | number) => void;
 }
+
+// Add this interface for sortable items
+interface SortableImageItemProps {
+  image: ImageItem;
+  index: number;
+  onRemove: (id: string | number) => void;
+  showPosition: boolean;
+  showFileInfo: boolean;
+  disabled: boolean;
+  isMarkedForDeletion: boolean;
+  onRestore?: (id: string | number) => void;
+}
+
+const SortableImageItem: React.FC<SortableImageItemProps> = ({
+  image,
+  index,
+  onRemove,
+  showPosition,
+  showFileInfo,
+  disabled,
+  isMarkedForDeletion,
+  onRestore
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: image.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  const imageUrl = image.url || image.preview;
+
+  return (
+    <Grid2 size={{ xs: 6, sm: 4, md: 3 }} ref={setNodeRef} style={style}>
+      <Card 
+        sx={{ 
+          position: 'relative',
+          opacity: isMarkedForDeletion ? 0.5 : 1,
+          filter: isMarkedForDeletion ? 'grayscale(100%)' : 'none',
+          boxShadow: isDragging ? 4 : 1,
+          transition: 'box-shadow 0.2s ease'
+        }}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            paddingTop: '100%',
+            overflow: 'hidden',
+          }}
+        >
+          {imageUrl && (
+            <CardMedia
+              component="img"
+              image={imageUrl}
+              alt={image.altText || `Image ${index + 1}`}
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          )}
+
+          {/* Position indicator */}
+          {showPosition && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 4,
+                left: 4,
+                bgcolor: 'primary.main',
+                color: 'white',
+                borderRadius: '50%',
+                width: 24,
+                height: 24,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 'bold',
+              }}
+            >
+              {image.position || index + 1}
+            </Box>
+          )}
+
+          {/* Drag handle */}
+          <Box
+            {...attributes}
+            {...listeners}
+            sx={{
+              position: 'absolute',
+              top: 4,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              bgcolor: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              borderRadius: 1,
+              p: 0.5,
+              cursor: 'grab',
+              '&:active': {
+                cursor: 'grabbing'
+              }
+            }}
+          >
+            <DragIndicatorIcon sx={{ fontSize: 16 }} />
+          </Box>
+
+          {/* Remove/Restore button */}
+          {isMarkedForDeletion && onRestore ? (
+            <Box sx={{ position: 'absolute', top: 4, right: 4 }}>
+              <Chip
+                label="Restore"
+                size="small"
+                color="success"
+                onClick={() => onRestore(image.id)}
+                disabled={disabled}
+              />
+            </Box>
+          ) : (
+            <IconButton
+              size="small"
+              onClick={() => onRemove(image.id)}
+              disabled={disabled}
+              sx={{
+                position: 'absolute',
+                top: 4,
+                right: 4,
+                bgcolor: 'error.main',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'error.dark',
+                },
+                width: 24,
+                height: 24,
+              }}
+            >
+              <DeleteIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          )}
+        </Box>
+        
+        {showFileInfo && (image.name || image.size) && (
+          <CardContent sx={{ py: 1 }}>
+            {image.name && (
+              <Typography variant="caption" noWrap>
+                {image.name}
+              </Typography>
+            )}
+            {image.size && (
+              <Typography variant="caption" display="block" color="textSecondary">
+                {(image.size / 1024 / 1024).toFixed(2)} MB
+              </Typography>
+            )}
+          </CardContent>
+        )}
+      </Card>
+    </Grid2>
+  );
+};
 
 export const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
@@ -47,235 +237,114 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   markedForDeletion = [],
   onRestore
 }) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   if (images.length === 0) return null;
 
-  const content = (
-    <>
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = images.findIndex((image) => image.id === active.id);
+      const newIndex = images.findIndex((image) => image.id === over?.id);
+      
+      // Convert to the format expected by the parent component
+      const result = {
+        draggableId: String(active.id),
+        type: 'DEFAULT',
+        source: {
+          droppableId: 'images',
+          index: oldIndex,
+        },
+        destination: {
+          droppableId: 'images',
+          index: newIndex,
+        },
+        reason: 'DROP' as const,
+        mode: 'FLUID' as const,
+        combine: null,
+      };
+
+      onReorder?.(result);
+    }
+  };
+
+  // If drag and drop is enabled
+  if (onReorder && showDragHandle) {
+    return (
+      <Box>
+        {title && (
+          <Typography variant="subtitle2" gutterBottom>
+            {title} ({images.length}) - Drag to reorder:
+          </Typography>
+        )}
+        
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={images.map(img => img.id)} strategy={verticalListSortingStrategy}>
+            <Grid2 container spacing={2}>
+              {images.map((image, index) => {
+                const isMarkedForDeletion = markedForDeletion.includes(image.id);
+                
+                return (
+                  <SortableImageItem
+                    key={image.id}
+                    image={image}
+                    index={index}
+                    onRemove={onRemove}
+                    showPosition={showPosition}
+                    showFileInfo={showFileInfo}
+                    disabled={disabled}
+                    isMarkedForDeletion={isMarkedForDeletion}
+                    onRestore={onRestore}
+                  />
+                );
+              })}
+            </Grid2>
+          </SortableContext>
+        </DndContext>
+      </Box>
+    );
+  }
+
+  // Non-draggable version (same as before)
+  return (
+    <Box>
       {title && (
         <Typography variant="subtitle2" gutterBottom>
           {title} ({images.length})
-          {showDragHandle && onReorder && " - Drag to reorder:"}
         </Typography>
       )}
       
-      <Grid container spacing={2}>
+      <Grid2 container spacing={2}>
         {images.map((image, index) => {
           const isMarkedForDeletion = markedForDeletion.includes(image.id);
           const imageUrl = image.url || image.preview;
           
-          const cardContent = (
-            <Card 
-              sx={{ 
-                position: 'relative',
-                opacity: isMarkedForDeletion ? 0.5 : 1,
-                filter: isMarkedForDeletion ? 'grayscale(100%)' : 'none',
-                transform: 'none',
-                boxShadow: 1,
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-              }}
-            >
-              <Box
-                sx={{
+          return (
+            <Grid2 size={{ xs: 6, sm: 4, md: 3 }} key={image.id}>
+              <Card 
+                sx={{ 
                   position: 'relative',
-                  paddingTop: '100%', // 1:1 aspect ratio
-                  overflow: 'hidden',
+                  opacity: isMarkedForDeletion ? 0.5 : 1,
+                  filter: isMarkedForDeletion ? 'grayscale(100%)' : 'none',
+                  boxShadow: 1,
                 }}
               >
-                {imageUrl && (
-                  <CardMedia
-                    component="img"
-                    image={imageUrl}
-                    alt={image.altText || `Image ${index + 1}`}
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                  />
-                )}
-
-                {/* Position indicator */}
-                {showPosition && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 4,
-                      left: 4,
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: 24,
-                      height: 24,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    {image.position || index + 1}
-                  </Box>
-                )}
-
-                {/* Drag handle */}
-                {showDragHandle && onReorder && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 4,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      bgcolor: 'rgba(0,0,0,0.7)',
-                      color: 'white',
-                      borderRadius: 1,
-                      p: 0.5,
-                      cursor: 'grab',
-                      '&:active': {
-                        cursor: 'grabbing'
-                      }
-                    }}
-                  >
-                    <DragIndicatorIcon sx={{ fontSize: 16 }} />
-                  </Box>
-                )}
-
-                {/* Remove/Restore button */}
-                {isMarkedForDeletion && onRestore ? (
-                  <Box sx={{ position: 'absolute', top: 4, right: 4 }}>
-                    <Chip
-                      label="Restore"
-                      size="small"
-                      color="success"
-                      onClick={() => onRestore(image.id)}
-                      disabled={disabled}
-                    />
-                  </Box>
-                ) : (
-                  <IconButton
-                    size="small"
-                    onClick={() => onRemove(image.id)}
-                    disabled={disabled}
-                    sx={{
-                      position: 'absolute',
-                      top: 4,
-                      right: 4,
-                      bgcolor: 'error.main',
-                      color: 'white',
-                      '&:hover': {
-                        bgcolor: 'error.dark',
-                      },
-                      width: 24,
-                      height: 24,
-                    }}
-                  >
-                    <DeleteIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                )}
-              </Box>
-              
-              {showFileInfo && (image.name || image.size) && (
-                <CardContent sx={{ py: 1 }}>
-                  {image.name && (
-                    <Typography variant="caption" noWrap>
-                      {image.name}
-                    </Typography>
-                  )}
-                  {image.size && (
-                    <Typography variant="caption" display="block" color="textSecondary">
-                      {(image.size / 1024 / 1024).toFixed(2)} MB
-                    </Typography>
-                  )}
-                </CardContent>
-              )}
-            </Card>
-          );
-
-          return (
-            <Grid item xs={6} sm={4} md={3} key={image.id}>
-              {cardContent}
-            </Grid>
+                {/* Same card content as the sortable version */}
+              </Card>
+            </Grid2>
           );
         })}
-      </Grid>
-    </>
+      </Grid2>
+    </Box>
   );
-
-  // If drag and drop is enabled, wrap with DragDropContext
-  if (onReorder && showDragHandle) {
-    return (
-      <DragDropContext onDragEnd={onReorder}>
-        <Droppable droppableId="images" direction="horizontal">
-          {(provided) => (
-            <Box 
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-            >
-              <Grid container spacing={2}>
-                {images.map((image, index) => (
-                  <Draggable key={image.id} draggableId={String(image.id)} index={index}>
-                    {(provided, snapshot) => (
-                      <Grid 
-                        item 
-                        xs={6} 
-                        sm={4} 
-                        md={3}
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                      >
-                        <Card 
-                          sx={{ 
-                            position: 'relative',
-                            transform: snapshot.isDragging ? 'rotate(5deg)' : 'none',
-                            boxShadow: snapshot.isDragging ? 4 : 1,
-                            transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                          }}
-                        >
-                          {/* Same card content as above, but with drag handle props */}
-                          <Box
-                            sx={{
-                              position: 'relative',
-                              paddingTop: '100%',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            {/* Card content here - similar to above but with drag handle props */}
-                            <Box
-                              {...provided.dragHandleProps}
-                              sx={{
-                                position: 'absolute',
-                                top: 4,
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                bgcolor: 'rgba(0,0,0,0.7)',
-                                color: 'white',
-                                borderRadius: 1,
-                                p: 0.5,
-                                cursor: 'grab',
-                                '&:active': {
-                                  cursor: 'grabbing'
-                                }
-                              }}
-                            >
-                              <DragIndicatorIcon sx={{ fontSize: 16 }} />
-                            </Box>
-                            {/* Rest of the card content */}
-                          </Box>
-                        </Card>
-                      </Grid>
-                    )}
-                  </Draggable>
-                ))}
-              </Grid>
-              {provided.placeholder}
-            </Box>
-          )}
-        </Droppable>
-      </DragDropContext>
-    );
-  }
-
-  return <Box>{content}</Box>;
 };

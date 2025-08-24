@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ShopAPI.Data;
 using ShopAPI.Dtos.Product;
 using ShopAPI.Enums;
@@ -13,14 +14,16 @@ namespace ShopAPI.Services;
 public class ProductService : IProductService
 {
     private readonly ShopContext _context;
-
     private readonly IFileStorageService _fileStorage;
+    private readonly ILogger<ProductService> _logger;
 
-    public ProductService(ShopContext context, IFileStorageService fileStorage)
+    public ProductService(ShopContext context, IFileStorageService fileStorage, ILogger<ProductService> logger)
     {
         _context = context;
         _fileStorage = fileStorage;
+        _logger = logger;
     }
+
     public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query)
     {
         var productsQuery = _context.Products
@@ -150,62 +153,116 @@ public class ProductService : IProductService
 
     public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, int? userId)
     {
-        var category = await _context.Categories.FindAsync(dto.CategoryId);
-        if (category == null)
-            return null;
-
-        var imageResults = new List<ImageSaveResult>();
-        if (dto.Images != null)
+        try
         {
-            foreach (var file in dto.Images)
+            _logger.LogInformation("CreateProductAsync started. Name: {Name}, CategoryId: {CategoryId}, UserId: {UserId}", 
+                dto.Name, dto.CategoryId, userId);
+
+            // Validate category exists
+            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            if (category == null)
             {
-                var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
-                imageResults.Add(result);
+                _logger.LogWarning("CreateProductAsync failed: Category {CategoryId} not found", dto.CategoryId);
+                return null;
             }
-        }
 
-        var images = imageResults.Select((res, index) => new ProductImage
-        {
-            Url = res.Url,
-            ThumbnailUrl = res.ThumbnailUrl,
-            Position = index + 1 // Start positions from 1
-        }).ToList();
+            _logger.LogInformation("Category found: {CategoryName} (ID: {CategoryId})", category.Name, category.Id);
 
-        var product = new Product
-        {
-            Name = dto.Name,
-            Description = dto.Description,
-            Price = dto.Price,
-            CategoryId = dto.CategoryId,
-            Category = category,
-            Images = images
-        };
-
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
-
-        // Generate slug after ID is available
-        product.Slug = SlugHelper.GenerateSlug(product.Name, product.Id);
-        await _context.SaveChangesAsync();
-
-        return new ReadProductDto
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Description = product.Description,
-            Price = product.Price,
-            CategoryId = product.CategoryId,
-            Slug = product.Slug,
-            Images = product.Images
-                .OrderBy(img => img.Position)
-                .Select(img => new ProductImageDto
+            // Process images
+            var imageResults = new List<ImageSaveResult>();
+            if (dto.Images != null && dto.Images.Any())
+            {
+                _logger.LogInformation("Processing {ImageCount} images", dto.Images.Count);
+                
+                for (int i = 0; i < dto.Images.Count; i++)
                 {
-                    Id = img.Id,
-                    Url = img.Url,
-                    ThumbnailUrl = img.ThumbnailUrl,
-                    Position = img.Position
-                }).ToList()
-        };
+                    var file = dto.Images[i];
+                    try
+                    {
+                        _logger.LogInformation("Processing image {Index}: {FileName} ({Size} bytes)", 
+                            i + 1, file.FileName, file.Length);
+                        
+                        var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
+                        imageResults.Add(result);
+                        
+                        _logger.LogInformation("Image {Index} saved successfully. Url: {Url}, ThumbnailUrl: {ThumbnailUrl}", 
+                            i + 1, result.Url, result.ThumbnailUrl);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to save image {Index} ({FileName})", i + 1, file.FileName);
+                        throw; // Re-throw to be caught by outer try-catch
+                    }
+                }
+            }
+            else
+            {
+                _logger.LogInformation("No images provided for product creation");
+            }
+
+            // Create product images
+            var images = imageResults.Select((res, index) => new ProductImage
+            {
+                Url = res.Url,
+                ThumbnailUrl = res.ThumbnailUrl,
+                Position = index + 1
+            }).ToList();
+
+            _logger.LogInformation("Created {ImageCount} ProductImage entities with positions 1 to {MaxPosition}", 
+                images.Count, images.Count);
+
+            // Create product
+            var product = new Product
+            {
+                Name = dto.Name,
+                Description = dto.Description ?? string.Empty,
+                Price = dto.Price,
+                CategoryId = dto.CategoryId,
+                Category = category,
+                Images = images
+            };
+
+            _logger.LogInformation("Adding product to context: {ProductName}", product.Name);
+            
+            _context.Products.Add(product);
+            
+            _logger.LogInformation("Saving product to database...");
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Product saved with ID: {ProductId}. Generating slug...", product.Id);
+
+            // Generate slug after ID is available
+            product.Slug = SlugHelper.GenerateSlug(product.Name, product.Id);
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Product creation completed successfully. ID: {ProductId}, Slug: {Slug}", 
+                product.Id, product.Slug);
+
+            return new ReadProductDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                CategoryId = product.CategoryId,
+                Slug = product.Slug,
+                Images = product.Images
+                    .OrderBy(img => img.Position)
+                    .Select(img => new ProductImageDto
+                    {
+                        Id = img.Id,
+                        Url = img.Url,
+                        ThumbnailUrl = img.ThumbnailUrl,
+                        Position = img.Position
+                    }).ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in CreateProductAsync for product {ProductName} (CategoryId: {CategoryId})", 
+                dto.Name, dto.CategoryId);
+            throw; // Re-throw to be handled by controller
+        }
     }
 
     public async Task<bool> UpdateProductAsync(int id, UpdateProductDto dto, int? userId)
