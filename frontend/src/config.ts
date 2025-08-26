@@ -40,7 +40,7 @@ export const ROUTE_PATH_SEARCH = "/search";
 export const FRONTEND_SEARCH_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_SEARCH}`;
 export const ROUTE_PATH_CART = "/cart";
 export const FRONTEND_CART_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_CART}`;
-export const ROUTE_PATH_ADMIN_PANEL = "/admin-panel";
+export const ROUTE_PATH_ADMIN_PANEL = "/admin-panel/*";
 export const FRONTEND_ADMIN_PANEL_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_ADMIN_PANEL}`;
 
 // API urls should match the django urls
