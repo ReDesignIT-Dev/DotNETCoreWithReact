@@ -41,6 +41,14 @@ public class ProductsController : ControllerBase
     }
 
     [AllowAnonymous]
+    [HttpGet("count")]
+    public async Task<ActionResult<int>> GetProductsCount([FromQuery] int? categoryId = null, [FromQuery] string? search = null)
+    {
+        var count = await _productService.GetProductsCountAsync(categoryId, search);
+        return Ok(count);
+    }
+
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<ActionResult<ReadProductDto>> GetProductById(int id)
     {

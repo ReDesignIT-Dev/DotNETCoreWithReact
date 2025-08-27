@@ -196,4 +196,9 @@ public class CategoryService : ICategoryService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<int> GetCategoriesCountAsync()
+    {
+        return await _context.Categories.CountAsync();
+    }
 }

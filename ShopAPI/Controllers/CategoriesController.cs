@@ -27,6 +27,15 @@ public class CategoriesController : ControllerBase
         var categories = await _categoryService.GetCategoriesAsync();
         return Ok(categories);
     }
+
+    [AllowAnonymous]
+    [HttpGet("count")]
+    public async Task<ActionResult<int>> GetCategoriesCount()
+    {
+        var count = await _categoryService.GetCategoriesCountAsync();
+        return Ok(count);
+    }
+
     [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<ActionResult<WriteCategoryDto>> GetCategory(int id)

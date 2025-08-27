@@ -32,7 +32,7 @@ import { useEffect } from "react";
 import { fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
 import { AppDispatch } from "reduxComponents/store";
 import { ProductAdd } from "../components/Admin/ProductAdd";
-import AdminPanel from "./AdminPanel";
+import { AdminPanel } from "./AdminPanel";
 
 function Shop() {
   const dispatch = useDispatch<AppDispatch>();
@@ -47,6 +47,7 @@ function Shop() {
       <Box sx={{ flex: 1 }}>
         <Routes>
           <Route path="" element={<ShopHome />} />
+          <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
           <Route path={ROUTE_PATH_LOGIN} element={<Login />} />
           <Route path={ROUTE_PATH_REGISTER} element={<Register />} />
           <Route path={ROUTE_PATH_PASSWORD_RECOVERY} element={<PasswordRecovery />} />

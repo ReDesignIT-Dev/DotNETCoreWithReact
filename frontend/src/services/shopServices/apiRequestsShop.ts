@@ -111,6 +111,37 @@ export const updateProduct = async (productId: number, productData: UpdateProduc
     }
 };
 
+export async function getProductsCount(categoryId?: number, search?: string): Promise<AxiosResponse<number> | undefined> {
+    try {
+        let url = `${API_PRODUCT_URL}count`;
+        
+        const params = new URLSearchParams();
+        if (categoryId !== undefined) {
+            params.append('categoryId', categoryId.toString());
+        }
+        if (search !== undefined && search.trim() !== '') {
+            params.append('search', search);
+        }
+        
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
+        
+        const response = await apiClient.get(url);
+        return response;
+    } catch (error) {
+        apiErrorHandler(error);
+    }
+}
+
+export async function getCategoriesCount(): Promise<AxiosResponse<number> | undefined> {
+    try {
+        const response = await apiClient.get(`${API_CATEGORY_URL}count`);
+        return response;
+    } catch (error) {
+        apiErrorHandler(error);
+    }
+}
 
 export async function getAllProducts(): Promise<AxiosResponse | undefined> {
     try {
