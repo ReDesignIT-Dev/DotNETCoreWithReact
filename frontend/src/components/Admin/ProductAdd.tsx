@@ -171,9 +171,14 @@ export const ProductAdd = () => {
     setProductSummary(null);
   };
 
-  const handleGoHome = () => {
+  const handleGoToProducts = () => {
     imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
-    navigate("/");
+    navigate("/admin/products");
+  };
+
+  const handleCancel = () => {
+    imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
+    navigate("/admin/products");
   };
 
   return (
@@ -228,8 +233,8 @@ export const ProductAdd = () => {
           >
             Add Another Product
           </Button>
-          <Button variant="outlined" onClick={handleGoHome} fullWidth sx={{ mt: 2 }}>
-            Go Back Home
+          <Button variant="outlined" onClick={handleGoToProducts} fullWidth sx={{ mt: 2 }}>
+            Back to Products
           </Button>
         </>
       ) : (
@@ -305,16 +310,24 @@ export const ProductAdd = () => {
             </Box>
           </Box>
 
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handleCancel}
+              fullWidth
+            >
+              Cancel
+            </Button>
+          </Box>
         </form>
       )}
     </Container>

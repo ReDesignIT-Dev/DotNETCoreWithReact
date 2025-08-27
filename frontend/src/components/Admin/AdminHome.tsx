@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Card, CardContent, Typography, Button, Grid, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -7,9 +7,28 @@ import {
   People as UsersIcon,
   Assessment as ReportsIcon 
 } from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAdminStats } from 'reduxComponents/reduxShop/Admin/adminThunks';
+import { 
+  selectProductsCount, 
+  selectCategoriesCount, 
+  selectUsersCount, 
+  selectAdminIsLoading 
+} from 'reduxComponents/reduxShop/Admin/adminSelectors';
+import { AppDispatch } from 'reduxComponents/store';
 
 export const AdminHome: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
+  const productsCount = useSelector(selectProductsCount);
+  const categoriesCount = useSelector(selectCategoriesCount);
+  const usersCount = useSelector(selectUsersCount);
+  const loading = useSelector(selectAdminIsLoading);
+
+  useEffect(() => {
+    dispatch(fetchAdminStats());
+  }, [dispatch]);
 
   const adminModules = [
     {
@@ -117,7 +136,7 @@ export const AdminHome: React.FC = () => {
           <Grid item xs={12} sm={4}>
             <Paper sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="h4" color="primary">
-                --
+                {loading ? '--' : productsCount}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Total Products
@@ -128,7 +147,7 @@ export const AdminHome: React.FC = () => {
           <Grid item xs={12} sm={4}>
             <Paper sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="h4" color="secondary">
-                --
+                {loading ? '--' : categoriesCount}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Categories
@@ -139,7 +158,7 @@ export const AdminHome: React.FC = () => {
           <Grid item xs={12} sm={4}>
             <Paper sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="h4" color="success.main">
-                --
+                {loading ? '--' : usersCount}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Active Users

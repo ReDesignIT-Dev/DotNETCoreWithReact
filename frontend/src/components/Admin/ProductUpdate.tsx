@@ -285,6 +285,7 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
   const existingImages = product.images?.map(image => ({
     id: image.id,
     url: image.url,
+    preview: image.url, // Add this line - use url as preview for existing images
     altText: image.altText || undefined,
     position: image.position || undefined,
     name: `Image ${image.id}`,

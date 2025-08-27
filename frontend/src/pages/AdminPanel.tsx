@@ -1,116 +1,67 @@
-import React, { useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
-import { useDispatch } from "react-redux";
-import { fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
-import { ProductAdd } from "components/Admin/ProductAdd";
-import { ProductUpdate } from "components/Admin/ProductUpdate";
-import { CategoryAdd } from "components/Admin/CategoryAdd";
-import { CategoryUpdate } from "components/Admin/CategoryUpdate";
-import { ProductsPanel } from "components/Admin/ProductsPanel";
-import { CategoriesPanel } from "components/Admin/CategoriesPanel";
+import React from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Box, Container, Typography } from '@mui/material';
+import { ProductsPanel } from 'components/Admin/ProductsPanel';
+import { ProductAdd } from 'components/Admin/ProductAdd';
+import { ProductEdit } from 'components/Admin/ProductEdit';
+import { CategoriesPanel } from 'components/Admin/CategoriesPanel';
+import { CategoryAdd } from 'components/Admin/CategoryAdd';
+import { CategoryEdit } from 'components/Admin/CategoryEdit';
+import { AdminNavigation } from 'components/Admin/AdminNavigation';
+import { AdminHome } from 'components/Admin/AdminHome';
 
-const AdminPanel: React.FC = () => {
-  const dispatch = useDispatch<any>();
-  const [activeView, setActiveView] = useState<"products" | "categories" | "addProduct" | "addCategory" | "editProduct" | "editCategory" | null>(null);
-  const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+export const AdminPanel: React.FC = () => {
+  const navigate = useNavigate();
 
-  const handleCategoryAddSuccess = async () => {
-    await dispatch(fetchCategoryTree());
-    setActiveView("categories");
+  const handleAddProduct = () => {
+    navigate('products/add');
   };
 
-  const handleEditProduct = (productId: number) => {
-    setEditingProductId(productId);
-    setActiveView("editProduct");
+  const handleEditProduct = (id: number) => {
+    navigate(`products/${id}/edit`);
   };
 
-  const handleEditCategory = (categoryId: number) => {
-    setEditingCategoryId(categoryId);
-    setActiveView("editCategory");
+  const handleAddCategory = () => {
+    navigate('categories/add');
   };
 
-  const handleProductUpdateSuccess = () => {
-    setEditingProductId(null);
-    setActiveView("products");
-  };
-
-  const handleCategoryUpdateSuccess = async () => {
-    await dispatch(fetchCategoryTree());
-    setEditingCategoryId(null);
-    setActiveView("categories");
+  const handleEditCategory = (id: number) => {
+    navigate(`categories/${id}/edit`);
   };
 
   return (
-    <Box maxWidth={1264} mx="auto" mt={3}>
-      <Typography variant="h4" mb={3}>Admin Panel</Typography>
+    <Container maxWidth="xl">
+      <Box sx={{ py: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Admin Panel
+        </Typography>
+        
+        <AdminNavigation />
 
-      <Box display="flex" gap={2} mb={3}>
-        <Button variant="contained" color="primary" onClick={() => setActiveView("products")}>Products</Button>
-        <Button variant="contained" color="primary" onClick={() => setActiveView("categories")}>Categories</Button>
+        <Box sx={{ mt: 3 }}>
+          <Routes>
+            {/* Admin Home - shows when at /admin-panel */}
+            <Route path="" element={<AdminHome />} />
+            
+            {/* Products routes */}
+            <Route path="products" element={<ProductsPanel onAdd={handleAddProduct} onEdit={handleEditProduct} />} />
+            <Route path="products/add" element={<ProductAdd />} />
+            <Route path="products/:id/edit" element={<ProductEdit />} />
+            
+            {/* Categories routes */}
+            <Route path="categories" element={<CategoriesPanel onAdd={handleAddCategory} onEdit={handleEditCategory} />} />
+            <Route path="categories/add" element={<CategoryAdd />} />
+            <Route path="categories/:id/edit" element={<CategoryEdit />} />
+            
+            {/* Future routes */}
+            <Route path="users" element={<div>Users management coming soon...</div>} />
+            <Route path="reports" element={<div>Reports coming soon...</div>} />
+            
+            {/* Catch-all route - redirect to home */}
+            <Route path="*" element={<Navigate to="" replace />} />
+          </Routes>
+        </Box>
       </Box>
-
-      <Box>
-        {activeView === "products" && (
-          <ProductsPanel 
-            onAdd={() => setActiveView("addProduct")}
-            onEdit={handleEditProduct}
-          />
-        )}
-
-        {activeView === "categories" && (
-          <CategoriesPanel 
-            onAdd={() => setActiveView("addCategory")}
-            onEdit={handleEditCategory}
-          />
-        )}
-
-        {activeView === "addProduct" && (
-          <Box>
-            <ProductAdd />
-            <Button variant="outlined" color="primary" onClick={() => setActiveView("products")} sx={{ mt: 2 }}>
-              Back to Products
-            </Button>
-          </Box>
-        )}
-
-        {activeView === "addCategory" && (
-          <Box>
-            <CategoryAdd
-              onSuccess={handleCategoryAddSuccess}
-              onCancel={() => setActiveView("categories")}
-            />
-          </Box>
-        )}
-
-        {activeView === "editProduct" && editingProductId && (
-          <Box>
-            <ProductUpdate
-              productId={editingProductId}
-              onSuccess={handleProductUpdateSuccess}
-              onCancel={() => {
-                setEditingProductId(null);
-                setActiveView("products");
-              }}
-            />
-          </Box>
-        )}
-
-        {activeView === "editCategory" && editingCategoryId && (
-          <Box>
-            <CategoryUpdate
-              categoryId={editingCategoryId}
-              onSuccess={handleCategoryUpdateSuccess}
-              onCancel={() => {
-                setEditingCategoryId(null);
-                setActiveView("categories");
-              }}
-            />
-          </Box>
-        )}
-      </Box>
-    </Box>
+    </Container>
   );
 };
-
-export default AdminPanel;
