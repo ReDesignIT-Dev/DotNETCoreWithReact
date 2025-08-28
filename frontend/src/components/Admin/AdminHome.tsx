@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Box, Card, CardContent, Typography, Button, Grid, Paper } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, Paper, Grid2 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
   Inventory as ProductsIcon, 
@@ -73,9 +73,9 @@ export const AdminHome: React.FC = () => {
         Select a module below to manage your e-commerce platform
       </Typography>
 
-      <Grid container spacing={3}>
+      <Grid2 container spacing={3}>
         {adminModules.map((module) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={module.title}>
+          <Grid2 size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={module.title}>
             <Card 
               sx={{ 
                 height: '100%',
@@ -122,9 +122,9 @@ export const AdminHome: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
+          </Grid2>
         ))}
-      </Grid>
+      </Grid2>
 
       {/* Quick Stats Section */}
       <Box sx={{ mt: 6 }}>
@@ -132,8 +132,8 @@ export const AdminHome: React.FC = () => {
           Quick Overview
         </Typography>
         
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={4}>
+        <Grid2 container spacing={2}>
+          <Grid2 size={{ xs: 12, sm: 4 }}>
             <Paper sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="h4" color="primary">
                 {loading ? '--' : productsCount}
@@ -142,9 +142,9 @@ export const AdminHome: React.FC = () => {
                 Total Products
               </Typography>
             </Paper>
-          </Grid>
+          </Grid2>
           
-          <Grid item xs={12} sm={4}>
+          <Grid2 size={{ xs: 12, sm: 4 }}>
             <Paper sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="h4" color="secondary">
                 {loading ? '--' : categoriesCount}
@@ -153,9 +153,9 @@ export const AdminHome: React.FC = () => {
                 Categories
               </Typography>
             </Paper>
-          </Grid>
+          </Grid2>
           
-          <Grid item xs={12} sm={4}>
+          <Grid2 size={{ xs: 12, sm: 4 }}>
             <Paper sx={{ p: 2, textAlign: 'center' }}>
               <Typography variant="h4" color="success.main">
                 {loading ? '--' : usersCount}
@@ -164,8 +164,8 @@ export const AdminHome: React.FC = () => {
                 Active Users
               </Typography>
             </Paper>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Box>
     </Box>
   );
