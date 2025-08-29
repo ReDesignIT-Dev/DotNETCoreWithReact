@@ -14,19 +14,19 @@ export const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
 
   const handleAddProduct = () => {
-    navigate('products/add');
+    navigate('/add');
   };
 
   const handleEditProduct = (id: number) => {
-    navigate(`products/${id}/edit`);
+    navigate(`${id}/edit`);
   };
 
   const handleAddCategory = () => {
-    navigate('categories/add');
+    navigate('/add');
   };
 
   const handleEditCategory = (id: number) => {
-    navigate(`categories/${id}/edit`);
+    navigate(`${id}/edit`);
   };
 
   return (

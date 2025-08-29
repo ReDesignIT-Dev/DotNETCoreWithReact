@@ -1,6 +1,6 @@
 // filepath: d:\Backupowane\Programowanie\DotNETCoreWithReact\frontend\src\components\Admin\ProductsPanel.tsx
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Avatar } from "@mui/material";
 import { deleteProduct, getAllProducts } from "services/shopServices/apiRequestsShop";
 import { ConfirmDialog } from "components/common/ConfirmDialog";
 
@@ -91,11 +91,23 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAdd, onEdit }) =
               border="1px solid #ccc"
               borderRadius="4px"
             >
-              <Box>
-                <Typography variant="h6">{p.name}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  ${p.price}
-                </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Avatar
+                  src={p.images && p.images.length > 0 ? p.images[0].url : '/placeholder-image.png'}
+                  alt={p.name}
+                  variant="rounded"
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    border: '1px solid #ddd'
+                  }}
+                />
+                <Box>
+                  <Typography variant="h6">{p.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    ${p.price}
+                  </Typography>
+                </Box>
               </Box>
               <Box display="flex" gap={1}>
                 <Button variant="outlined" color="primary" size="small" onClick={() => openEdit(p)}>
