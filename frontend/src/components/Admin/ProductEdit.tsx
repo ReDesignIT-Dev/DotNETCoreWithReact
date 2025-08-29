@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ProductUpdate } from './ProductUpdate';
 import { Container, Typography, Button, Box } from '@mui/material';
+import { FRONTEND_ADMIN_PRODUCTS_URL } from 'config';
 
 export const ProductEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +17,7 @@ export const ProductEdit: React.FC = () => {
         </Typography>
         <Button 
           variant="outlined" 
-          onClick={() => navigate('/admin/products')}
+          onClick={() => navigate(FRONTEND_ADMIN_PRODUCTS_URL)}
           sx={{ mt: 2 }}
         >
           Back to Products
@@ -26,11 +27,11 @@ export const ProductEdit: React.FC = () => {
   }
 
   const handleSuccess = () => {
-    navigate('/admin/products');
+    navigate(FRONTEND_ADMIN_PRODUCTS_URL);
   };
 
   const handleCancel = () => {
-    navigate('/admin/products');
+    navigate(FRONTEND_ADMIN_PRODUCTS_URL);
   };
 
   return (

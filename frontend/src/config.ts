@@ -40,8 +40,9 @@ export const ROUTE_PATH_SEARCH = "/search";
 export const FRONTEND_SEARCH_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_SEARCH}`;
 export const ROUTE_PATH_CART = "/cart";
 export const FRONTEND_CART_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_CART}`;
-export const ROUTE_PATH_ADMIN_PANEL = "/admin-panel/*";
-export const FRONTEND_ADMIN_PANEL_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_ADMIN_PANEL}`;
+export const ADMIN_PANEL_URL = "/admin-panel"
+export const ROUTE_PATH_ADMIN_PANEL = `${ADMIN_PANEL_URL}/*`;
+export const FRONTEND_ADMIN_PANEL_URL = `${FRONTEND_SHOP_URL}${ADMIN_PANEL_URL}`;
 
 // API urls should match the django urls
 export const API_LOGOUT_USER_URL = `${BACKEND_USER_URL}/logout`;
@@ -65,3 +66,30 @@ export const API_DELETE_FROM_CART_URL = `${API_CART_URL}/delete`;
 
 // API home based
 export const API_PROJECTS_ALL_URL = `${BACKEND_HOME_URL}`;
+
+// admin panel navigation - RELATIVE PATHS for internal navigation
+export const ADMIN_PRODUCTS_PATH = "products";
+export const ADMIN_PRODUCTS_ADD_PATH = `${ADMIN_PRODUCTS_PATH}/add`;
+export const ADMIN_PRODUCTS_EDIT_PATH = `${ADMIN_PRODUCTS_PATH}/:id/edit`;
+export const ADMIN_CATEGORIES_PATH = "categories";
+export const ADMIN_CATEGORIES_ADD_PATH = `${ADMIN_CATEGORIES_PATH}/add`;
+export const ADMIN_CATEGORIES_EDIT_PATH = `${ADMIN_CATEGORIES_PATH}/:id/edit`;
+export const ADMIN_USERS_PATH = "users";
+export const ADMIN_REPORTS_PATH = "reports";
+
+// admin panel navigation - ABSOLUTE PATHS for external navigation
+export const FRONTEND_ADMIN_PRODUCTS_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_PRODUCTS_PATH}`;
+export const FRONTEND_ADMIN_CATEGORIES_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_CATEGORIES_PATH}`;
+export const FRONTEND_ADMIN_USERS_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_USERS_PATH}`;
+export const FRONTEND_ADMIN_REPORTS_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_REPORTS_PATH}`;
+
+// Helper functions for dynamic paths
+// For navigation from admin panel root
+export const getAdminProductEditPath = (id: number) => `${ADMIN_PRODUCTS_PATH}/${id}/edit`;
+export const getAdminCategoryEditPath = (id: number) => `${ADMIN_CATEGORIES_PATH}/${id}/edit`;
+
+// For navigation from within products/categories pages (relative)
+export const getProductEditPath = (id: number) => `${id}/edit`;
+export const getCategoryEditPath = (id: number) => `${id}/edit`;
+export const getProductAddPath = () => "add";
+export const getCategoryAddPath = () => "add";

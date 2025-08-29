@@ -1,14 +1,14 @@
 import React from 'react';
 import { Box, Button, Paper } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
+import { ADMIN_PANEL_URL, FRONTEND_ADMIN_CATEGORIES_URL, FRONTEND_ADMIN_PANEL_URL, FRONTEND_ADMIN_PRODUCTS_URL } from 'config';
 
 export const AdminNavigation: React.FC = () => {
   const location = useLocation();
   
   const isActive = (path: string) => {
     if (path === '') {
-      // Home is active only when we're exactly at admin-panel
-      return location.pathname.endsWith('/admin-panel');
+      return location.pathname.endsWith(ADMIN_PANEL_URL);
     }
     return location.pathname.includes(path);
   };
@@ -18,7 +18,7 @@ export const AdminNavigation: React.FC = () => {
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <Button
           component={Link}
-          to="/shop/admin-panel"
+          to={FRONTEND_ADMIN_PANEL_URL}
           variant={isActive('') ? 'contained' : 'outlined'}
           color="primary"
         >
@@ -26,7 +26,7 @@ export const AdminNavigation: React.FC = () => {
         </Button>
         <Button
           component={Link}
-          to="/shop/admin-panel/products"
+          to={FRONTEND_ADMIN_PRODUCTS_URL}
           variant={isActive('products') ? 'contained' : 'outlined'}
           color="primary"
         >
@@ -34,7 +34,7 @@ export const AdminNavigation: React.FC = () => {
         </Button>
         <Button
           component={Link}
-          to="/shop/admin-panel/categories"
+          to={FRONTEND_ADMIN_CATEGORIES_URL}
           variant={isActive('categories') ? 'contained' : 'outlined'}
           color="primary"
         >

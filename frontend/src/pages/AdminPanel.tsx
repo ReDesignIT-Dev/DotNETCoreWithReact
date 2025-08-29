@@ -9,24 +9,38 @@ import { CategoryAdd } from 'components/Admin/CategoryAdd';
 import { CategoryEdit } from 'components/Admin/CategoryEdit';
 import { AdminNavigation } from 'components/Admin/AdminNavigation';
 import { AdminHome } from 'components/Admin/AdminHome';
+import { 
+  ADMIN_PRODUCTS_PATH,
+  ADMIN_PRODUCTS_ADD_PATH,
+  ADMIN_PRODUCTS_EDIT_PATH,
+  ADMIN_CATEGORIES_PATH,
+  ADMIN_CATEGORIES_ADD_PATH,
+  ADMIN_CATEGORIES_EDIT_PATH,
+  ADMIN_USERS_PATH,
+  ADMIN_REPORTS_PATH,
+  getProductEditPath,
+  getCategoryEditPath,
+  getProductAddPath,
+  getCategoryAddPath
+} from '../config';
 
 export const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
 
   const handleAddProduct = () => {
-    navigate('/add');
+    navigate(getProductAddPath()); 
   };
 
   const handleEditProduct = (id: number) => {
-    navigate(`${id}/edit`);
+    navigate(getProductEditPath(id)); 
   };
 
   const handleAddCategory = () => {
-    navigate('/add');
+    navigate(getCategoryAddPath()); 
   };
 
   const handleEditCategory = (id: number) => {
-    navigate(`${id}/edit`);
+    navigate(getCategoryEditPath(id)); 
   };
 
   return (
@@ -40,24 +54,15 @@ export const AdminPanel: React.FC = () => {
 
         <Box sx={{ mt: 3 }}>
           <Routes>
-            {/* Admin Home - shows when at /admin-panel */}
             <Route path="" element={<AdminHome />} />
-            
-            {/* Products routes */}
-            <Route path="products" element={<ProductsPanel onAdd={handleAddProduct} onEdit={handleEditProduct} />} />
-            <Route path="products/add" element={<ProductAdd />} />
-            <Route path="products/:id/edit" element={<ProductEdit />} />
-            
-            {/* Categories routes */}
-            <Route path="categories" element={<CategoriesPanel onAdd={handleAddCategory} onEdit={handleEditCategory} />} />
-            <Route path="categories/add" element={<CategoryAdd />} />
-            <Route path="categories/:id/edit" element={<CategoryEdit />} />
-            
-            {/* Future routes */}
-            <Route path="users" element={<div>Users management coming soon...</div>} />
-            <Route path="reports" element={<div>Reports coming soon...</div>} />
-            
-            {/* Catch-all route - redirect to home */}
+            <Route path={ADMIN_PRODUCTS_PATH} element={<ProductsPanel onAdd={handleAddProduct} onEdit={handleEditProduct} />} />
+            <Route path={ADMIN_PRODUCTS_ADD_PATH} element={<ProductAdd />} />
+            <Route path={ADMIN_PRODUCTS_EDIT_PATH} element={<ProductEdit />} />
+            <Route path={ADMIN_CATEGORIES_PATH} element={<CategoriesPanel onAdd={handleAddCategory} onEdit={handleEditCategory} />} />
+            <Route path={ADMIN_CATEGORIES_ADD_PATH} element={<CategoryAdd />} />
+            <Route path={ADMIN_CATEGORIES_EDIT_PATH} element={<CategoryEdit />} />
+            <Route path={ADMIN_USERS_PATH} element={<div>Users management coming soon...</div>} />
+            <Route path={ADMIN_REPORTS_PATH} element={<div>Reports coming soon...</div>} />
             <Route path="*" element={<Navigate to="" replace />} />
           </Routes>
         </Box>
