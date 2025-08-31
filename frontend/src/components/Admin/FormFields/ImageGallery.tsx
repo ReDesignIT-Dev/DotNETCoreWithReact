@@ -29,17 +29,6 @@ import {
   CSS,
 } from '@dnd-kit/utilities';
 
-// Define the ImageItem interface
-interface ImageItem {
-  id: string | number;
-  url?: string;
-  preview?: string;
-  altText?: string;
-  position?: number;
-  name?: string;
-  size?: number;
-}
-
 // Define the ImageGalleryProps interface
 interface ImageGalleryProps {
   images: ImageItem[];

@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CategoryUpdate } from './CategoryUpdate';
 import { Container, Typography, Button, Box } from '@mui/material';
+import { FRONTEND_ADMIN_CATEGORIES_URL } from 'config';
 
 export const CategoryEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +17,7 @@ export const CategoryEdit: React.FC = () => {
         </Typography>
         <Button 
           variant="outlined" 
-          onClick={() => navigate('/admin/categories')}
+          onClick={() => navigate(FRONTEND_ADMIN_CATEGORIES_URL)}
           sx={{ mt: 2 }}
         >
           Back to Categories
@@ -26,11 +27,11 @@ export const CategoryEdit: React.FC = () => {
   }
 
   const handleSuccess = () => {
-    navigate('/admin/categories');
+    navigate(FRONTEND_ADMIN_CATEGORIES_URL);
   };
 
   const handleCancel = () => {
-    navigate('/admin/categories');
+    navigate(FRONTEND_ADMIN_CATEGORIES_URL);
   };
 
   return (

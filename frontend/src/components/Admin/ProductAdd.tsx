@@ -24,6 +24,7 @@ import {
   ImageUploadDropzone,
   ImageGallery 
 } from "components/Admin/FormFields";
+import { FRONTEND_ADMIN_PRODUCTS_URL } from "config";
 
 interface ImageFile extends File {
   preview: string;
@@ -173,12 +174,12 @@ export const ProductAdd = () => {
 
   const handleGoToProducts = () => {
     imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
-    navigate("/admin/products");
+    navigate(FRONTEND_ADMIN_PRODUCTS_URL);
   };
 
   const handleCancel = () => {
     imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
-    navigate("/admin/products");
+    navigate(FRONTEND_ADMIN_PRODUCTS_URL);
   };
 
   return (

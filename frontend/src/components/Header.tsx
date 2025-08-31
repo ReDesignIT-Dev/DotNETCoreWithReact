@@ -19,7 +19,7 @@ const Header: React.FC = () => {
     <Toolbar>
     <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, padding: 1 }}>
           <img
-            src="logo-redesign.jpg" // Replace with your actual path, e.g., /images/logo.png
+            src="logo-redesign.jpg"
             alt="ReDesignIT Logo"
             style={{ height: "60px", marginRight: "10px", borderRadius: 10 }} // Adjust height and spacing as needed
           />

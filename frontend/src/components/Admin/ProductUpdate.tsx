@@ -281,24 +281,26 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
     );
   }
 
-  // Convert existing product images to gallery format
-  const existingImages = product.images?.map(image => ({
+  // Convert existing product images to gallery format matching ImageItem interface
+  const existingImages: ImageItem[] = product.images?.map(image => ({
     id: image.id,
     url: image.url,
-    preview: image.url, // Add this line - use url as preview for existing images
-    altText: image.altText || undefined,
-    position: image.position || undefined,
+    preview: image.thumbnailUrl, // Use thumbnail for preview
+    altText: undefined,
+    position: image.position ?? undefined,
     name: `Image ${image.id}`,
     size: undefined
   })) || [];
 
-  // Convert new images to gallery format
-  const newGalleryImages = newImageFiles.map(file => ({
+  // Convert new images to gallery format matching ImageItem interface  
+  const newGalleryImages: ImageItem[] = newImageFiles.map(file => ({
     id: file.id,
+    url: undefined, // New files don't have URLs yet
     preview: file.preview,
+    altText: undefined,
+    position: file.position,
     name: file.name,
-    size: file.size,
-    position: file.position
+    size: file.size
   }));
 
   return (
@@ -342,7 +344,7 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         disabled={saving}
       />
 
-      {/* Current Images Section */}
+      {/* Current Images Section - ADDED */}
       {existingImages.length > 0 && (
         <Box mt={3} mb={2}>
           <ImageGallery
@@ -359,7 +361,7 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         </Box>
       )}
 
-      {/* New Images Section */}
+      {/* New Images Section - ADDED */}
       <Box mt={3} mb={2}>
         <Typography variant="h6" mb={2}>Add New Images</Typography>
         

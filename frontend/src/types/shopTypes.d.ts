@@ -104,3 +104,14 @@ interface ProductImage extends Image{
 interface CategoryImage extends Image {
 
 }
+
+// ============= UI COMPONENT TYPES =============
+interface ImageItem {
+  id: string | number;
+  url?: string;
+  preview?: string;
+  altText?: string;
+  position?: number;
+  name?: string;
+  size?: number;
+}
