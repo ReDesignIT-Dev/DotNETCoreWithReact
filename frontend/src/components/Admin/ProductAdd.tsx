@@ -11,7 +11,6 @@ import {
   CardContent,
   Box,
 } from "@mui/material";
-import { DropResult } from "react-beautiful-dnd";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { addProduct } from "services/shopServices/apiRequestsShop";
@@ -77,22 +76,6 @@ export const ProductAdd = () => {
       return updated;
     });
   }, [imageFiles.length, setValue]);
-
-  const handleOnDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-
-    const items = Array.from(imageFiles);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    const updatedItems = items.map((item, index) => ({
-      ...item,
-      position: index + 1
-    }));
-
-    setImageFiles(updatedItems);
-    setValue("images", updatedItems.map(img => img as File));
-  };
 
   const removeImage = (imageId: string | number) => {
     setImageFiles(prev => {
@@ -301,7 +284,23 @@ export const ProductAdd = () => {
             <Box sx={{ mt: 2 }}>
               <ImageGallery
                 images={galleryImages}
-                onReorder={handleOnDragEnd}
+                onReorder={(result) => {
+                  // Handle the reorder using the result format from ImageGallery
+                  const sourceIndex = result.source.index;
+                  const destinationIndex = result.destination.index;
+                  
+                  const newOrder = [...imageFiles];
+                  const [reorderedItem] = newOrder.splice(sourceIndex, 1);
+                  newOrder.splice(destinationIndex, 0, reorderedItem);
+                  
+                  const updated = newOrder.map((item, index) => ({
+                    ...item,
+                    position: index + 1
+                  }));
+                  
+                  setImageFiles(updated);
+                  setValue("images", updated.map(img => img as File));
+                }}
                 onRemove={removeImage}
                 title="Selected Images"
                 showDragHandle={true}

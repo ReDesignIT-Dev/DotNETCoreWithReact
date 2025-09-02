@@ -25,6 +25,17 @@ interface ImageFile extends File {
   position: number;
 }
 
+// Add this interface or update your existing one
+interface UpdateProductRequest {
+  name?: string;
+  description?: string;
+  price?: number;
+  categoryId?: number;
+  imagesToDelete?: number[];
+  newImages?: File[];
+  imagePositions?: { id: number; position: number }[]; // Add this for existing image position updates
+}
+
 export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSuccess, onCancel }) => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,6 +66,54 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
 
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [newImageFiles, setNewImageFiles] = useState<ImageFile[]>([]);
+
+  // Convert existing product images to gallery format matching ImageItem interface
+  const existingImages: ImageItem[] = React.useMemo(() => {
+    return product?.images?.map(image => ({
+      id: image.id,
+      url: image.url,
+      preview: image.thumbnailUrl, // Use thumbnail for preview
+      altText: undefined,
+      position: image.position ?? undefined,
+      name: `Image ${image.id}`,
+      size: undefined
+    })) || [];
+  }, [product?.images]);
+
+  // Convert new images to gallery format matching ImageItem interface  
+  const newGalleryImages: ImageItem[] = React.useMemo(() => {
+    return newImageFiles.map(file => ({
+      id: file.id,
+      url: undefined, // New files don't have URLs yet
+      preview: file.preview,
+      altText: undefined,
+      position: file.position,
+      name: file.name,
+      size: file.size
+    }));
+  }, [newImageFiles]);
+
+  // Combine existing and new images into one array for display
+  const allImages: ImageItem[] = React.useMemo(() => {
+    const existing = existingImages
+      .filter(img => !formData.imagesToDelete?.includes(Number(img.id)))
+      .sort((a, b) => (a.position || 0) - (b.position || 0));
+      
+    const newImages = newGalleryImages
+      .sort((a, b) => (a.position || 0) - (b.position || 0));
+      
+    return [...existing, ...newImages].map((img, index) => ({
+      ...img,
+      position: index + 1 // Ensure sequential positions
+    }));
+  }, [existingImages, newGalleryImages, formData.imagesToDelete]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      newImageFiles.forEach(file => URL.revokeObjectURL(file.preview));
+    };
+  }, [newImageFiles]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -129,17 +188,24 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
   };
 
   const onDrop = (acceptedFiles: File[]) => {
-    const newImageFiles = acceptedFiles.map((file, index) => {
+    // Calculate current total images count (existing + new, excluding deleted)
+    const currentExistingCount = product?.images?.filter(img => 
+      !formData.imagesToDelete?.includes(img.id)
+    ).length || 0;
+    const currentNewCount = newImageFiles.length;
+    const totalCurrentImages = currentExistingCount + currentNewCount;
+
+    const newFiles = acceptedFiles.map((file, index) => {
       const imageFile = Object.assign(file, {
         preview: URL.createObjectURL(file),
         id: `new-${Date.now()}-${index}`,
-        position: newImageFiles.length + index + 1,
+        position: totalCurrentImages + index + 1,
       }) as ImageFile;
       return imageFile;
     });
 
     setNewImageFiles(prev => {
-      const updated = [...prev, ...newImageFiles];
+      const updated = [...prev, ...newFiles];
       handleFieldChange('newImages', updated.map(img => img as File));
       return updated;
     });
@@ -215,11 +281,26 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         updateData.imagesToDelete = formData.imagesToDelete;
       }
       if (modifiedFields.has('newImages') && formData.newImages && formData.newImages.length > 0) {
-        updateData.newImages = formData.newImages;
+        // Sort new images by position before sending
+        const sortedNewImages = [...newImageFiles].sort((a, b) => a.position - b.position);
+        updateData.newImages = sortedNewImages.map(img => img as File);
       }
-      
+      if (modifiedFields.has('imagePositions')) {
+        // Get the current positions of existing images from the allImages array
+        const existingImagePositions = allImages
+          .filter(img => !img.id.toString().startsWith('new-') && !formData.imagesToDelete?.includes(Number(img.id)))
+          .map(img => ({
+            id: Number(img.id),
+            position: img.position || 1
+          }));
+        
+        if (existingImagePositions.length > 0) {
+          updateData.imagePositions = existingImagePositions;
+        }
+      }
+    
       const response = await updateProduct(productId, updateData);
-      
+    
       if (response?.status === 204) {
         // Clean up new image previews
         newImageFiles.forEach(file => URL.revokeObjectURL(file.preview));
@@ -239,13 +320,72 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
     }
   };
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      newImageFiles.forEach(file => URL.revokeObjectURL(file.preview));
-    };
-  }, []);
+  const handleOnDragEnd = (result: any) => {
+    if (!result.destination) return;
 
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
+    // Create a working copy of all images with their current state
+    const workingImages = [...allImages];
+    
+    // Perform the reorder
+    const [reorderedItem] = workingImages.splice(sourceIndex, 1);
+    workingImages.splice(destinationIndex, 0, reorderedItem);
+
+    // Update positions for all images in the reordered array
+    const updatedImages = workingImages.map((img, index) => ({
+      ...img,
+      position: index + 1
+    }));
+
+    // Separate new images and existing images after reorder
+    const updatedNewImages: ImageFile[] = [];
+    const updatedExistingImages: ImageItem[] = [];
+    
+    updatedImages.forEach((img, index) => {
+      if (img.id.toString().startsWith('new-')) {
+        // Find the original file object and update it
+        const originalFile = newImageFiles.find(f => f.id === img.id);
+        if (originalFile) {
+          const updatedFile = Object.assign(originalFile, {
+            position: index + 1
+          }) as ImageFile;
+          updatedNewImages.push(updatedFile);
+        }
+      } else {
+        // This is an existing image
+        updatedExistingImages.push({
+          ...img,
+          position: index + 1
+        });
+      }
+    });
+
+    // Update new image files state
+    setNewImageFiles(updatedNewImages);
+    handleFieldChange('newImages', updatedNewImages.map(img => img as File));
+    
+    // Check if any existing images have changed positions
+    const hasExistingImagePositionChanges = updatedExistingImages.some(updatedImg => {
+      const originalImg = existingImages.find(orig => orig.id === updatedImg.id);
+      return originalImg && originalImg.position !== updatedImg.position;
+    });
+
+    // Only mark imagePositions as modified if existing images actually moved
+    if (hasExistingImagePositionChanges) {
+      setModifiedFields(prev => new Set(prev).add('imagePositions'));
+    }
+
+    // Also mark newImages as modified since we're changing their positions
+    if (updatedNewImages.length > 0) {
+      setModifiedFields(prev => new Set(prev).add('newImages'));
+    }
+  };
+
+  // NOW the conditional returns can happen after all hooks are called
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
@@ -280,28 +420,6 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
       </Box>
     );
   }
-
-  // Convert existing product images to gallery format matching ImageItem interface
-  const existingImages: ImageItem[] = product.images?.map(image => ({
-    id: image.id,
-    url: image.url,
-    preview: image.thumbnailUrl, // Use thumbnail for preview
-    altText: undefined,
-    position: image.position ?? undefined,
-    name: `Image ${image.id}`,
-    size: undefined
-  })) || [];
-
-  // Convert new images to gallery format matching ImageItem interface  
-  const newGalleryImages: ImageItem[] = newImageFiles.map(file => ({
-    id: file.id,
-    url: undefined, // New files don't have URLs yet
-    preview: file.preview,
-    altText: undefined,
-    position: file.position,
-    name: file.name,
-    size: file.size
-  }));
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 600 }}>
@@ -344,26 +462,9 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         disabled={saving}
       />
 
-      {/* Current Images Section - ADDED */}
-      {existingImages.length > 0 && (
-        <Box mt={3} mb={2}>
-          <ImageGallery
-            images={existingImages}
-            onRemove={handleImageDelete}
-            onRestore={handleImageRestore}
-            markedForDeletion={formData.imagesToDelete || []}
-            title="Current Images"
-            showDragHandle={false}
-            showPosition={true}
-            showFileInfo={false}
-            disabled={saving}
-          />
-        </Box>
-      )}
-
-      {/* New Images Section - ADDED */}
+      {/* Combined Images Section */}
       <Box mt={3} mb={2}>
-        <Typography variant="h6" mb={2}>Add New Images</Typography>
+        <Typography variant="h6" mb={2}>Product Images</Typography>
         
         <ImageUploadDropzone
           onDrop={onDrop}
@@ -371,13 +472,24 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
           multiple={true}
         />
 
-        {newGalleryImages.length > 0 && (
+        {allImages.length > 0 && (
           <Box sx={{ mt: 2 }}>
             <ImageGallery
-              images={newGalleryImages}
-              onRemove={removeNewImage}
-              title="New Images to be Added"
-              showDragHandle={false}
+              images={allImages}
+              onReorder={handleOnDragEnd}
+              onRemove={(id) => {
+                // Check if it's a new image or existing image
+                const isNewImage = newGalleryImages.some(img => img.id === id);
+                if (isNewImage) {
+                  removeNewImage(id);
+                } else {
+                  handleImageDelete(id);
+                }
+              }}
+              onRestore={handleImageRestore}
+              markedForDeletion={formData.imagesToDelete || []}
+              title={`All Images (${existingImages.length} existing, ${newGalleryImages.length} new)`}
+              showDragHandle={true}
               showPosition={true}
               showFileInfo={true}
               disabled={saving}
