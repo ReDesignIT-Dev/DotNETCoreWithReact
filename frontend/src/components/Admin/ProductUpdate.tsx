@@ -66,6 +66,7 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
 
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [newImageFiles, setNewImageFiles] = useState<ImageFile[]>([]);
+  const [existingImagePositions, setExistingImagePositions] = useState<{ id: number; position: number }[]>([]);
 
   // Convert existing product images to gallery format matching ImageItem interface
   const existingImages: ImageItem[] = React.useMemo(() => {
@@ -97,16 +98,23 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
   const allImages: ImageItem[] = React.useMemo(() => {
     const existing = existingImages
       .filter(img => !formData.imagesToDelete?.includes(Number(img.id)))
-      .sort((a, b) => (a.position || 0) - (b.position || 0));
-      
-    const newImages = newGalleryImages
-      .sort((a, b) => (a.position || 0) - (b.position || 0));
-      
-    return [...existing, ...newImages].map((img, index) => ({
-      ...img,
-      position: index + 1 // Ensure sequential positions
-    }));
-  }, [existingImages, newGalleryImages, formData.imagesToDelete]);
+      .map(img => {
+        // Check if we have an updated position for this image
+        const updatedPosition = existingImagePositions.find(pos => pos.id === img.id);
+        return {
+          ...img,
+          position: updatedPosition ? updatedPosition.position : img.position
+        };
+      });
+    
+    const newImages = newGalleryImages;
+    
+    // Combine all images and sort by position, don't reassign positions
+    const combinedImages = [...existing, ...newImages];
+    
+    // Sort by position but maintain the actual position values
+    return combinedImages.sort((a, b) => (a.position || 0) - (b.position || 0));
+  }, [existingImages, newGalleryImages, formData.imagesToDelete, existingImagePositions]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -188,18 +196,14 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
   };
 
   const onDrop = (acceptedFiles: File[]) => {
-    // Calculate current total images count (existing + new, excluding deleted)
-    const currentExistingCount = product?.images?.filter(img => 
-      !formData.imagesToDelete?.includes(img.id)
-    ).length || 0;
-    const currentNewCount = newImageFiles.length;
-    const totalCurrentImages = currentExistingCount + currentNewCount;
+    // Get the highest position from current allImages
+    const maxPosition = allImages.length > 0 ? Math.max(...allImages.map(img => img.position || 0)) : 0;
 
     const newFiles = acceptedFiles.map((file, index) => {
       const imageFile = Object.assign(file, {
         preview: URL.createObjectURL(file),
         id: `new-${Date.now()}-${index}`,
-        position: totalCurrentImages + index + 1,
+        position: maxPosition + index + 1, // Start from the next available position
       }) as ImageFile;
       return imageFile;
     });
@@ -214,18 +218,14 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
   const removeNewImage = (imageId: string | number) => {
     setNewImageFiles(prev => {
       const filtered = prev.filter(img => img.id !== imageId);
-      const updated = filtered.map((img, index) => ({
-        ...img,
-        position: index + 1
-      }));
       
       const imageToRemove = prev.find(img => img.id === imageId);
       if (imageToRemove) {
         URL.revokeObjectURL(imageToRemove.preview);
       }
       
-      handleFieldChange('newImages', updated.map(img => img as File));
-      return updated;
+      handleFieldChange('newImages', filtered.map(img => img as File));
+      return filtered; // Don't reassign positions, keep original positions
     });
   };
 
@@ -341,46 +341,60 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
       position: index + 1
     }));
 
-    // Separate new images and existing images after reorder
+    // Now we need to separate and update both arrays while maintaining the mixed order
     const updatedNewImages: ImageFile[] = [];
-    const updatedExistingImages: ImageItem[] = [];
+    const updatedExistingImagePositions: { id: number; position: number }[] = [];
     
-    updatedImages.forEach((img, index) => {
+    // Go through the reordered images and update positions accordingly
+    updatedImages.forEach((img) => {
       if (img.id.toString().startsWith('new-')) {
         // Find the original file object and update it
         const originalFile = newImageFiles.find(f => f.id === img.id);
         if (originalFile) {
           const updatedFile = Object.assign(originalFile, {
-            position: index + 1
+            position: img.position
           }) as ImageFile;
           updatedNewImages.push(updatedFile);
         }
       } else {
-        // This is an existing image
-        updatedExistingImages.push({
-          ...img,
-          position: index + 1
+        // This is an existing image - store its new position
+        updatedExistingImagePositions.push({
+          id: Number(img.id),
+          position: img.position || 1
         });
       }
     });
 
-    // Update new image files state
+    // Add any new images that weren't in the visible list (shouldn't happen, but safety check)
+    newImageFiles.forEach(file => {
+      if (!updatedNewImages.find(updated => updated.id === file.id)) {
+        updatedNewImages.push(file);
+      }
+    });
+
+    // Update states
     setNewImageFiles(updatedNewImages);
+    setExistingImagePositions(updatedExistingImagePositions);
+    
+    // Update form data
     handleFieldChange('newImages', updatedNewImages.map(img => img as File));
     
-    // Check if any existing images have changed positions
-    const hasExistingImagePositionChanges = updatedExistingImages.some(updatedImg => {
-      const originalImg = existingImages.find(orig => orig.id === updatedImg.id);
+    // Mark appropriate fields as modified
+    const hasExistingImagePositionChanges = updatedExistingImagePositions.some(updatedImg => {
+      const originalImg = existingImages.find(orig => Number(orig.id) === updatedImg.id);
       return originalImg && originalImg.position !== updatedImg.position;
     });
 
-    // Only mark imagePositions as modified if existing images actually moved
+    const hasNewImagePositionChanges = updatedNewImages.some(updatedImg => {
+      const originalImg = newImageFiles.find(orig => orig.id === updatedImg.id);
+      return originalImg && originalImg.position !== updatedImg.position;
+    });
+
     if (hasExistingImagePositionChanges) {
       setModifiedFields(prev => new Set(prev).add('imagePositions'));
     }
 
-    // Also mark newImages as modified since we're changing their positions
-    if (updatedNewImages.length > 0) {
+    if (hasNewImagePositionChanges) {
       setModifiedFields(prev => new Set(prev).add('newImages'));
     }
   };

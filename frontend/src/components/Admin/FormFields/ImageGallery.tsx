@@ -12,7 +12,6 @@ import {
 import { Delete as DeleteIcon, DragIndicator as DragIndicatorIcon } from '@mui/icons-material';
 import {
   DndContext,
-  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
