@@ -88,11 +88,14 @@ export const updateProduct = async (productId: number, productData: UpdateProduc
         if (productData.price !== undefined) {
             formData.append('price', String(productData.price));
         }
-        if (productData.imagesToDelete && productData.imagesToDelete.length > 0) {
-            productData.imagesToDelete.forEach(id => {
-                formData.append('imagesToDelete', String(id));
+        
+        // NEW APPROACH: send current images with positions
+        if (productData.currentImages) {
+            Object.entries(productData.currentImages).forEach(([imageId, position]) => {
+                formData.append(`currentImages[${imageId}]`, String(position));
             });
         }
+        
         if (productData.newImages && productData.newImages.length > 0) {
             productData.newImages.forEach(image => {
                 formData.append('newImages', image);

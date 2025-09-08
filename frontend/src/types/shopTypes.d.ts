@@ -51,15 +51,15 @@ interface CreateProductRequest {  // corresponds to WriteProductDto
     description: string;
     price: number;
     categoryId: number;
-    images: File[]; // Remove the optional ? since it's required in form
+    images: File[]; 
 }
 
-interface UpdateProductRequest {
+interface UpdateProductRequest { // corresponds to UpdateProductDto
     name?: string;
     description?: string;
     price?: number;
     categoryId?: number;
-    imagesToDelete?: number[];
+    currentImages?: Record<number, number>; // Key: ImageId, Value: Position
     newImages?: File[];
 }
 
@@ -107,11 +107,17 @@ interface CategoryImage extends Image {
 
 // ============= UI COMPONENT TYPES =============
 interface ImageItem {
-  id: string | number;
+  id: number;
   url?: string;
   preview?: string;
   altText?: string;
   position?: number;
   name?: string;
   size?: number;
+}
+
+interface ImageFile extends File {
+  preview: string;
+  id: number;
+  position: number;
 }

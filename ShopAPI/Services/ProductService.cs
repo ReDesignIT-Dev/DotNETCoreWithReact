@@ -297,39 +297,91 @@ public class ProductService : IProductService
             product.Category = category;
         }
 
-        // Handle image deletions
-        if (dto.ImagesToDelete != null && dto.ImagesToDelete.Any())
-        {
-            var imagesToRemove = product.Images
-                .Where(img => dto.ImagesToDelete.Contains(img.Id))
-                .ToList();
-
-            foreach (var imageToRemove in imagesToRemove)
-            {
-                product.Images.Remove(imageToRemove);
-            }
-        }
-
-        // Handle new images
-        if (dto.NewImages != null && dto.NewImages.Any())
-        {
-            // Get the highest existing position
-            var maxPosition = product.Images.Any() ? product.Images.Max(img => img.Position) : 0;
-
-            foreach (var file in dto.NewImages)
-            {
-                var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
-                product.Images.Add(new ProductImage
-                {
-                    Url = result.Url,
-                    ThumbnailUrl = result.ThumbnailUrl,
-                    Position = ++maxPosition // Increment position for each new image
-                });
-            }
-        }
+        // Handle image reorganization
+        await ReorganizeImages(product, dto.CurrentImages, dto.NewImages, userId);
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private async Task ReorganizeImages(
+        Product product, 
+        Dictionary<int, int>? currentImages, 
+        List<IFormFile>? newImages, 
+        int? userId)
+    {
+        // If no image changes specified, skip
+        if (currentImages == null && (newImages == null || !newImages.Any()))
+            return;
+
+        // Handle deletions: remove images not in currentImages
+        if (currentImages != null)
+        {
+            var imagesToDelete = product.Images
+                .Where(img => !currentImages.ContainsKey(img.Id))
+                .ToList();
+
+            foreach (var imageToDelete in imagesToDelete)
+            {
+                product.Images.Remove(imageToDelete);
+            }
+        }
+
+        // Update positions of existing images
+        if (currentImages != null)
+        {
+            foreach (var (imageId, position) in currentImages)
+            {
+                var existingImage = product.Images.FirstOrDefault(img => img.Id == imageId);
+                if (existingImage != null)
+                {
+                    existingImage.Position = position;
+                }
+            }
+        }
+
+        // Handle new images: find gaps and fill them
+        if (newImages != null && newImages.Any())
+        {
+            // Get all occupied positions
+            var occupiedPositions = product.Images.Select(img => img.Position).ToHashSet();
+            
+            // Find gaps and available positions
+            var availablePositions = new List<int>();
+            var maxPosition = occupiedPositions.Any() ? occupiedPositions.Max() : 0;
+            
+            // Find gaps in existing positions (1, 2, 3, ... maxPosition)
+            for (int i = 1; i <= maxPosition; i++)
+            {
+                if (!occupiedPositions.Contains(i))
+                {
+                    availablePositions.Add(i);
+                }
+            }
+            
+            // Add positions after the max position if needed
+            while (availablePositions.Count < newImages.Count)
+            {
+                availablePositions.Add(++maxPosition);
+            }
+
+            // Process new images
+            for (int i = 0; i < newImages.Count; i++)
+            {
+                var file = newImages[i];
+                var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
+                
+                var newImage = new ProductImage
+                {
+                    Url = result.Url,
+                    ThumbnailUrl = result.ThumbnailUrl,
+                    Position = availablePositions[i], // Fill gaps in order
+                    ProductId = product.Id
+                };
+                
+                product.Images.Add(newImage);
+            }
+        }
     }
 
 

@@ -25,12 +25,6 @@ import {
 } from "components/Admin/FormFields";
 import { FRONTEND_ADMIN_PRODUCTS_URL } from "config";
 
-interface ImageFile extends File {
-  preview: string;
-  id: string;
-  position: number;
-}
-
 export const ProductAdd = () => {
   const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
@@ -64,10 +58,10 @@ export const ProductAdd = () => {
     const newImageFiles = acceptedFiles.map((file, index) => {
       const imageFile = Object.assign(file, {
         preview: URL.createObjectURL(file),
-        id: `${Date.now()}-${index}`,
+        id: Date.now() + index,
         position: imageFiles.length + index + 1,
       }) as ImageFile;
-      return imageFile;
+      return imageFile; 
     });
 
     setImageFiles(prev => {
