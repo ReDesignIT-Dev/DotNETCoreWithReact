@@ -1,20 +1,15 @@
 import { MouseEvent } from "react";
-import { generatePath, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "services/shopServices/cartLogic";
 import "./ProductList.css";
 import { FRONTEND_PRODUCT_URL } from "config";
 import shopDefaultImage from "assets/images/shop_default_image.jpg";
 import { Box } from "@mui/material";
+import { navigateToProduct } from "utils/navigation";
 
 export default function ProductList({ products }: {products: Product[]}) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-
-  const handleNavigationClick = (slug: string, event: MouseEvent<HTMLDivElement>) => {
-    event.stopPropagation();
-    const productPath = generatePath(FRONTEND_PRODUCT_URL, { slug });
-    navigate(productPath);
-  };
 
   const handleAddToCartClick = async (product: Product, event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -38,7 +33,7 @@ export default function ProductList({ products }: {products: Product[]}) {
               key={product.id}
               className="single-product-on-list d-flex flex-row w-100"
               role="button"
-              onClick={(event) => handleNavigationClick(product.slug, event)}
+              onClick={(event) => navigateToProduct(product.slug, event, navigate)}
             >
               <img src={imageSrc} alt={imageAlt} />
               <div className="product-details d-flex justify-content-between w-100">

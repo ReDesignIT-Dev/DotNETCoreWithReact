@@ -1,8 +1,10 @@
 // filepath: d:\Backupowane\Programowanie\DotNETCoreWithReact\frontend\src\components\Admin\ProductsPanel.tsx
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography, Avatar } from "@mui/material";
+import { Box, Button, Typography, Avatar, Tooltip } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { deleteProduct, getAllProducts } from "services/shopServices/apiRequestsShop";
 import { ConfirmDialog } from "components/common/ConfirmDialog";
+import { navigateToProduct } from "utils/navigation";
 
 type ProductsPanelProps = {
   onAdd: () => void;
@@ -13,9 +15,10 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAdd, onEdit }) =
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [target, setTarget] = useState<Product | null>(null);
+  
+  const navigate = useNavigate();
 
   const load = async () => {
     try {
@@ -81,43 +84,60 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAdd, onEdit }) =
       ) : products.length > 0 ? (
         <Box>
           {products.map((p) => (
-            <Box
+            <Tooltip 
               key={p.id}
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              mb={1}
-              p={1}
-              border="1px solid #ccc"
-              borderRadius="4px"
+              title={`Click to view ${p.name} details`}
+              arrow
+              placement="top"
             >
-              <Box display="flex" alignItems="center" gap={2}>
-                <Avatar
-                  src={p.images && p.images.length > 0 ? p.images[0].url : '/placeholder-image.png'}
-                  alt={p.name}
-                  variant="rounded"
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    border: '1px solid #ddd'
-                  }}
-                />
-                <Box>
-                  <Typography variant="h6">{p.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    ${p.price}
-                  </Typography>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                mb={1}
+                p={1}
+                border="1px solid #ccc"
+                borderRadius="4px"
+                sx={{ 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: '#f8f9fa',
+                    borderColor: '#007bff',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(0,123,255,0.15)'
+                  }
+                }}
+                onClick={(event) => navigateToProduct(p.slug, event, navigate)}
+              >
+                <Box display="flex" alignItems="center" gap={2} flex={1}>
+                  <Avatar
+                    src={p.images && p.images.length > 0 ? p.images[0].url : '/placeholder-image.png'}
+                    alt={p.name}
+                    variant="rounded"
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      border: '1px solid #ddd'
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="h6">{p.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      ${p.price}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box display="flex" gap={1} onClick={(e) => e.stopPropagation()}>
+                  <Button variant="outlined" color="primary" size="small" onClick={() => openEdit(p)}>
+                    Edit
+                  </Button>
+                  <Button variant="outlined" color="error" size="small" onClick={() => openDelete(p)}>
+                    Remove
+                  </Button>
                 </Box>
               </Box>
-              <Box display="flex" gap={1}>
-                <Button variant="outlined" color="primary" size="small" onClick={() => openEdit(p)}>
-                  Edit
-                </Button>
-                <Button variant="outlined" color="error" size="small" onClick={() => openDelete(p)}>
-                  Remove
-                </Button>
-              </Box>
-            </Box>
+            </Tooltip>
           ))}
         </Box>
       ) : (
