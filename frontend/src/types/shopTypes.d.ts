@@ -121,3 +121,32 @@ interface ImageFile extends File {
   id: number;
   position: number;
 }
+
+// Add these interfaces to your existing types:
+
+interface Cart {
+    id: number;
+    items: CartItem[];
+    totalAmount: number;
+    totalItems: number;
+    updatedAt: string;
+}
+
+interface CartItem {
+    id: number;
+    productId: number;
+    product: Product;
+    quantity: number;
+    itemTotal: number;
+    addedAt: string;
+    updatedAt: string;
+}
+
+interface AddToCartRequest {
+    productId: number;
+    quantity: number;
+}
+
+interface UpdateCartItemRequest {
+    quantity: number;
+}
