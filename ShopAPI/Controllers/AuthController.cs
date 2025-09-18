@@ -129,6 +129,10 @@ public class AuthController : ControllerBase
                 return BadRequest("reCAPTCHA validation failed.");
         }
 
+        // Add null check before calling FindByEmailAsync
+        if (string.IsNullOrEmpty(email))
+            return Unauthorized("Invalid email or password.");
+
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
             return Unauthorized("Invalid email or password.");

@@ -54,6 +54,10 @@ public class UserService : IUserService
 
     public async Task<UserDto?> LoginAsync(LoginDto dto)
     {
+        // Add null checks for email and password
+        if (string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.Password))
+            return null;
+
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
             return null;
