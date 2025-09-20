@@ -49,7 +49,6 @@ public class CartService : ICartService
                         }).ToList()
                 },
                 Quantity = item.Quantity,
-                ItemTotal = item.Product.Price * item.Quantity,
                 AddedAt = item.AddedAt,
                 UpdatedAt = item.UpdatedAt
             }).ToList(),
