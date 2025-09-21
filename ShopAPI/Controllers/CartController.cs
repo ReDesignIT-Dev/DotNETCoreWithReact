@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace ShopAPI.Controllers;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "ActiveUserOnly")]
 [ApiController]
 [Route("api/shop/[controller]")]
 public class CartController : ControllerBase
