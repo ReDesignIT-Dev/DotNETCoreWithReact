@@ -1,8 +1,3 @@
-interface CartItem {
-    product: Product;
-    quantity: number;
-}
-
 interface CategoryTree extends Category {
     readonly children: CategoryTree[];
 }
@@ -128,18 +123,12 @@ interface Cart {
     id: number;
     items: CartItem[];
     totalAmount: number;
-    totalItems: number;
-    updatedAt: string;
 }
 
 interface CartItem {
-    id: number;
-    productId: number;
     product: Product;
     quantity: number;
     itemTotal: number;
-    addedAt: string;
-    updatedAt: string;
 }
 
 interface AddToCartRequest {

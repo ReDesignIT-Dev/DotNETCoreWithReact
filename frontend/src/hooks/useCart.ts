@@ -25,8 +25,6 @@ export function useCart() {
                     updatedAt: new Date().toISOString()
                 })),
                 totalAmount: localCart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0),
-                totalItems: localCart.reduce((sum, item) => sum + item.quantity, 0),
-                updatedAt: new Date().toISOString()
             };
             setCart(mockCart);
             return;
@@ -127,9 +125,8 @@ export function useCart() {
             setCart({
                 id: 0,
                 items: [],
-                totalAmount: 0,
-                totalItems: 0,
-                updatedAt: new Date().toISOString()
+                totalAmount: 0
+
             });
         } catch (err) {
             setError('Failed to clear cart');

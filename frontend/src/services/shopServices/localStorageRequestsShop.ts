@@ -30,8 +30,12 @@ export const addItemToCart = (product: Product, quantity = 1) => {
 
   if (existingItemIndex !== -1) {
     cart[existingItemIndex].quantity += quantity;
+    // Recalculate itemTotal for existing item
+    cart[existingItemIndex].itemTotal = cart[existingItemIndex].quantity * product.price;
   } else {
-    cart.push({ product, quantity });
+    // Calculate itemTotal for new item
+    const itemTotal = quantity * product.price;
+    cart.push({ product, quantity, itemTotal });
   }
 
   saveState(cart);
@@ -49,6 +53,8 @@ export const updateItemQuantity = (product: Product, quantity: number) => {
 
   if (existingItemIndex !== -1) {
     cart[existingItemIndex].quantity = quantity;
+    // Recalculate itemTotal when quantity changes
+    cart[existingItemIndex].itemTotal = quantity * product.price;
   }
 
   saveState(cart);

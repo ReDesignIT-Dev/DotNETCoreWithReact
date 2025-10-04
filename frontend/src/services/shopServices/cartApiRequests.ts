@@ -19,7 +19,7 @@ export async function getCart(): Promise<AxiosResponse<Cart> | undefined> {
     }
 }
 
-export async function addToCart(productId: number, quantity: number = 1): Promise<AxiosResponse<Cart> | undefined> {
+export async function addToCart(productId: number, quantity = 1): Promise<AxiosResponse<Cart> | undefined> {
     try {
         const token = getValidatedToken();
         const response = await apiClient.post(`${API_CART_URL}/add`, {
@@ -87,6 +87,21 @@ export async function getCartItemCount(): Promise<AxiosResponse<number> | undefi
         const token = getValidatedToken();
         const response = await apiClient.get(`${API_CART_URL}/count`, {
             headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response;
+    } catch (error) {
+        apiErrorHandler(error);
+    }
+}
+
+export async function testWebSocket(): Promise<AxiosResponse<{ requestId: string; message: string }> | undefined> {
+    try {
+        const token = getValidatedToken();
+        const response = await apiClient.post(`${API_CART_URL}/test-websocket`, {}, {
+            headers: {
+                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`
             }
         });

@@ -21,11 +21,6 @@ interface ApiRequestConfig extends AxiosRequestConfig {
   data?: Record<string, unknown>; 
 }
 
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
-
 const apiRequest = async (
   method: string,
   url: string,

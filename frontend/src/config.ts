@@ -1,7 +1,7 @@
 // config.ts
 export const FRONTEND_SHOP_URL = "/shop";
 
-export const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || "http://localhost:8000";
+export const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || "https://localhost:7288";
 export const FRONTEND_BASE_URL = process.env.REACT_APP_FRONTEND_BASE_URL || "http://localhost:3000";
 export const BACKEND_SHOP_URL = "api/shop";
 export const BACKEND_USER_URL = "api/shop/auth";

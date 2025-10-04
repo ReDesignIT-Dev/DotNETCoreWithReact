@@ -28,8 +28,6 @@ public class CartService : ICartService
             Id = cart.Id,
             Items = cart.Items.Select(item => new CartItemDto
             {
-                Id = item.Id,
-                ProductId = item.ProductId,
                 Product = new ReadProductDto
                 {
                     Id = item.Product.Id,
@@ -49,12 +47,8 @@ public class CartService : ICartService
                         }).ToList()
                 },
                 Quantity = item.Quantity,
-                AddedAt = item.AddedAt,
-                UpdatedAt = item.UpdatedAt
             }).ToList(),
             TotalAmount = cart.Items.Sum(item => item.Product.Price * item.Quantity),
-            TotalItems = cart.Items.Sum(item => item.Quantity),
-            UpdatedAt = cart.UpdatedAt
         };
     }
 
@@ -82,7 +76,6 @@ public class CartService : ICartService
             {
                 // Update quantity
                 existingItem.Quantity += dto.Quantity;
-                existingItem.UpdatedAt = DateTime.UtcNow;
             }
             else
             {
@@ -92,14 +85,11 @@ public class CartService : ICartService
                     CartId = cart.Id,
                     ProductId = dto.ProductId,
                     Quantity = dto.Quantity,
-                    AddedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
                 };
                 
                 cart.Items.Add(cartItem);
             }
 
-            cart.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             
             _logger.LogInformation("Added {Quantity} of product {ProductId} to cart for user {UserId}", 
@@ -138,10 +128,9 @@ public class CartService : ICartService
             else
             {
                 cartItem.Quantity = dto.Quantity;
-                cartItem.UpdatedAt = DateTime.UtcNow;
             }
 
-            cart.UpdatedAt = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
             
             _logger.LogInformation("Updated cart item for product {ProductId} to quantity {Quantity} for user {UserId}", 
@@ -170,7 +159,6 @@ public class CartService : ICartService
             cart.Items.Remove(cartItem);
             _context.CartItems.Remove(cartItem);
             
-            cart.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             
             _logger.LogInformation("Removed product {ProductId} from cart for user {UserId}", 
@@ -198,7 +186,6 @@ public class CartService : ICartService
                 return true; // No cart to clear
 
             _context.CartItems.RemoveRange(cart.Items);
-            cart.UpdatedAt = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();
             
@@ -234,9 +221,7 @@ public class CartService : ICartService
         {
             cart = new Cart
             {
-                UserId = userId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UserId = userId
             };
             
             _context.Carts.Add(cart);

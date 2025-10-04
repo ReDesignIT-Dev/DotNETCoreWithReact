@@ -13,11 +13,13 @@ namespace ShopAPI.Controllers;
 public class CartController : ControllerBase
 {
     private readonly ICartService _cartService;
+    private readonly IWebSocketService _webSocketService;
     private readonly ILogger<CartController> _logger;
 
-    public CartController(ICartService cartService, ILogger<CartController> logger)
+    public CartController(ICartService cartService, IWebSocketService webSocketService, ILogger<CartController> logger)
     {
         _cartService = cartService;
+        _webSocketService = webSocketService;
         _logger = logger;
     }
 
@@ -114,6 +116,24 @@ public class CartController : ControllerBase
 
         var count = await _cartService.GetCartItemCountAsync(userId.Value);
         return Ok(count);
+    }
+
+    [HttpPost("test-websocket")]
+    public ActionResult TestWebSocket() // Removed async since we're not awaiting anything
+    {
+        var userId = GetUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var requestId = Guid.NewGuid().ToString();
+        
+        _logger.LogInformation("WebSocket test initiated by user {UserId}, request {RequestId}", userId, requestId);
+        
+        // Start the background task that will trigger the button success after 5 seconds
+        _ = Task.Run(async () => await _webSocketService.TriggerButtonSuccessAsync(userId.Value, requestId));
+        
+        // Return immediate response
+        return Ok(new { requestId, message = "Request initiated, button will change to success in 5 seconds" });
     }
 
     private int? GetUserId()
