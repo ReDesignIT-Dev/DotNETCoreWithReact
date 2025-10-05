@@ -10,6 +10,7 @@ using ShopAPI.Data;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using ShopAPI.Services;
+using ShopAPI.Hubs;
 using System.Text;
 
 DotNetEnv.Env.Load();
@@ -28,9 +29,18 @@ builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
 builder.Services.AddSwaggerGen();
 
+// Add SignalR with detailed configuration
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+});
+
+// Add WebSocket service
+builder.Services.AddScoped<IWebSocketService, WebSocketService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -43,12 +53,33 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ActiveUserHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, SimpleActiveUserHandler>(); // Use Singleton for SignalR
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ICartService, CartService>();
 
+// Configure Identity BEFORE authentication
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+{
+    options.SignIn.RequireConfirmedEmail = true;
+    options.Password.RequiredLength = 12;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireDigit = true;
+    options.User.RequireUniqueEmail = true;
+    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
 
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+})
+.AddEntityFrameworkStores<ShopContext>()
+.AddDefaultTokenProviders();
+
+// Configure authentication AFTER Identity but override the default schemes
 builder.Services.AddAuthentication(options =>
 {
+    // Override the defaults set by AddIdentity
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -69,55 +100,82 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+
+    // Enhanced JWT configuration for SignalR
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            
+            Log.Information("JWT OnMessageReceived - Path: {Path}, HasToken: {HasToken}", 
+                path, !string.IsNullOrEmpty(accessToken));
+            
+            if (!string.IsNullOrEmpty(accessToken) && 
+                (path.StartsWithSegments("/testHub") || path.StartsWithSegments("/hubs/")))
+            {
+                context.Token = accessToken;
+                Log.Information("JWT Token set for SignalR path: {Path}", path);
+            }
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            Log.Warning("JWT Authentication failed for SignalR: {Error}", context.Exception?.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Log.Information("JWT Token validated successfully for SignalR");
+            return Task.CompletedTask;
+        }
     };
 });
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ActiveUserOnly", policy =>
-    policy.Requirements.Add(new ActiveUserRequirement()));
+    {
+        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        policy.Requirements.Add(new ActiveUserRequirement());
+    });
     options.AddPolicy("AdminOnly", policy =>
-    policy.Requirements.Add(new AdminRequirement()));
+    {
+        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        policy.Requirements.Add(new AdminRequirement());
+    });
     options.AddPolicy("AdminAndActive", policy =>
     {
+        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
         policy.Requirements.Add(new AdminRequirement());
         policy.Requirements.Add(new ActiveUserRequirement());
     });
 });
 
+// Enhanced CORS configuration for SignalR
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
+    options.AddDefaultPolicy(corsBuilder =>
     {
-        builder.WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:8000", "https://localhost:8000")
-               .AllowCredentials()
-               .AllowAnyHeader()
-               .AllowAnyMethod();
+        corsBuilder
+            .WithOrigins(
+                "http://localhost:3000", 
+                "https://localhost:3000", 
+                "http://localhost:8000", 
+                "https://localhost:8000"
+            )
+            .AllowCredentials()
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .SetIsOriginAllowed(origin => true); // Allow any origin in development
     });
 });
 
-builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
-{
-    options.SignIn.RequireConfirmedEmail = true;
-    options.Password.RequiredLength = 12;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireDigit = true;
-    options.User.RequireUniqueEmail = true;
-    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
-
-    // Lockout settings
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-    options.Lockout.MaxFailedAccessAttempts = 5;
-    options.Lockout.AllowedForNewUsers = true;
-})
-.AddEntityFrameworkStores<ShopContext>()
-.AddDefaultTokenProviders();
-
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
 
 if (builder.Environment.IsDevelopment())
 {
@@ -131,6 +189,8 @@ else
 }
 
 var app = builder.Build();
+
+// Move CORS before other middleware
 app.UseCors();
 
 if (!builder.Environment.IsDevelopment())
@@ -143,7 +203,6 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ShopContext>();
     db.Database.Migrate();
 
-    // Ensure roles exist
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
     string[] roles = ["Admin", "User", "Moderator"];
     foreach (var role in roles)
@@ -154,7 +213,6 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // Seed initial admin user
     var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var adminEmail = config["ADMIN_EMAIL"] ?? "";
@@ -181,7 +239,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -197,11 +254,12 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
-
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR Hub with the new policy
+app.MapHub<TestHub>("/testHub");
 
 app.Run();

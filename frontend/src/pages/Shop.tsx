@@ -33,6 +33,7 @@ import { fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
 import { AppDispatch } from "reduxComponents/store";
 import { ProductAdd } from "../components/Admin/ProductAdd";
 import { AdminPanel } from "./AdminPanel";
+import WebSocketTest from "components/WebSocketTest";
 
 function Shop() {
   const dispatch = useDispatch<AppDispatch>();
@@ -59,6 +60,7 @@ function Shop() {
           <Route path={ROUTE_PATH_SEARCH} element={<SearchPage />} />
           <Route path={ROUTE_PATH_CART} element={<Cart />} />
           <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
+          <Route path="/test-socket" element={<WebSocketTest />}></Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Box>
