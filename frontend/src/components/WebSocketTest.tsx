@@ -13,17 +13,12 @@ const WebSocketTest: React.FC = () => {
     const [connectionState, setConnectionState] = useState('Not initialized');
     const [connectionInfo, setConnectionInfo] = useState<any>({});
     const [error, setError] = useState<string | null>(null);
-    const connectionInitialized = useRef(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const callbackRef = useRef<((data: any) => void) | null>(null); // Store callback reference
 
     useEffect(() => {
-        // Create callback function once and store reference
         const handleButtonSuccess = (data: { requestId: string; success: boolean; timestamp: string }) => {
             console.log('🎉 Button success event received in component:', data);
             setButtonState(prev => {
-                console.log('prev request id', prev.requestId);
-                console.log('data request id', data.requestId);
                 if (prev.requestId === data.requestId) {
                     console.log('✅ Request ID matches, updating button to success');
                     return { ...prev, status: 'success' };
@@ -34,62 +29,26 @@ const WebSocketTest: React.FC = () => {
             });
         };
 
-        // Store callback reference
-        callbackRef.current = handleButtonSuccess;
+        // Update connection state periodically
+        intervalRef.current = setInterval(() => {
+            const connected = webSocketService.isConnected();
+            const state = webSocketService.getConnectionState();
+            const info = webSocketService.getConnectionInfo();
+            setIsConnected(connected);
+            setConnectionState(state);
+            setConnectionInfo(info);
+        }, 1000);
 
-        // Only initialize connection once
-        if (!connectionInitialized.current) {
-            const connectWebSocket = async () => {
-                try {
-                    setError(null);
-                    console.log('🔌 Initializing WebSocket connection...');
-                    await webSocketService.connect();
-                    setIsConnected(webSocketService.isConnected());
-                    setConnectionState(webSocketService.getConnectionState());
-                    setConnectionInfo(webSocketService.getConnectionInfo());
-                    console.log('✅ WebSocket initialization completed');
-                } catch (err) {
-                    setError(`Failed to connect to WebSocket: ${err}`);
-                    console.error('❌ WebSocket connection error:', err);
-                    setIsConnected(false);
-                    setConnectionState(webSocketService.getConnectionState());
-                    setConnectionInfo(webSocketService.getConnectionInfo());
-                }
-            };
-
-            // Update connection state periodically
-            intervalRef.current = setInterval(() => {
-                const connected = webSocketService.isConnected();
-                const state = webSocketService.getConnectionState();
-                const info = webSocketService.getConnectionInfo();
-                setIsConnected(connected);
-                setConnectionState(state);
-                setConnectionInfo(info);
-            }, 1000);
-
-            // Mark as initialized before connecting
-            connectionInitialized.current = true;
-            connectWebSocket();
-        }
-
-        // Always register the callback (even on re-mount in StrictMode)
-        console.log('🔗 Registering ButtonSuccess callback');
+        // Register for button success events
         webSocketService.on('ButtonSuccess', handleButtonSuccess);
 
         return () => {
-            // Only unregister THIS specific callback
-            if (callbackRef.current) {
-                console.log('🔓 Unregistering ButtonSuccess callback');
-                webSocketService.off('ButtonSuccess', callbackRef.current);
-            }
-            
-            // Only cleanup interval and connection on final unmount
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
-                intervalRef.current = null;
             }
+            webSocketService.off('ButtonSuccess', handleButtonSuccess);
         };
-    }, []); // Keep empty dependency array
+    }, []);
 
     const handleButtonClick = async () => {
         if (buttonState.status !== 'idle') return;
@@ -169,7 +128,7 @@ const WebSocketTest: React.FC = () => {
     return (
         <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
             <h3>WebSocket Test</h3>
-
+            
             <div style={{ marginBottom: '20px', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '5px' }}>
                 <h4>Connection Status</h4>
                 <p>Status: {isConnected ? '🟢 Connected' : '🔴 Disconnected'}</p>
@@ -177,6 +136,7 @@ const WebSocketTest: React.FC = () => {
                 <p>Connection ID: <code>{connectionInfo.connectionId || 'None'}</code></p>
                 <p>Reconnect Attempts: {connectionInfo.reconnectAttempts || 0}</p>
                 <p>Current Request ID: <code>{buttonState.requestId || 'None'}</code></p>
+                <p><strong>Note:</strong> {`WebSocket is now connected globally when you're authenticated!`}</p>
             </div>
 
             <div style={{ marginBottom: '20px' }}>

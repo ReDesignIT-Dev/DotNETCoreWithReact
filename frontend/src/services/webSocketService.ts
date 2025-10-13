@@ -9,10 +9,24 @@ type ButtonSuccessData = {
     timestamp: string;
 };
 
+type ForceLogoutData = {
+    reason: string;
+    timestamp: string;
+    type: 'global' | 'individual';
+};
+
+type GlobalNotificationData = {
+    message: string;
+    type: string;
+    timestamp: string;
+};
+
 type WebSocketEventCallback<T = any> = (data: T) => void;
 
 type WebSocketEventMap = {
     ButtonSuccess: ButtonSuccessData;
+    ForceLogout: ForceLogoutData;
+    GlobalNotification: GlobalNotificationData;
     // Add more event types here as needed
     [key: string]: any;
 };
@@ -132,12 +146,17 @@ class WebSocketService {
         // Set up event handlers before starting connection
         this.connection.on('ButtonSuccess', (data: ButtonSuccessData) => {
             console.log('🎉 Button success received in WebSocketService:', data);
-            console.log('🔄 About to emit ButtonSuccess event to callbacks');
             this.emit('ButtonSuccess', data);
         });
 
-        this.connection.on('TestResponse', (data: any) => {
-            console.log('📨 Test response received:', data);
+        this.connection.on('ForceLogout', (data: ForceLogoutData) => {
+            console.log('🚪 Force logout received:', data);
+            this.emit('ForceLogout', data);
+        });
+
+        this.connection.on('GlobalNotification', (data: GlobalNotificationData) => {
+            console.log('📢 Global notification received:', data);
+            this.emit('GlobalNotification', data);
         });
 
         this.connection.onreconnecting((error) => {

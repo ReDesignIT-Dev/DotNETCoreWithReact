@@ -41,7 +41,6 @@ builder.Services.AddSignalR(options =>
 
 // Add WebSocket service
 builder.Services.AddScoped<IWebSocketService, WebSocketService>();
-
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -53,7 +52,6 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ActiveUserHandler>();
-builder.Services.AddSingleton<IAuthorizationHandler, SimpleActiveUserHandler>(); // Use Singleton for SignalR
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ICartService, CartService>();
 
@@ -164,7 +162,9 @@ builder.Services.AddCors(options =>
         corsBuilder
             .WithOrigins(
                 "http://localhost:3000", 
-                "https://localhost:3000", 
+                "https://localhost:3000",
+                "http://localhost:7288",
+                "https://localhost:7288",
                 "http://localhost:8000", 
                 "https://localhost:8000"
             )
@@ -259,7 +259,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Map SignalR Hub with the new policy
 app.MapHub<TestHub>("/testHub");
 
 app.Run();

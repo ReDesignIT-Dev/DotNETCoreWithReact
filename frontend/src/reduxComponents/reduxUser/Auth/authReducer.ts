@@ -1,10 +1,10 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { postLogin, logoutUser } from "services/apiRequestsUser"; // Import your API functions
-import { getToken, getValidatedToken, isTokenValid, isUserAdmin, setToken, getIsAdminFromJwt } from "utils/cookies"; // Import cookie functions
+﻿import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { postLogin, logoutUser } from "services/apiRequestsUser";
+import { getToken, getValidatedToken, isTokenValid, isUserAdmin, setToken, getIsAdminFromJwt, decodeJwtPayload } from "utils/cookies";
 
 interface AuthState {
   isLoggedIn: boolean;
-  user: string | null;
+  username: string | null;
   token: string | null;
   isAdmin: boolean;
   isLoading: boolean;
@@ -14,8 +14,22 @@ interface AuthState {
 interface LoginResponse {
   token: string;
   expiry: string;
-  user: string;
+  username: string;
   isAdmin: boolean;
+}
+
+// Helper function to extract username from token
+function getUsernameFromToken(token: string): string | null {
+  try {
+    const payload = decodeJwtPayload(token);
+    if (!payload) return null;
+    
+    // The username might be in different claims, try common ones
+    return payload.unique_name || payload.username || payload.name || payload.sub || null;
+  } catch (e) {
+    console.error("Failed to get username from JWT:", e);
+    return null;
+  }
 }
 
 export const loginUser = createAsyncThunk<LoginResponse, { username: string; password: string; recaptchaToken: string | null }>(
@@ -24,10 +38,11 @@ export const loginUser = createAsyncThunk<LoginResponse, { username: string; pas
     try {
       const response = await postLogin({ username, password, recaptchaToken });
       if (response && response.status === 200) {
-        const { token, user } = response.data as LoginResponse;
+        const { token, username } = response.data as LoginResponse;
+        console.log("Login response data:", response.data);
         setToken(token);
         const isAdmin = getIsAdminFromJwt(token);
-        return { token, user, isAdmin, expiry: "" };
+        return { token, username, isAdmin, expiry: "" };
       } else {
         return rejectWithValue("Unexpected response status");
       }
@@ -36,11 +51,9 @@ export const loginUser = createAsyncThunk<LoginResponse, { username: string; pas
         console.error("Error Response:", error.response);
         return rejectWithValue(error.response.data || "Server Error");
       } else if (error.request) {
-        // Request was made but no response was received
         console.error("No Response Received:", error.request);
         return rejectWithValue("No response from server");
       } else {
-        // Other errors (setting up request, etc.)
         console.error("Error during request setup:", error.message);
         return rejectWithValue("Invalid username or password");
       }
@@ -59,9 +72,10 @@ export const logout = createAsyncThunk(
   }
 );
 
+// ✅ Fix: Extract username from token on initialization
 const initialState: AuthState = {
   isLoggedIn: Boolean(getValidatedToken()) && isTokenValid(),
-  user: null,
+  username: getValidatedToken() ? getUsernameFromToken(getValidatedToken()!) : null, // ← Extract username from token
   isAdmin: Boolean(getValidatedToken()) && isTokenValid() && isUserAdmin(),
   token: getValidatedToken() || null,
   isLoading: false,
@@ -82,7 +96,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isLoggedIn = true;
         state.token = action.payload.token;
-        state.user = action.payload.user; 
+        state.username = action.payload.username; 
         state.isAdmin = action.payload.isAdmin;
         state.error = null;
       })
@@ -100,7 +114,7 @@ const authSlice = createSlice({
         state.isLoggedIn = false;
         state.isAdmin = false;
         state.token = null;
-        state.user = null;
+        state.username = null;
       })
       .addCase(logout.rejected, (state, action) => {
         state.isLoading = false;
