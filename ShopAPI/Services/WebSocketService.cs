@@ -6,10 +6,10 @@ namespace ShopAPI.Services;
 
 public class WebSocketService : IWebSocketService
 {
-    private readonly IHubContext<TestHub> _hubContext;
+    private readonly IHubContext<MainHub> _hubContext;
     private readonly ILogger<WebSocketService> _logger;
 
-    public WebSocketService(IHubContext<TestHub> hubContext, ILogger<WebSocketService> logger)
+    public WebSocketService(IHubContext<MainHub> hubContext, ILogger<WebSocketService> logger)
     {
         _hubContext = hubContext;
         _logger = logger;

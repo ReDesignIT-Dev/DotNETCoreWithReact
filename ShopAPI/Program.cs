@@ -110,11 +110,11 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
             
-            Log.Information("JWT OnMessageReceived - Path: {Path}, HasToken: {HasToken}", 
+            Log.Information("JWT OnMessageReceived - Path: {Path}, accessToken: {accessToken}", 
                 path, !string.IsNullOrEmpty(accessToken));
             
             if (!string.IsNullOrEmpty(accessToken) && 
-                (path.StartsWithSegments("/testHub") || path.StartsWithSegments("/hubs/")))
+                (path.StartsWithSegments("/Hub") || path.StartsWithSegments("/hubs/")))
             {
                 context.Token = accessToken;
                 Log.Information("JWT Token set for SignalR path: {Path}", path);
@@ -259,6 +259,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<TestHub>("/testHub");
+app.MapHub<MainHub>("/hub");
 
 app.Run();

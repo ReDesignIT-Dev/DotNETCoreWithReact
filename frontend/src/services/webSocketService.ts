@@ -78,7 +78,7 @@ class WebSocketService {
             }
 
             // Use the correct HTTPS URL from config
-            const hubUrl = `${BACKEND_BASE_URL}/testHub`;
+            const hubUrl = `${BACKEND_BASE_URL}/hub`;
 
             console.log('Creating new SignalR connection to:', hubUrl);
 

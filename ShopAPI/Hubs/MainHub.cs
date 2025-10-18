@@ -5,11 +5,11 @@ using System.Security.Claims;
 namespace ShopAPI.Hubs;
 
 [Authorize(Policy = "ActiveUserOnly")]
-public class TestHub : Hub
+public class MainHub : Hub
 {
-    private readonly ILogger<TestHub> _logger;
+    private readonly ILogger<MainHub> _logger;
 
-    public TestHub(ILogger<TestHub> logger)
+    public MainHub(ILogger<MainHub> logger)
     {
         _logger = logger;
     }
