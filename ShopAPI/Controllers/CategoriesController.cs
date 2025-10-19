@@ -137,7 +137,6 @@ public class CategoriesController : ControllerBase
             return NotFound();
         }
 
-        _logger.LogInformation("Category with id {CategoryId} was deleted by user {User}.", id, User.Identity?.Name ?? "Unknown");
         return NoContent();
     }
 }

@@ -102,7 +102,6 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // Enhanced JWT configuration for SignalR
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -110,25 +109,19 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
             
-            Log.Information("JWT OnMessageReceived - Path: {Path}, accessToken: {accessToken}", 
-                path, !string.IsNullOrEmpty(accessToken));
-            
             if (!string.IsNullOrEmpty(accessToken) && 
                 (path.StartsWithSegments("/Hub") || path.StartsWithSegments("/hubs/")))
             {
                 context.Token = accessToken;
-                Log.Information("JWT Token set for SignalR path: {Path}", path);
             }
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context =>
         {
-            Log.Warning("JWT Authentication failed for SignalR: {Error}", context.Exception?.Message);
             return Task.CompletedTask;
         },
         OnTokenValidated = context =>
         {
-            Log.Information("JWT Token validated successfully for SignalR");
             return Task.CompletedTask;
         }
     };

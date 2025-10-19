@@ -51,7 +51,8 @@ public class CartController : ControllerBase
         if (cart == null)
             return BadRequest("Product not found");
 
-        _logger.LogInformation("User {UserId} added product {ProductId} to cart", userId, dto.ProductId);
+        _logger.Log
+            ("User {UserId} added product {ProductId} to cart", userId, dto.ProductId);
         return Ok(cart);
     }
 

@@ -155,7 +155,8 @@ public class ProductService : IProductService
     {
         try
         {
-            _logger.LogInformation("CreateProductAsync started. Name: {Name}, CategoryId: {CategoryId}, UserId: {UserId}", 
+            _logger.Log
+                ("CreateProductAsync started. Name: {Name}, CategoryId: {CategoryId}, UserId: {UserId}", 
                 dto.Name, dto.CategoryId, userId);
 
             // Validate category exists

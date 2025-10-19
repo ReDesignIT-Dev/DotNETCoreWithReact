@@ -49,7 +49,6 @@ class WebSocketService {
 
         // If we're already connecting, wait for that connection to complete
         if (this.isConnecting && this.connectionPromise) {
-            console.log('Connection attempt already in progress, waiting for it to complete...');
             return this.connectionPromise;
         }
 
@@ -80,32 +79,23 @@ class WebSocketService {
             // Use the correct HTTPS URL from config
             const hubUrl = `${BACKEND_BASE_URL}/hub`;
 
-            console.log('Creating new SignalR connection to:', hubUrl);
-
             this.connection = new signalR.HubConnectionBuilder()
                 .withUrl(hubUrl, {
                     accessTokenFactory: () => {
                         const currentToken = getValidatedToken();
-                        console.log('Token requested for SignalR:', currentToken ? 'Token available' : 'No token');
                         return currentToken || '';
                     },
                     withCredentials: true
                 })
                 .withAutomaticReconnect([0, 2000, 10000, 30000])
-                .configureLogging(signalR.LogLevel.Information)
+                .configureLogging(signalR.LogLevel.None)
                 .build();
 
             // Set up event handlers
             this._setupEventHandlers();
 
             // Start the connection
-            console.log('Starting SignalR connection...');
             await this.connection.start();
-            
-            console.log('SignalR connected successfully');
-            console.log('Connection ID:', this.connection.connectionId);
-            console.log('Connection state:', this.connection.state);
-            
             this.initialized = true;
             this.reconnectAttempts = 0;
 
@@ -114,7 +104,6 @@ class WebSocketService {
                 try {
                     if (this.connection?.state === signalR.HubConnectionState.Connected) {
                         await this.connection.invoke('TestMethod', 'Connection established successfully');
-                        console.log('Test method invoked successfully after connection');
                     }
                 } catch (invokeErr) {
                     console.warn('Failed to invoke test method after connection:', invokeErr);
@@ -128,7 +117,6 @@ class WebSocketService {
             
             // Try to reconnect if we haven't exceeded max attempts
             if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                console.log(`Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts} in 2 seconds...`);
                 setTimeout(() => {
                     if (!this.isConnected()) {
                         this.connect().catch(console.error);
@@ -145,36 +133,22 @@ class WebSocketService {
 
         // Set up event handlers before starting connection
         this.connection.on('ButtonSuccess', (data: ButtonSuccessData) => {
-            console.log('🎉 Button success received in WebSocketService:', data);
             this.emit('ButtonSuccess', data);
         });
 
         this.connection.on('ForceLogout', (data: ForceLogoutData) => {
-            console.log('🚪 Force logout received:', data);
             this.emit('ForceLogout', data);
         });
 
         this.connection.on('GlobalNotification', (data: GlobalNotificationData) => {
-            console.log('📢 Global notification received:', data);
             this.emit('GlobalNotification', data);
         });
 
-        this.connection.onreconnecting((error) => {
-            console.log('🔄 SignalR reconnecting:', error);
-        });
-
-        this.connection.onreconnected((connectionId) => {
-            console.log('✅ SignalR reconnected with connection ID:', connectionId);
-            this.reconnectAttempts = 0;
-        });
-
         this.connection.onclose((error) => {
-            console.log('❌ SignalR connection closed:', error);
             this.initialized = false;
             
             // Try to reconnect if the connection was closed unexpectedly
             if (error && this.reconnectAttempts < this.maxReconnectAttempts) {
-                console.log('Connection closed unexpectedly, attempting to reconnect...');
                 setTimeout(() => {
                     if (!this.isConnected()) {
                         this.connect().catch(console.error);
@@ -222,37 +196,28 @@ class WebSocketService {
     on<K extends keyof WebSocketEventMap>(event: K, callback: WebSocketEventCallback<WebSocketEventMap[K]>): void;
     on(event: string, callback: WebSocketEventCallback): void;
     on(event: string, callback: WebSocketEventCallback): void {
-        console.log('🔗 Registering callback for event:', event);
         if (!this.callbacks[event]) {
             this.callbacks[event] = [];
         }
         this.callbacks[event].push(callback);
-        console.log('📝 Current callbacks for', event, ':', this.callbacks[event].length);
     }
 
     off<K extends keyof WebSocketEventMap>(event: K, callback: WebSocketEventCallback<WebSocketEventMap[K]>): void;
     off(event: string, callback: WebSocketEventCallback): void;
     off(event: string, callback: WebSocketEventCallback): void {
-        console.log('🔓 Unregistering callback for event:', event);
         if (this.callbacks[event]) {
             this.callbacks[event] = this.callbacks[event].filter(cb => cb !== callback);
-            console.log('📝 Remaining callbacks for', event, ':', this.callbacks[event].length);
         }
     }
 
     private emit<K extends keyof WebSocketEventMap>(event: K, data: WebSocketEventMap[K]): void;
     private emit(event: string, data: any): void;
     private emit(event: string, data: any): void {
-        console.log('📢 Emitting event:', event, 'with data:', data);
-        console.log('📋 Available callbacks for event:', event, ':', this.callbacks[event]?.length || 0);
         
         if (this.callbacks[event]) {
-            console.log('✅ Found callbacks, calling them...');
             this.callbacks[event].forEach((callback, index) => {
-                console.log(`🔄 Calling callback ${index + 1} for event: ${event}`);
                 try {
                     callback(data);
-                    console.log(`✅ Callback ${index + 1} executed successfully`);
                 } catch (error) {
                     console.error(`❌ Error in callback ${index + 1}:`, error);
                 }

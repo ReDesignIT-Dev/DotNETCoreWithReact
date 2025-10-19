@@ -64,59 +64,44 @@ public class ProductsController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("CreateProduct started. Name: {ProductName}, CategoryId: {CategoryId}, Price: {Price}, ImagesCount: {ImagesCount}", 
-                dto.Name, dto.CategoryId, dto.Price, dto.Images?.Count ?? 0);
-
-            // Log detailed DTO validation
             if (string.IsNullOrWhiteSpace(dto.Name))
             {
-                _logger.LogWarning("CreateProduct failed: Name is null or empty");
                 return BadRequest("Product name is required.");
             }
 
             if (dto.Price <= 0)
             {
-                _logger.LogWarning("CreateProduct failed: Invalid price {Price}", dto.Price);
                 return BadRequest("Product price must be greater than 0.");
             }
 
             if (dto.CategoryId <= 0)
             {
-                _logger.LogWarning("CreateProduct failed: Invalid categoryId {CategoryId}", dto.CategoryId);
                 return BadRequest("Valid category ID is required.");
             }
 
-            // Log image details if present
             if (dto.Images != null && dto.Images.Any())
             {
-                _logger.LogInformation("Processing {Count} images for product creation", dto.Images.Count);
                 foreach (var (image, index) in dto.Images.Select((img, idx) => (img, idx)))
                 {
-                    _logger.LogInformation("Image {Index}: Name={FileName}, Size={Size} bytes, ContentType={ContentType}", 
-                        index + 1, image.FileName, image.Length, image.ContentType);
+                    index + 1, image.FileName, image.Length, image.ContentType);
                 }
             }
 
             var userId = GetUserId();
-            _logger.LogInformation("User ID for product creation: {UserId}", userId);
 
             var created = await _productService.CreateProductAsync(dto, userId);
-            
+
             if (created == null)
             {
-                _logger.LogWarning("CreateProduct failed: Service returned null - Category {CategoryId} does not exist", dto.CategoryId);
                 return BadRequest("Category does not exist.");
             }
 
-            _logger.LogInformation("Product created successfully with ID: {ProductId}, Name: {ProductName}", 
-                created.Id, created.Name);
-            
+
             return CreatedAtAction(nameof(GetProductById), new { id = created.Id }, created);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error creating product. Name: {ProductName}, CategoryId: {CategoryId}", 
-                dto.Name, dto.CategoryId);
+            dto.Name, dto.CategoryId);
             return StatusCode(500, "An internal server error occurred while creating the product.");
         }
     }
@@ -140,7 +125,6 @@ public class ProductsController : ControllerBase
         var success = await _productService.DeleteProductAsync(id);
         if (!success)
             return NotFound();
-        _logger.LogInformation("Product with id {ProductId} was deleted by user {User}.", id, User.Identity?.Name ?? "Unknown");
         return NoContent();
     }
 

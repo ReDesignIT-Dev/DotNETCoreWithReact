@@ -19,7 +19,6 @@ public class WebSocketService : IWebSocketService
     {
         try
         {
-            _logger.LogInformation("Triggering button success for user {UserId}, request {RequestId}", userId, requestId);
             
             // Wait 5 seconds before sending the success message
             await Task.Delay(5000);
@@ -27,7 +26,6 @@ public class WebSocketService : IWebSocketService
             await _hubContext.Clients.Group($"User_{userId}")
                 .SendAsync("ButtonSuccess", new { requestId, success = true, timestamp = DateTime.UtcNow });
                 
-            _logger.LogInformation("Button success triggered for user {UserId}, request {RequestId}", userId, requestId);
         }
         catch (Exception ex)
         {
@@ -73,7 +71,6 @@ public class WebSocketService : IWebSocketService
                     type = "individual"
                 });
                 
-            _logger.LogInformation("User logout triggered for user {UserId}", userId);
         }
         catch (Exception ex)
         {
@@ -84,9 +81,7 @@ public class WebSocketService : IWebSocketService
     public async Task SendGlobalNotificationAsync(string message, string type = "info")
     {
         try
-        {
-            _logger.LogInformation("Sending global notification: {Message}", message);
-            
+        {            
             await _hubContext.Clients.All
                 .SendAsync("GlobalNotification", new 
                 { 
@@ -95,7 +90,6 @@ public class WebSocketService : IWebSocketService
                     timestamp = DateTime.UtcNow 
                 });
                 
-            _logger.LogInformation("Global notification sent successfully");
         }
         catch (Exception ex)
         {

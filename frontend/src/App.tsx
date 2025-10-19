@@ -14,60 +14,32 @@ import { useUser } from 'hooks/useUser';
 import { webSocketService } from 'services/webSocketService';
 import { getValidatedToken, isTokenValid, isUserAdmin } from "./utils/cookies";
 
-// Create a wrapper component that uses the Router context
 function AppContent() {
   const dispatch = useDispatch<AppDispatch>();
-  const authState = useUser(); // Get the full auth state for debugging
+  const authState = useUser();
   const { username, isLoggedIn, token, isLoading } = authState;
   
-  useGlobalLogout(); // ✅ This handles logout globally
-
-  // Add debugging logs
-  useEffect(() => {
-    console.log('🔍 Auth state changed:', { 
-      isLoggedIn, 
-      username, 
-      hasToken: !!token, 
-      isLoading 
-    });
-  }, [isLoggedIn, username, token, isLoading]);
+  useGlobalLogout();
 
   useEffect(() => {
-    console.log('🔄 Dispatching validateToken...');
     dispatch(validateToken());
   }, [dispatch]);
 
-  // Connect to WebSocket when user is authenticated
   useEffect(() => {
-    const connectToWebSocket = async () => {
-      console.log('🔄 WebSocket connection check - isLoggedIn:', isLoggedIn, 'user:', username);
-      
+    const connectToWebSocket = async () => {     
       if (isLoggedIn && username) {
         try {
-          console.log('🔌 User is logged in, connecting to WebSocket...');
-          console.log('User details:', { username, isLoggedIn });
           await webSocketService.connect();
-          console.log('✅ WebSocket connected for authenticated user');
         } catch (error) {
           console.error('❌ Failed to connect to WebSocket:', error);
         }
       } else {
-        console.log('🔓 User not logged in, disconnecting WebSocket...');
-        console.log('Debug - isLoggedIn:', isLoggedIn, 'user:', username);
         await webSocketService.disconnect();
       }
     };
 
     connectToWebSocket();
-  }, [isLoggedIn, username]); // ✅ Use isLoggedIn consistently
-
-  // Temporarily add this to test token validity
-  useEffect(() => {
-    console.log('🔍 Token debug info:');
-    console.log('Token from cookies:', getValidatedToken());
-    console.log('Is token valid:', isTokenValid());
-    console.log('Is user admin:', isUserAdmin());
-  }, []);
+  }, [isLoggedIn]);
 
   return (
     <Routes>
