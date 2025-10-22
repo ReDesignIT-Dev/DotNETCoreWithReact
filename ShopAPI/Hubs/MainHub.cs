@@ -7,11 +7,8 @@ namespace ShopAPI.Hubs;
 [Authorize(Policy = "ActiveUserOnly")]
 public class MainHub : Hub
 {
-    private readonly ILogger<MainHub> _logger;
-
-    public MainHub(ILogger<MainHub> logger)
+    public MainHub()
     {
-        _logger = logger;
     }
 
     public override async Task OnConnectedAsync()
@@ -19,8 +16,6 @@ public class MainHub : Hub
         var userId = GetUserId();
         var userName = Context.User?.Identity?.Name;
         
-            Context.ConnectionId, userId, userName);
-
         // Add to user-specific group
         if (userId.HasValue)
         {
@@ -46,8 +41,7 @@ public class MainHub : Hub
     {
         var userId = GetUserId();
         
-            userId, Context.ConnectionId, exception?.Message);
-
+          
         // Cleanup is automatic for groups when connection closes
         await base.OnDisconnectedAsync(exception);
     }

@@ -79,14 +79,6 @@ public class ProductsController : ControllerBase
                 return BadRequest("Valid category ID is required.");
             }
 
-            if (dto.Images != null && dto.Images.Any())
-            {
-                foreach (var (image, index) in dto.Images.Select((img, idx) => (img, idx)))
-                {
-                    index + 1, image.FileName, image.Length, image.ContentType);
-                }
-            }
-
             var userId = GetUserId();
 
             var created = await _productService.CreateProductAsync(dto, userId);
@@ -101,7 +93,7 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            dto.Name, dto.CategoryId);
+          
             return StatusCode(500, "An internal server error occurred while creating the product.");
         }
     }

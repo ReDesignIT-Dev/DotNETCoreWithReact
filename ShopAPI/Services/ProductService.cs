@@ -155,10 +155,6 @@ public class ProductService : IProductService
     {
         try
         {
-            _logger.Log
-                ("CreateProductAsync started. Name: {Name}, CategoryId: {CategoryId}, UserId: {UserId}", 
-                dto.Name, dto.CategoryId, userId);
-
             // Validate category exists
             var category = await _context.Categories.FindAsync(dto.CategoryId);
             if (category == null)
@@ -174,19 +170,19 @@ public class ProductService : IProductService
             if (dto.Images != null && dto.Images.Any())
             {
                 _logger.LogInformation("Processing {ImageCount} images", dto.Images.Count);
-                
+
                 for (int i = 0; i < dto.Images.Count; i++)
                 {
                     var file = dto.Images[i];
                     try
                     {
-                        _logger.LogInformation("Processing image {Index}: {FileName} ({Size} bytes)", 
+                        _logger.LogInformation("Processing image {Index}: {FileName} ({Size} bytes)",
                             i + 1, file.FileName, file.Length);
-                        
+
                         var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
                         imageResults.Add(result);
-                        
-                        _logger.LogInformation("Image {Index} saved successfully. Url: {Url}, ThumbnailUrl: {ThumbnailUrl}", 
+
+                        _logger.LogInformation("Image {Index} saved successfully. Url: {Url}, ThumbnailUrl: {ThumbnailUrl}",
                             i + 1, result.Url, result.ThumbnailUrl);
                     }
                     catch (Exception ex)
@@ -209,7 +205,7 @@ public class ProductService : IProductService
                 Position = index + 1
             }).ToList();
 
-            _logger.LogInformation("Created {ImageCount} ProductImage entities with positions 1 to {MaxPosition}", 
+            _logger.LogInformation("Created {ImageCount} ProductImage entities with positions 1 to {MaxPosition}",
                 images.Count, images.Count);
 
             // Create product
@@ -224,19 +220,19 @@ public class ProductService : IProductService
             };
 
             _logger.LogInformation("Adding product to context: {ProductName}", product.Name);
-            
+
             _context.Products.Add(product);
-            
+
             _logger.LogInformation("Saving product to database...");
             await _context.SaveChangesAsync();
-            
+
             _logger.LogInformation("Product saved with ID: {ProductId}. Generating slug...", product.Id);
 
             // Generate slug after ID is available
             product.Slug = SlugHelper.GenerateSlug(product.Name, product.Id);
             await _context.SaveChangesAsync();
-            
-            _logger.LogInformation("Product creation completed successfully. ID: {ProductId}, Slug: {Slug}", 
+
+            _logger.LogInformation("Product creation completed successfully. ID: {ProductId}, Slug: {Slug}",
                 product.Id, product.Slug);
 
             return new ReadProductDto
@@ -260,7 +256,7 @@ public class ProductService : IProductService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in CreateProductAsync for product {ProductName} (CategoryId: {CategoryId})", 
+            _logger.LogError(ex, "Error in CreateProductAsync for product {ProductName} (CategoryId: {CategoryId})",
                 dto.Name, dto.CategoryId);
             throw; // Re-throw to be handled by controller
         }
@@ -293,7 +289,7 @@ public class ProductService : IProductService
             var category = await _context.Categories.FindAsync(dto.CategoryId.Value);
             if (category == null)
                 return false;
-            
+
             product.CategoryId = dto.CategoryId.Value;
             product.Category = category;
         }
@@ -306,9 +302,9 @@ public class ProductService : IProductService
     }
 
     private async Task ReorganizeImages(
-        Product product, 
-        Dictionary<int, int>? currentImages, 
-        List<IFormFile>? newImages, 
+        Product product,
+        Dictionary<int, int>? currentImages,
+        List<IFormFile>? newImages,
         int? userId)
     {
         // If no image changes specified, skip
@@ -346,11 +342,11 @@ public class ProductService : IProductService
         {
             // Get all occupied positions
             var occupiedPositions = product.Images.Select(img => img.Position).ToHashSet();
-            
+
             // Find gaps and available positions
             var availablePositions = new List<int>();
             var maxPosition = occupiedPositions.Any() ? occupiedPositions.Max() : 0;
-            
+
             // Find gaps in existing positions (1, 2, 3, ... maxPosition)
             for (int i = 1; i <= maxPosition; i++)
             {
@@ -359,7 +355,7 @@ public class ProductService : IProductService
                     availablePositions.Add(i);
                 }
             }
-            
+
             // Add positions after the max position if needed
             while (availablePositions.Count < newImages.Count)
             {
@@ -371,7 +367,7 @@ public class ProductService : IProductService
             {
                 var file = newImages[i];
                 var result = await _fileStorage.SaveImageAsync(file, ImageType.Product, userId);
-                
+
                 var newImage = new ProductImage
                 {
                     Url = result.Url,
@@ -379,7 +375,7 @@ public class ProductService : IProductService
                     Position = availablePositions[i], // Fill gaps in order
                     ProductId = product.Id
                 };
-                
+
                 product.Images.Add(newImage);
             }
         }
