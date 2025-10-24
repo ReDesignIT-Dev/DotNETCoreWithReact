@@ -13,4 +13,5 @@ public interface ICategoryService
     Task<bool> DeleteCategoryAsync(int id);
     Task<List<CategoryTreeDto>> GetCategoryTreeAsync();
     Task<int> GetCategoriesCountAsync();
+    Task<List<int>> GetAllDescendantCategoryIdsAsync(int categoryId);
 }

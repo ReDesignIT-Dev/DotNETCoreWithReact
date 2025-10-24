@@ -71,6 +71,31 @@ public class CategoryService : ICategoryService
         return BuildCategoryTree(categories.ToList());
     }
 
+    public async Task<List<int>> GetAllDescendantCategoryIdsAsync(int categoryId)
+    {
+        var categoryIds = new List<int> { categoryId }; // Include the parent category itself
+        var categoriesToProcess = new Queue<int>();
+        categoriesToProcess.Enqueue(categoryId);
+
+        while (categoriesToProcess.Count > 0)
+        {
+            var currentCategoryId = categoriesToProcess.Dequeue();
+            
+            var childCategoryIds = await _context.Categories
+                .Where(c => c.ParentId == currentCategoryId)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            foreach (var childId in childCategoryIds)
+            {
+                categoryIds.Add(childId);
+                categoriesToProcess.Enqueue(childId); // Add to queue to process its children
+            }
+        }
+
+        return categoryIds;
+    }
+
     private List<CategoryTreeDto> BuildCategoryTree(List<ReadCategoryDto> categories, int? parentId = null)
     {
 

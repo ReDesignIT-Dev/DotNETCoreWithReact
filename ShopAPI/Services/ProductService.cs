@@ -16,12 +16,14 @@ public class ProductService : IProductService
     private readonly ShopContext _context;
     private readonly IFileStorageService _fileStorage;
     private readonly ILogger<ProductService> _logger;
+    private readonly ICategoryService _categoryService;
 
-    public ProductService(ShopContext context, IFileStorageService fileStorage, ILogger<ProductService> logger)
+    public ProductService(ShopContext context, IFileStorageService fileStorage, ILogger<ProductService> logger, ICategoryService categoryService)
     {
         _context = context;
         _fileStorage = fileStorage;
         _logger = logger;
+        _categoryService = categoryService;
     }
 
     public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query)
@@ -32,12 +34,10 @@ public class ProductService : IProductService
 
         if (query.Category.HasValue)
         {
-            var categoryIds = await _context.Categories
-                .Where(c => c.Id == query.Category.Value || c.ParentId == query.Category.Value)
-                .Select(c => c.Id)
-                .ToListAsync();
+            var categoryIds = await _categoryService.GetAllDescendantCategoryIdsAsync(query.Category.Value);
             productsQuery = productsQuery.Where(p => categoryIds.Contains(p.CategoryId));
         }
+        
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var searchLower = query.Search.ToLower();
@@ -125,17 +125,13 @@ public class ProductService : IProductService
         };
     }
 
-
     public async Task<int> GetProductsCountAsync(int? categoryId, string? search)
     {
         var query = _context.Products.AsQueryable();
 
         if (categoryId.HasValue)
         {
-            var categoryIds = await _context.Categories
-                .Where(c => c.Id == categoryId.Value || c.ParentId == categoryId.Value)
-                .Select(c => c.Id)
-                .ToListAsync();
+            var categoryIds = await _categoryService.GetAllDescendantCategoryIdsAsync(categoryId.Value);
             query = query.Where(p => categoryIds.Contains(p.CategoryId));
         }
 
@@ -149,7 +145,6 @@ public class ProductService : IProductService
 
         return await query.CountAsync();
     }
-
 
     public async Task<ReadProductDto?> CreateProductAsync(WriteProductDto dto, int? userId)
     {
@@ -380,8 +375,6 @@ public class ProductService : IProductService
             }
         }
     }
-
-
 
     public async Task<bool> DeleteProductAsync(int id)
     {
