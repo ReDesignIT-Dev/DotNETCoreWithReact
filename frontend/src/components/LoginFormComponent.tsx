@@ -6,7 +6,8 @@ import Loading from "components/Loading";
 import "./LoginFormComponent.css"; 
 import { loginUser } from "reduxComponents/reduxUser/Auth/authReducer";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "reduxComponents/store"; // Adjust the import according to your store setup
+import { RootState, AppDispatch } from "reduxComponents/store";
+import { useLoginRedirect } from 'hooks/useLoginRedirect';
 
 const LoginFormComponent: React.FC = () => {
   const [isValid, setIsValid] = useState<boolean>(false);
@@ -19,6 +20,8 @@ const LoginFormComponent: React.FC = () => {
 
   const { isLoggedIn, isLoading, error } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
+  
+  useLoginRedirect();
 
   useEffect(() => {
     const valid = isEmailValid && isValidReCaptchaToken && isPasswordValid;
@@ -37,7 +40,9 @@ const LoginFormComponent: React.FC = () => {
       {isLoading ? (
         <Loading />
       ) : isLoggedIn ? (
-        <label className="alert alert-success">{"You are logged in"}</label>
+        <label className="alert alert-success">
+          {"Login successful! Redirecting..."}
+        </label>
       ) : (
         <form
           onSubmit={handleSubmit}

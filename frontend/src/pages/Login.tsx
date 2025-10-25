@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import LoginFormComponent from "components/LoginFormComponent";
 import { useNavigate } from "react-router-dom";
 import { FRONTEND_REGISTER_URL } from "config";
@@ -30,11 +30,12 @@ const Login: React.FC = () => {
           {`Don't have an account? Click here to register`}
         </Button>
       
-      <Typography variant="h5" sx={{ mt: 2 }}>
-        {`Login`}
-      </Typography>
-      </>
-    )}
+        <Typography variant="h5" sx={{ mt: 2 }}>
+          {`Login`}
+        </Typography>
+
+        </>
+      )}
       <LoginFormComponent />
     </Box>
   );

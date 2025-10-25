@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { FRONTEND_LOGIN_URL, FRONTEND_ADMIN_PANEL_URL } from "config";
 import { debounce } from "lodash";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
-import { isTokenValid } from "utils/cookies";
+import { isTokenValid, isUserAdmin } from "utils/cookies";
 
 const SignInButton: React.FC = () => {
   const FaUserCircleIcon = FaUserCircle as React.ComponentType<any>;
@@ -33,10 +33,13 @@ const SignInButton: React.FC = () => {
     [user?.isLoggedIn, user?.token, dispatch, navigate]
   );
 
+  // Check admin status from JWT token directly
+  const isAdminUser = user?.isLoggedIn && isTokenValid() && isUserAdmin();
+
   return (
     <Box display="flex" alignItems="center" gap={1}>
       {/* Admin Profile Icon */}
-      {user?.isAdmin && isTokenValid() && (
+      {isAdminUser && (
         <Tooltip title="Admin Panel">
           <IconButton size="small" sx={{ color: "#fff" }} onClick={() => navigate(FRONTEND_ADMIN_PANEL_URL)}>
             <FaUserCircleIcon size={28} />

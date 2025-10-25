@@ -39,7 +39,6 @@ export const loginUser = createAsyncThunk<LoginResponse, { username: string; pas
       const response = await postLogin({ username, password, recaptchaToken });
       if (response && response.status === 200) {
         const { token, username } = response.data as LoginResponse;
-        console.log("Login response data:", response.data);
         setToken(token);
         const isAdmin = getIsAdminFromJwt(token);
         return { token, username, isAdmin, expiry: "" };
@@ -72,12 +71,15 @@ export const logout = createAsyncThunk(
   }
 );
 
-// ✅ Fix: Extract username from token on initialization
+// ✅ Fix: Store token once and reuse it safely
+const validatedToken = getValidatedToken();
+const isValidToken = validatedToken && isTokenValid();
+
 const initialState: AuthState = {
-  isLoggedIn: Boolean(getValidatedToken()) && isTokenValid(),
-  username: getValidatedToken() ? getUsernameFromToken(getValidatedToken()!) : null, // ← Extract username from token
-  isAdmin: Boolean(getValidatedToken()) && isTokenValid() && isUserAdmin(),
-  token: getValidatedToken() || null,
+  isLoggedIn: Boolean(isValidToken),
+  username: validatedToken ? getUsernameFromToken(validatedToken) : null, // ✅ Safe - no non-null assertion
+  isAdmin: Boolean(isValidToken && isUserAdmin()),
+  token: validatedToken,
   isLoading: false,
   error: null,
 };

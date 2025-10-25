@@ -1,10 +1,11 @@
 import React from 'react';
 import { Box, Button, Paper } from '@mui/material';
-import { Link, useLocation } from 'react-router-dom';
+import {
+    Link,
+} from 'react-router-dom';
 import { ADMIN_PANEL_URL, FRONTEND_ADMIN_CATEGORIES_URL, FRONTEND_ADMIN_PANEL_URL, FRONTEND_ADMIN_PRODUCTS_URL } from 'config';
 
 export const AdminNavigation: React.FC = () => {
-  const location = useLocation();
   
   const isActive = (path: string) => {
     if (path === '') {

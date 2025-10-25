@@ -8,7 +8,7 @@ import { Box, Grid2 } from "@mui/material";
 import { getIdFromSlug } from "utils/utils";
 import { useSelector } from "react-redux";
 import { RootState } from "reduxComponents/store";
-import { selectCategoryTreeById } from "reduxComponents/reduxShop/Categories/selectors";
+import { selectCategoryTreeById, selectCategoriesIsLoading, selectTreeCategories } from "reduxComponents/reduxShop/Categories/selectors";
 import { getAllProductsInCategory } from "services/shopServices/apiRequestsShop";
 import Loading from "components/Loading";
 import PaginationComponent from "components/PaginationComponent";
@@ -18,9 +18,13 @@ export default function Category() {
   const { slug } = useParams() as { slug: string };
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const categoryId = getIdFromSlug(slug);
+  
+  // Use the Redux loading state
+  const categoriesLoading = useSelector(selectCategoriesIsLoading);
+  const categoriesInStore = useSelector(selectTreeCategories);
+  
   const category = useSelector((state: RootState) => (categoryId !== null ? selectCategoryTreeById(state, categoryId) : null));
   const categoryTree = useSelector((state: RootState) => {
-
     if (categoryId === null) return null;
     const currentCategoryTree = selectCategoryTreeById(state, categoryId);
     if (currentCategoryTree?.children?.length) {
@@ -30,7 +34,6 @@ export default function Category() {
     if (parentCategoryId) {
       return selectCategoryTreeById(state, parentCategoryId);
     }
-
     return null; 
   });
   const parentCategory = useSelector((state: RootState) => (category?.parentId ? selectCategoryTreeById(state, category.parentId) : null));
@@ -55,11 +58,12 @@ export default function Category() {
     fetchProducts();
   }, [categoryId, pageParam]);
 
-  if (category === undefined) {
+  // Show loading while categories are being fetched OR if we have no categories in store yet
+  if (categoriesLoading || categoriesInStore.length === 0) {
     return <Loading />;
   }
 
-  if (category === null) {
+  if (categoryId === null || category === null) {
     return <NotFound />;
   }
 

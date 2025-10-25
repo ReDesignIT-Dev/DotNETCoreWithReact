@@ -15,17 +15,17 @@ import SearchPage from "pages/SearchPage";
 import NotFound from "pages/NotFound";
 import { Box } from "@mui/material";
 import {
-  ROUTE_PATH_CART,
-  ROUTE_PATH_SEARCH,
-  ROUTE_PATH_PRODUCT,
-  ROUTE_PATH_CATEGORY,
-  ROUTE_PATH_LOGIN,
-  ROUTE_PATH_REGISTER,
-  ROUTE_PATH_PASSWORD_RECOVERY,
-  ROUTE_PATH_PASSWORD_RESET,
-  ROUTE_PATH_ACTIVATE_USER,
-  ROUTE_PATH_PRODUCT_ADD,
-  ROUTE_PATH_ADMIN_PANEL,
+    ROUTE_PATH_CART,
+    ROUTE_PATH_SEARCH,
+    ROUTE_PATH_PRODUCT,
+    ROUTE_PATH_CATEGORY,
+    ROUTE_PATH_LOGIN,
+    ROUTE_PATH_REGISTER,
+    ROUTE_PATH_PASSWORD_RECOVERY,
+    ROUTE_PATH_PASSWORD_RESET,
+    ROUTE_PATH_ACTIVATE_USER,
+    ROUTE_PATH_PRODUCT_ADD,
+    ROUTE_PATH_ADMIN_PANEL,
 } from "config";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
@@ -34,39 +34,42 @@ import { AppDispatch } from "reduxComponents/store";
 import { ProductAdd } from "../components/Admin/ProductAdd";
 import { AdminPanel } from "./AdminPanel";
 import WebSocketTest from "components/WebSocketTest";
+import { useLocationTracker } from "hooks/useLocationTracker";
 
 function Shop() {
-  const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useDispatch<AppDispatch>();
 
-  useEffect(() => {
-    dispatch(fetchCategoryTree());
-  }, [dispatch]);
+    useLocationTracker();
 
-  return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <ShopHeader />
-      <Box sx={{ flex: 1 }}>
-        <Routes>
-          <Route path="" element={<ShopHome />} />
-          <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
-          <Route path={ROUTE_PATH_LOGIN} element={<Login />} />
-          <Route path={ROUTE_PATH_REGISTER} element={<Register />} />
-          <Route path={ROUTE_PATH_PASSWORD_RECOVERY} element={<PasswordRecovery />} />
-          <Route path={ROUTE_PATH_PASSWORD_RESET} element={<PasswordReset />} />
-          <Route path={ROUTE_PATH_ACTIVATE_USER} element={<UserActivation />} />
-          <Route path={ROUTE_PATH_CATEGORY} element={<Category />} />
-          <Route path={ROUTE_PATH_PRODUCT} element={<Product />} />
-          <Route path={ROUTE_PATH_PRODUCT_ADD} element={<ProductAdd />} />
-          <Route path={ROUTE_PATH_SEARCH} element={<SearchPage />} />
-          <Route path={ROUTE_PATH_CART} element={<Cart />} />
-          <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
-          <Route path="/test-socket" element={<WebSocketTest />}></Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Box>
-      <ShopFooter />
-    </Box>
-  );
+    useEffect(() => {
+        dispatch(fetchCategoryTree());
+    }, [dispatch]);
+
+    return (
+        <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <ShopHeader />
+            <Box sx={{ flex: 1 }}>
+                <Routes>
+                    <Route path="" element={<ShopHome />} />
+                    <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
+                    <Route path={ROUTE_PATH_LOGIN} element={<Login />} />
+                    <Route path={ROUTE_PATH_REGISTER} element={<Register />} />
+                    <Route path={ROUTE_PATH_PASSWORD_RECOVERY} element={<PasswordRecovery />} />
+                    <Route path={ROUTE_PATH_PASSWORD_RESET} element={<PasswordReset />} />
+                    <Route path={ROUTE_PATH_ACTIVATE_USER} element={<UserActivation />} />
+                    <Route path={ROUTE_PATH_CATEGORY} element={<Category />} />
+                    <Route path={ROUTE_PATH_PRODUCT_ADD} element={<ProductAdd />} />
+                    <Route path={ROUTE_PATH_PRODUCT} element={<Product />} />
+                    <Route path={ROUTE_PATH_SEARCH} element={<SearchPage />} />
+                    <Route path={ROUTE_PATH_CART} element={<Cart />} />
+                    <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
+                    <Route path="/test-socket" element={<WebSocketTest />}></Route>
+                    <Route path="*" element={<NotFound />} />
+                </Routes>
+            </Box>
+            <ShopFooter />
+        </Box>
+    );
 }
 
 export default Shop;

@@ -12,12 +12,11 @@ import { validateToken } from "reduxComponents/reduxUser/Auth/thunks";
 import { useGlobalLogout } from 'hooks/useGlobalLogout';
 import { useUser } from 'hooks/useUser';
 import { webSocketService } from 'services/webSocketService';
-import { getValidatedToken, isTokenValid, isUserAdmin } from "./utils/cookies";
 
 function AppContent() {
   const dispatch = useDispatch<AppDispatch>();
   const authState = useUser();
-  const { username, isLoggedIn, token, isLoading } = authState;
+  const { username, isLoggedIn } = authState;
   
   useGlobalLogout();
 
@@ -31,7 +30,7 @@ function AppContent() {
         try {
           await webSocketService.connect();
         } catch (error) {
-          console.error('❌ Failed to connect to WebSocket:', error);
+          console.error('Failed to connect to WebSocket:', error);
         }
       } else {
         await webSocketService.disconnect();

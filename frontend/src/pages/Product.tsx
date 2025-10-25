@@ -14,11 +14,10 @@ import Inline from "yet-another-react-lightbox/plugins/inline";
 import "yet-another-react-lightbox/styles.css";
 import shopDefaultImage from "assets/images/shop_default_image.jpg";
 import { getIdFromSlug } from "utils/utils";
-import { useSelector } from "react-redux";
-import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selectors";
 import NotFound from "./NotFound";
 import CategoryBreadcrumb from "components/CategoryBreadcrumb";
 import { useMemo } from "react";
+import Loading from "components/Loading";
 
 export default function Product() {
   const { slug } = useParams() as { slug: string };
@@ -41,35 +40,48 @@ export default function Product() {
   });
 
   const [notFound, setNotFound] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
 
   useEffect(() => {
     const fetchProduct = async () => {
+      setIsLoading(true); // Start loading immediately
+      setNotFound(false); // Reset notFound state
+      
       try {
-        if (!slug) {
+          if (!slug) {
           setNotFound(true);
+          setIsLoading(false);
           return;
         }
         const productId = getIdFromSlug(slug);
-        if (productId == null) {
+          if (productId == null) {
           setNotFound(true);
+          setIsLoading(false);
           return;
-        } else {
-          const response = await getProduct(productId);
-          const productData = response?.data;
-          console.log("Fetched product data:", productData);
-          if (productData) {
-            const images = productData.images;
-            const selectedImage = images?.[0]?.url || shopDefaultImage;
+        }
+        
+        // Only set notFound after the API call completes
+        const response = await getProduct(productId);
+        const productData = response?.data;
+        
+        if (productData) {
+          const images = productData.images;
+          const selectedImage = images?.[0]?.url || shopDefaultImage;
 
-            setSelectedImage(selectedImage);
-            setProduct({
-              ...productData,
-              images: images.length > 0 ? images : [{ url: shopDefaultImage }],
-            });
-          }
+          setSelectedImage(selectedImage);
+          setProduct({
+            ...productData,
+            images: images.length > 0 ? images : [{ url: shopDefaultImage }],
+          });
+          setNotFound(false); 
+        } else {
+          setNotFound(true);
         }
       } catch (error) {
-        console.error("Error fetching product data:", error);
+          console.error("Error fetching product data:", error);
+        setNotFound(true); 
+      } finally {
+        setIsLoading(false); 
       }
     };
 
@@ -138,6 +150,12 @@ export default function Product() {
     setCurrentImageIndex(index);
     setIsLightboxOpen(true);
   };
+
+  if (isLoading) {
+    return (
+     <Loading />
+    );
+  }
 
   if (notFound) {
     return <NotFound />;
