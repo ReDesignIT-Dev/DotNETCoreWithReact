@@ -20,7 +20,7 @@ export function useCart() {
                     productId: item.product.id,
                     product: item.product,
                     quantity: item.quantity,
-                    itemTotal: item.product.price * item.quantity,
+                    totalAmount: item.product.price * item.quantity,
                     addedAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 })),

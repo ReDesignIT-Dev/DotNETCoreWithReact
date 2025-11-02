@@ -1,7 +1,7 @@
-import apiClient from "services/axiosConfig";
+﻿import apiClient from "services/axiosConfig";
 import { apiErrorHandler } from "../apiErrorHandler";
 import { AxiosResponse } from "axios";
-import { getValidatedToken } from "utils/cookies";
+import { getValidatedToken, isTokenValid } from "utils/cookies";
 
 const API_CART_URL = "/api/shop/cart";
 
@@ -22,6 +22,14 @@ export async function getCart(): Promise<AxiosResponse<Cart> | undefined> {
 export async function addToCart(productId: number, quantity = 1): Promise<AxiosResponse<Cart> | undefined> {
     try {
         const token = getValidatedToken();
+        
+        // ✅ Add debugging
+        console.log("=== Frontend Cart Add Debug ===");
+        console.log("Token exists:", !!token);
+        console.log("Token length:", token?.length || 0);
+        console.log("Token preview:", token?.substring(0, 20) + "...");
+        console.log("Is token valid:", isTokenValid());
+        
         const response = await apiClient.post(`${API_CART_URL}/add`, {
             productId,
             quantity
@@ -33,6 +41,7 @@ export async function addToCart(productId: number, quantity = 1): Promise<AxiosR
         });
         return response;
     } catch (error) {
+        console.error("Cart add error:", error);
         apiErrorHandler(error);
     }
 }

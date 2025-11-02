@@ -8,4 +8,5 @@ public class ProductImage
     public int Position { get; set; }
     public int ProductId { get; set; }
     public Product Product { get; set; } = null!;
+    public string AltText { get; set; } = "Product Image";
 }

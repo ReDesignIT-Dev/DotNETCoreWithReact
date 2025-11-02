@@ -4,7 +4,6 @@ namespace ShopAPI.Dtos.Cart;
 
 public class CartItemDto
 {
-    public ReadProductDto Product { get; set; } = null!;
+    public CartProductDto Product { get; set; } = null!;
     public int Quantity { get; set; }
-    public decimal TotalAmount { get; set; }
 }

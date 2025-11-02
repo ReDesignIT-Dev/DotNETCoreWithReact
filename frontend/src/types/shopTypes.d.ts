@@ -93,7 +93,7 @@ interface Image {
 
 }
 interface ProductImage extends Image{
-    position?: number | null;
+    position?: number | null | undefined;
 }
 
 interface CategoryImage extends Image {
@@ -126,9 +126,18 @@ interface Cart {
 }
 
 interface CartItem {
-    product: Product;
+    product: CartProduct;
     quantity: number;
-    itemTotal: number;
+}
+
+interface CartProduct {
+    id: number;
+    slug: string;
+    name: string;
+    price: number;
+    mainImageUrl?: string;
+    mainImageThumbnailUrl?: string;
+    mainImageAltText?: string; 
 }
 
 interface AddToCartRequest {

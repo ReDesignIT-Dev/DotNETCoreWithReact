@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   addToCart as apiAddToCart,
   deleteCartItem as apiDeleteCartItem,
@@ -21,7 +21,7 @@ export function useCart() {
   const addToCart = async (product: Product, quantity: number) => {
     if (isLoggedIn) {
       try {
-        await apiAddToCart(product, quantity);
+        await apiAddToCart(product.id, quantity);
       } catch (error) {
         console.error("Error adding to cart:", error);
       }
@@ -30,27 +30,37 @@ export function useCart() {
     }
   };
 
-  const deleteFromCart = async (product: Product) => {
+  const addCartItemToCart = async (cartItem: CartItem) => {
+    if (isLoggedIn) {
+        try {
+        await apiAddToCart(cartItem.product.id, cartItem.quantity);
+      } catch (error) {
+        console.error("Error adding cart item to cart:", error);
+      }
+    }
+  };
+
+  const deleteFromCart = async (productId: number) => {
     if (isLoggedIn) {
       try {
-        await apiDeleteCartItem(product);
+        await apiDeleteCartItem(productId);
       } catch (error) {
         console.error("Error deleting from cart:", error);
       }
     } else {
-      localRemoveItemFromCart(product);
+      localRemoveItemFromCart(productId);
     }
   };
 
-  const updateCart = async (product: Product, quantity: number) => {
+  const updateCart = async (productId: number, quantity: number) => {
     if (isLoggedIn) {
       try {
-        await apiUpdateCartItemQuantity(product, quantity);
+        await apiUpdateCartItemQuantity(productId, quantity);
       } catch (error) {
         console.error("Error updating cart item quantity:", error);
       }
     } else {
-      localUpdateItemQuantity(product, quantity);
+      localUpdateItemQuantity(productId, quantity);
     }
   };
 
@@ -58,10 +68,11 @@ export function useCart() {
     try {
       let cartItems = [];
       if (isLoggedIn) {
-        const backendCart = await apiGetCart();
-        const localCart = localGetCart();
-        cartItems = mergeCarts(backendCart, localCart);
-        setItems(cartItems);
+          const backendCart = await apiGetCart();
+          const localCart = localGetCart();
+          cartItems = mergeCarts(backendCart, localCart);
+          setItems(cartItems);
+          localClearCart();
       } else {
         cartItems = localGetCart();
         setItems(cartItems);
@@ -85,15 +96,16 @@ export function useCart() {
     localCart: CartItem[]
   ): CartItem[] => {
     const mergedCart = [...backendCart];
-    const backendSlugs = new Set(backendCart.map((item) => item.product.slug));
 
     localCart.forEach((localItem) => {
       const backendItem = mergedCart.find(
-        (item) => item.product.slug === localItem.product.slug
+        (item) => item.product.id === localItem.product.id
       );
       if (backendItem) {
         backendItem.quantity += localItem.quantity;
       } else {
+        // Use the internal method for CartItem
+        addCartItemToCart(localItem);
         mergedCart.push(localItem);
       }
     });

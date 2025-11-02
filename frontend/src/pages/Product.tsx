@@ -12,7 +12,8 @@ import "swiper/css/scrollbar";
 import Lightbox from "yet-another-react-lightbox";
 import Inline from "yet-another-react-lightbox/plugins/inline";
 import "yet-another-react-lightbox/styles.css";
-import shopDefaultImage from "assets/images/shop_default_image.jpg";
+import { createSafeImage, getImageSrc } from "utils/imageUtils";
+import { SHOP_DEFAULT_IMAGE } from "config";
 import { getIdFromSlug } from "utils/utils";
 import NotFound from "./NotFound";
 import CategoryBreadcrumb from "components/CategoryBreadcrumb";
@@ -35,50 +36,71 @@ export default function Product() {
     categoryId: 0,
     description: "",
     price: 0,
-    images: [{ id: 0, url: shopDefaultImage, thumbnailUrl: shopDefaultImage, altText: "", position: 0 }],
+    images: [{ 
+      id: 0, 
+      url: SHOP_DEFAULT_IMAGE, 
+      thumbnailUrl: SHOP_DEFAULT_IMAGE, 
+      altText: "Default product image", 
+      position: 0 
+    }],
     slug: "",
   });
 
   const [notFound, setNotFound] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
-      setIsLoading(true); // Start loading immediately
-      setNotFound(false); // Reset notFound state
+      setIsLoading(true);
+      setNotFound(false);
       
       try {
-          if (!slug) {
+        if (!slug) {
           setNotFound(true);
           setIsLoading(false);
           return;
         }
         const productId = getIdFromSlug(slug);
-          if (productId == null) {
+        if (productId == null) {
           setNotFound(true);
           setIsLoading(false);
           return;
         }
         
-        // Only set notFound after the API call completes
         const response = await getProduct(productId);
         const productData = response?.data;
         
         if (productData) {
           const images = productData.images;
-          const selectedImage = images?.[0]?.url || shopDefaultImage;
+          
+          // Use imageUtils for safe image handling
+          const safeMainImage = createSafeImage(
+            images?.[0] ? {
+              url: images[0].url,
+              thumbnailUrl: images[0].thumbnailUrl,
+              altText: images[0].altText
+            } : null,
+            productData.name
+          );
+          
+          setSelectedImage(getImageSrc(safeMainImage, false)); // Use full image for main display
 
-          setSelectedImage(selectedImage);
           setProduct({
             ...productData,
-            images: images.length > 0 ? images : [{ url: shopDefaultImage }],
+            images: images.length > 0 ? images : [{
+              id: 0,
+              url: safeMainImage.url,
+              thumbnailUrl: safeMainImage.thumbnailUrl,
+              altText: safeMainImage.altText,
+              position: 0
+            }],
           });
           setNotFound(false); 
         } else {
           setNotFound(true);
         }
       } catch (error) {
-          console.error("Error fetching product data:", error);
+        console.error("Error fetching product data:", error);
         setNotFound(true); 
       } finally {
         setIsLoading(false); 
@@ -90,39 +112,50 @@ export default function Product() {
 
   const swiperSlides = useMemo(
     () =>
-      product.images.map((img, index) => (
-        <SwiperSlide key={index} style={{ backgroundColor: "transparent" }}>
-          <Card
-            onClick={() => {
-              setSelectedImage(img.url);
-              setCurrentImageIndex(index);
-            }}
-            sx={{
-              cursor: "pointer",
-              width: "160px",
-              height: "90px",
-              marginTop: "10px",
-              marginBottom: "35px",
-              backgroundColor: "transparent",
-              boxShadow: "none",
-            }}
-          >
-            <CardMedia
-              component="img"
-              image={img.url}
-              alt={`Product image ${index + 1}`}
-              sx={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                objectPosition: "center",
-                backgroundColor: "transparent",
+      product.images.map((img, index) => {
+        const safeImage = createSafeImage(
+          {
+            url: img.url,
+            thumbnailUrl: img.thumbnailUrl,
+            altText: img.altText
+          },
+          `${product.name} - Image ${index + 1}`
+        );
+
+        return (
+          <SwiperSlide key={index} style={{ backgroundColor: "transparent" }}>
+            <Card
+              onClick={() => {
+                setSelectedImage(getImageSrc(safeImage, false)); // Use full image when selected
+                setCurrentImageIndex(index);
               }}
-            />
-          </Card>
-        </SwiperSlide>
-      )),
-    [product.images]
+              sx={{
+                cursor: "pointer",
+                width: "160px",
+                height: "90px",
+                marginTop: "10px",
+                marginBottom: "35px",
+                backgroundColor: "transparent",
+                boxShadow: "none",
+              }}
+            >
+              <CardMedia
+                component="img"
+                image={getImageSrc(safeImage, true)} // Use thumbnail for swiper
+                alt={safeImage.altText}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  objectPosition: "center",
+                  backgroundColor: "transparent",
+                }}
+              />
+            </Card>
+          </SwiperSlide>
+        );
+      }),
+    [product.images, product.name]
   );
 
   const handleQuantityChange = (quantity: number) => {
@@ -152,14 +185,18 @@ export default function Product() {
   };
 
   if (isLoading) {
-    return (
-     <Loading />
-    );
+    return <Loading />;
   }
 
   if (notFound) {
     return <NotFound />;
   }
+
+  // Create safe image for main display
+  const mainDisplayImage = createSafeImage(
+    selectedImage ? { url: selectedImage } : null,
+    product.name
+  );
 
   return (
     <Box maxWidth="lg" mx="auto" p={3}>
@@ -182,15 +219,15 @@ export default function Product() {
                 sx={{
                   width: "100%",
                   aspectRatio: "16/9",
-                  display: "flex", // makes CardMedia respect parent's size
+                  display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <CardMedia
                   component="img"
-                  image={selectedImage}
-                  alt={product.name}
+                  image={getImageSrc(mainDisplayImage, false)}
+                  alt={mainDisplayImage.altText}
                   sx={{
                     maxWidth: "100%",
                     maxHeight: "100%",
@@ -249,7 +286,6 @@ export default function Product() {
                 type="number"
                 value={quantity}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => handleQuantityChange(Math.max(1, parseInt(e.target.value, 10)))}
-                
                 slotProps={{ htmlInput: { min: 1 } }}
                 sx={{ width: 80 }}
               />
@@ -274,21 +310,37 @@ export default function Product() {
 
       {/* Lightbox for fullscreen images */}
       {isLightboxOpen && (
-        <Lightbox open={isLightboxOpen} close={() => setIsLightboxOpen(false)} slides={product.images.map((img) => ({ src: img.url }))} />
+        <Lightbox 
+          open={isLightboxOpen} 
+          close={() => setIsLightboxOpen(false)} 
+          slides={product.images.map((img) => {
+            const safeImage = createSafeImage(
+              { url: img.url, altText: img.altText },
+              `${product.name} - Image`
+            );
+            return { src: getImageSrc(safeImage, false) };
+          })} 
+        />
       )}
       {isLightboxOpen && (
         <Lightbox
           plugins={[Inline]}
           open={isLightboxOpen}
           close={() => setIsLightboxOpen(false)}
-          slides={product.images.map((img) => ({ src: img.url }))}
+          slides={product.images.map((img) => {
+            const safeImage = createSafeImage(
+              { url: img.url, altText: img.altText },
+              `${product.name} - Image`
+            );
+            return { src: getImageSrc(safeImage, false) };
+          })}
           inline={{
             style: {
-              width: "80%", // Set desired width
-              maxWidth: "900px", // Set maximum width
-              height: "auto", // Maintain aspect ratio
-              maxHeight: "80vh", // Set maximum height relative to viewport height
-              margin: "0 auto", // Center the lightbox
+              width: "80%",
+              maxWidth: "900px",
+              height: "auto",
+              maxHeight: "80vh",
+              margin: "0 auto",
             },
           }}
         />

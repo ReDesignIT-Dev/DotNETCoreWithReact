@@ -38,6 +38,7 @@ public class CartController : ControllerBase
     public async Task<ActionResult<ReadCartDto>> AddToCart([FromBody] AddToCartDto dto)
     {
         var userId = GetUserId();
+        Console.WriteLine(userId);
         if (!userId.HasValue)
             return Unauthorized();
 

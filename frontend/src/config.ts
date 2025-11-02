@@ -1,3 +1,5 @@
+import shopDefaultImageAsset from "assets/images/shop_default_image.jpg";
+
 // config.ts
 export const FRONTEND_SHOP_URL = "/shop";
 
@@ -19,7 +21,7 @@ export const ROUTE_PATH_REGISTER = "/register";
 export const FRONTEND_REGISTER_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_REGISTER}`;
 export const ROUTE_PATH_ACTIVATE_USER = "/activate/:userId/:token";
 export const FRONTEND_ACTIVATE_USER_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_ACTIVATE_USER}`;
-export const ROUTE_PATH_PASSWORD_RECOVERY = "/password-recovery";
+export const ROUTE_PATH_PASSWORD_RECOVERY = "/password-recovery"
 export const FRONTEND_PASSWORD_RECOVERY_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_PASSWORD_RECOVERY}`;
 export const ROUTE_PATH_PASSWORD_RESET = "/password-reset/:token";
 export const FRONTEND_PASSWORD_RESET_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_PASSWORD_RESET}`;
@@ -61,8 +63,8 @@ export const API_SEARCH_URL = `${BACKEND_SHOP_URL}/products?string=`;
 export const API_SEARCH_ASSOCIATED_CATEGORIES_URL = `${BACKEND_SHOP_URL}/search-associated-categories?string=`;
 export const API_CART_URL = `${BACKEND_SHOP_URL}/cart`;
 export const API_ADD_TO_CART_URL = `${API_CART_URL}/add`;
-export const API_UPDATE_CART_URL = `${API_CART_URL}/update`;
-export const API_DELETE_FROM_CART_URL = `${API_CART_URL}/delete`;
+export const API_UPDATE_CART_URL = `${API_CART_URL}/items`;
+export const API_DELETE_FROM_CART_URL = `${API_CART_URL}/items`;
 
 // API home based
 export const API_PROJECTS_ALL_URL = `${BACKEND_HOME_URL}`;
@@ -93,3 +95,13 @@ export const getProductEditPath = (id: number) => `${id}/edit`;
 export const getCategoryEditPath = (id: number) => `${id}/edit`;
 export const getProductAddPath = () => "add";
 export const getCategoryAddPath = () => "add";
+
+// ============= ASSET CONFIGURATION =============
+export const DEFAULT_IMAGES = {
+  SHOP_DEFAULT: shopDefaultImageAsset, // Now uses the imported asset
+  // TODO: Add more default images as needed
+  // PRODUCT_PLACEHOLDER: productPlaceholderAsset,
+  // CATEGORY_PLACEHOLDER: categoryPlaceholderAsset,
+} as const;
+
+export const SHOP_DEFAULT_IMAGE = DEFAULT_IMAGES.SHOP_DEFAULT;
