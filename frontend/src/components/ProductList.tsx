@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "services/shopServices/cartLogic";
 import "./ProductList.css";
 import { FRONTEND_PRODUCT_URL } from "config";
-import shopDefaultImage from "assets/images/shop_default_image.jpg";
+import { createSafeImage, getImageSrc } from "utils/imageUtils";
 import { Box } from "@mui/material";
 import { navigateToProduct } from "utils/navigation";
 
@@ -25,8 +25,14 @@ export default function ProductList({ products }: {products: Product[]}) {
     <Box sx={{ opacity: products.length === 0 ? 0.5 : 1, transition: "opacity 0.3s" }}>
       <div className="product-list-container d-flex flex-column gap-3 w-100 p-3">
         {products.map((product) => {
-          const imageSrc = product.images?.[0]?.thumbnailUrl || shopDefaultImage;
-          const imageAlt = product.images?.[0]?.altText || product.name;
+          const safeImage = createSafeImage(
+            product.images?.[0] ? {
+              url: product.images[0].url,
+              thumbnailUrl: product.images[0].thumbnailUrl,
+              altText: product.images[0].altText
+            } : null,
+            product.name
+          );
 
           return (
             <div
@@ -35,7 +41,10 @@ export default function ProductList({ products }: {products: Product[]}) {
               role="button"
               onClick={(event) => navigateToProduct(product.slug, event, navigate)}
             >
-              <img src={imageSrc} alt={imageAlt} />
+              <img 
+                src={getImageSrc(safeImage, true)} 
+                alt={safeImage.altText} 
+              />
               <div className="product-details d-flex justify-content-between w-100">
                 <h2>{product.name}</h2>
                 <div className="product-price-and-cart d-flex align-items-center">
