@@ -6,12 +6,14 @@ import { generatePath, useNavigate } from "react-router-dom";
 import { FRONTEND_PRODUCT_URL } from "config";
 import { Typography } from "@mui/material";
 import { useCart } from "services/shopServices/cartLogic";
+import { useNotification } from "contexts/NotificationContext";
 import { createSafeImage, getImageSrc } from "utils/imageUtils";
 import "./Cart.css";
 
 export default function Cart() {
     const FaRegTrashAltIcon = FaRegTrashAlt as React.ComponentType<any>;
     const { getCart, updateCart, deleteFromCart, calculateTotal } = useCart();
+    const { showSuccess, showError, showInfo } = useNotification();
     const [items, setItems] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -30,12 +32,13 @@ export default function Cart() {
                 setTotal(totalAmount.toFixed(2));
             } catch (error) {
                 setError("Error fetching products.");
+                showError("Failed to load cart items. Please refresh the page.");
             } finally {
                 setLoading(false);
             }
         };
         fetchCart();
-    }, [getCart]);
+    }, [getCart, showError]);
 
     const handleQuantityChange = (item: CartItem, quantity: number) => {
         const updatedItems = items.map((i) =>
@@ -50,11 +53,25 @@ export default function Cart() {
         }
         const timeout = window.setTimeout(async () => {
             try {
-                await updateCart(item.product.id, quantity);
-                const totalAmount = calculateTotal(updatedItems);
-                setTotal(totalAmount.toFixed(2));
+                const response = await updateCart(item.product.id, quantity);
+                
+                if (response && (response.status === 200 || response.status === 204)) {
+                    const totalAmount = calculateTotal(updatedItems);
+                    setTotal(totalAmount.toFixed(2));
+                    showSuccess(`Updated quantity for ${item.product.name}`);
+                } else {
+                    showError("Failed to update item quantity. Please try again.");
+                    // Revert the optimistic update
+                    setItems(items);
+                    setTotal(calculateTotal(items).toFixed(2));
+                }
             } catch (error: any) {
+                console.error("Error updating cart:", error);
+                showError("Failed to update item quantity. Please check your connection.");
                 setError(error.message);
+                // Revert the optimistic update
+                setItems(items);
+                setTotal(calculateTotal(items).toFixed(2));
             }
         }, 500); 
 
@@ -66,14 +83,22 @@ export default function Cart() {
 
     const handleRemoveItem = async (item: CartItem) => {
         try {
-            await deleteFromCart(item.product.id);
-            const updatedItems = items.filter(
-                (i) => i.product && i.product.id !== item.product.id
-            );
-            setItems(updatedItems);
-            const totalAmount = calculateTotal(updatedItems);
-            setTotal(totalAmount.toFixed(2));
+            const response = await deleteFromCart(item.product.id);
+            
+            if (response && (response.status === 200 || response.status === 204)) {
+                const updatedItems = items.filter(
+                    (i) => i.product && i.product.id !== item.product.id
+                );
+                setItems(updatedItems);
+                const totalAmount = calculateTotal(updatedItems);
+                setTotal(totalAmount.toFixed(2));
+                showSuccess(`${item.product.name} removed from cart`);
+            } else {
+                showError("Failed to remove item from cart. Please try again.");
+            }
         } catch (error: any) {
+            console.error("Error removing item:", error);
+            showError("Failed to remove item from cart. Please check your connection.");
             setError(error.message);
         }
     };
@@ -90,6 +115,7 @@ export default function Cart() {
 
     const handleCloseModal = () => {
         setShowModal(false);
+        showInfo("Thank you for your purchase!");
     };
 
     if (loading) {

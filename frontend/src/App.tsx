@@ -12,6 +12,7 @@ import { validateToken } from "reduxComponents/reduxUser/Auth/thunks";
 import { useGlobalLogout } from 'hooks/useGlobalLogout';
 import { useUser } from 'hooks/useUser';
 import { webSocketService } from 'services/webSocketService';
+import { NotificationProvider } from 'contexts/NotificationContext';
 
 function AppContent() {
   const dispatch = useDispatch<AppDispatch>();
@@ -59,7 +60,9 @@ function App() {
       }}
     >
       <BrowserRouter>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
       </BrowserRouter>
     </Box>
   );

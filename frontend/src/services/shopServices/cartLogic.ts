@@ -13,20 +13,31 @@ import {
   clearCart as localClearCart,
 } from "./localStorageRequestsShop";
 import { useAuth } from "hooks/useAuth";
+import { AxiosResponse } from "axios";
 
 export function useCart() {
   const isLoggedIn = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = async (product: Product, quantity: number) => {
+  const addToCart = async (product: Product, quantity: number): Promise<AxiosResponse | undefined> => {
     if (isLoggedIn) {
       try {
-        await apiAddToCart(product.id, quantity);
+        const response = await apiAddToCart(product.id, quantity);
+        return response;
       } catch (error) {
         console.error("Error adding to cart:", error);
+        throw error; // Re-throw to allow the component to handle the error
       }
     } else {
       localAddToCart(product, quantity);
+      // For local storage, simulate a successful response
+      return {
+        status: 200,
+        statusText: 'OK',
+        data: { success: true },
+        headers: {},
+        config: {} as any
+      } as AxiosResponse;
     }
   };
 
@@ -40,27 +51,47 @@ export function useCart() {
     }
   };
 
-  const deleteFromCart = async (productId: number) => {
+  const deleteFromCart = async (productId: number): Promise<AxiosResponse | undefined> => {
     if (isLoggedIn) {
       try {
-        await apiDeleteCartItem(productId);
+        const response = await apiDeleteCartItem(productId);
+        return response;
       } catch (error) {
         console.error("Error deleting from cart:", error);
+        throw error;
       }
     } else {
       localRemoveItemFromCart(productId);
+      // For local storage, simulate a successful response
+      return {
+        status: 204,
+        statusText: 'No Content',
+        data: null,
+        headers: {},
+        config: {} as any
+      } as AxiosResponse;
     }
   };
 
-  const updateCart = async (productId: number, quantity: number) => {
+  const updateCart = async (productId: number, quantity: number): Promise<AxiosResponse | undefined> => {
     if (isLoggedIn) {
       try {
-        await apiUpdateCartItemQuantity(productId, quantity);
+        const response = await apiUpdateCartItemQuantity(productId, quantity);
+        return response;
       } catch (error) {
         console.error("Error updating cart item quantity:", error);
+        throw error;
       }
     } else {
       localUpdateItemQuantity(productId, quantity);
+      // For local storage, simulate a successful response
+      return {
+        status: 200,
+        statusText: 'OK',
+        data: { success: true },
+        headers: {},
+        config: {} as any
+      } as AxiosResponse;
     }
   };
 

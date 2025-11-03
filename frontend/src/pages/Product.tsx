@@ -2,6 +2,7 @@ import { useEffect, useState, ChangeEvent, MouseEvent } from "react";
 import { useParams } from "react-router-dom";
 import { getProduct } from "services/shopServices/apiRequestsShop";
 import { useCart } from "services/shopServices/cartLogic";
+import { useNotification } from "contexts/NotificationContext";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
 import { Box, Grid2, Typography, Button, TextField, Card, CardMedia } from "@mui/material";
@@ -24,12 +25,11 @@ export default function Product() {
   const { slug } = useParams() as { slug: string };
   const [quantity, setQuantity] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
-  const [confirmationMessage, setConfirmationMessage] = useState<string>("");
-  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const { addToCart } = useCart();
+  const { showSuccess, showError } = useNotification();
   const [product, setProduct] = useState<Product>({
     id: 1,
     name: "",
@@ -170,12 +170,16 @@ export default function Product() {
   const handleAddToCartClick = async (product: Product, event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     try {
-      await addToCart(product, quantity);
-      setConfirmationMessage(`Product added to the cart!`);
-      setShowConfirmation(true);
-      setTimeout(() => setShowConfirmation(false), 3000);
+      const response = await addToCart(product, quantity);
+      
+      if (response && (response.status === 200 || response.status === 201 || response.status === 204)) {
+        showSuccess(`${quantity} x ${product.name} added to cart!`);
+      } else {
+        showError("Failed to add product to cart. Please try again.");
+      }
     } catch (error) {
       console.error("Error adding product to cart:", error);
+      showError("Failed to add product to cart. Please check your connection and try again.");
     }
   };
 
@@ -200,11 +204,6 @@ export default function Product() {
 
   return (
     <Box maxWidth="lg" mx="auto" p={3}>
-      {showConfirmation && (
-        <Box mb={2} p={2} bgcolor="success.main" color="white" borderRadius={1}>
-          {confirmationMessage}
-        </Box>
-      )}
       {product.categoryId ? <CategoryBreadcrumb categoryId={product.categoryId} includeSelf={true} /> : "Category missing"}
 
       {/* Main product info */}

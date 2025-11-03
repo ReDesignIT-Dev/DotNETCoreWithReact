@@ -35,6 +35,7 @@ import { ProductAdd } from "../components/Admin/ProductAdd";
 import { AdminPanel } from "./AdminPanel";
 import WebSocketTest from "components/WebSocketTest";
 import { useLocationTracker } from "hooks/useLocationTracker";
+import NotificationDemo from "../components/NotificationDemo";
 
 function Shop() {
     const dispatch = useDispatch<AppDispatch>();
@@ -64,6 +65,7 @@ function Shop() {
                     <Route path={ROUTE_PATH_CART} element={<Cart />} />
                     <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
                     <Route path="/test-socket" element={<WebSocketTest />}></Route>
+                    <Route path="testing-ground" element={<NotificationDemo />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </Box>

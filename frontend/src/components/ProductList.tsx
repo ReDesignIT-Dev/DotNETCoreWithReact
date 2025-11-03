@@ -1,6 +1,7 @@
 import { MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "services/shopServices/cartLogic";
+import { useNotification } from "contexts/NotificationContext";     
 import "./ProductList.css";
 import { FRONTEND_PRODUCT_URL } from "config";
 import { createSafeImage, getImageSrc } from "utils/imageUtils";
@@ -10,14 +11,23 @@ import { navigateToProduct } from "utils/navigation";
 export default function ProductList({ products }: {products: Product[]}) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { showSuccess, showError } = useNotification();
 
   const handleAddToCartClick = async (product: Product, event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     try {
-      await addToCart(product, 1);
-      alert(`${product.name} was added to the cart!`);
+      const response = await addToCart(product, 1);
+      
+      // Only show success notification if the server response status is 200 (or 201/204 for success)
+      if (response && (response.status === 200 || response.status === 201 || response.status === 204)) {
+        showSuccess(`${product.name} was added to the cart!`);
+      } else {
+        // Handle unexpected response status
+        showError("Failed to add product to cart. Please try again.");
+      }
     } catch (error) {
       console.error("Error adding product to cart:", error);
+      showError("Failed to add product to cart. Please check your connection and try again.");
     }
   };
 
