@@ -311,21 +311,8 @@ export default function Product() {
       {isLightboxOpen && (
         <Lightbox 
           open={isLightboxOpen} 
-          close={() => setIsLightboxOpen(false)} 
-          slides={product.images.map((img) => {
-            const safeImage = createSafeImage(
-              { url: img.url, altText: img.altText },
-              `${product.name} - Image`
-            );
-            return { src: getImageSrc(safeImage, false) };
-          })} 
-        />
-      )}
-      {isLightboxOpen && (
-        <Lightbox
-          plugins={[Inline]}
-          open={isLightboxOpen}
           close={() => setIsLightboxOpen(false)}
+          index={currentImageIndex}
           slides={product.images.map((img) => {
             const safeImage = createSafeImage(
               { url: img.url, altText: img.altText },
@@ -333,15 +320,6 @@ export default function Product() {
             );
             return { src: getImageSrc(safeImage, false) };
           })}
-          inline={{
-            style: {
-              width: "80%",
-              maxWidth: "900px",
-              height: "auto",
-              maxHeight: "80vh",
-              margin: "0 auto",
-            },
-          }}
         />
       )}
     </Box>
