@@ -58,7 +58,6 @@ export default function Cart() {
                 if (response && (response.status === 200 || response.status === 204)) {
                     const totalAmount = calculateTotal(updatedItems);
                     setTotal(totalAmount.toFixed(2));
-                    showSuccess(`Updated quantity for ${item.product.name}`);
                 } else {
                     showError("Failed to update item quantity. Please try again.");
                     // Revert the optimistic update
