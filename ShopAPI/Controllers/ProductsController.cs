@@ -91,7 +91,7 @@ public class ProductsController : ControllerBase
 
             return CreatedAtAction(nameof(GetProductById), new { id = created.Id }, created);
         }
-        catch (Exception ex)
+        catch
         {
           
             return StatusCode(500, "An internal server error occurred while creating the product.");

@@ -14,4 +14,6 @@ public interface ICategoryService
     Task<List<CategoryTreeDto>> GetCategoryTreeAsync();
     Task<int> GetCategoriesCountAsync();
     Task<List<int>> GetAllDescendantCategoryIdsAsync(int categoryId);
+    Task<List<CategoryTreeDto>> GetSearchAssociatedCategoriesAsync(string searchTerm);
+    Task<List<CategoryTreeDto>> GetCategoryChildrenWithSearchAsync(int categoryId, string? searchTerm = null);
 }

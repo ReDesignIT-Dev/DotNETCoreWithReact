@@ -95,8 +95,6 @@ public class CategoriesController : ControllerBase
         return Ok(path);
     }
 
-
-
     [HttpPost]
     public async Task<ActionResult<ReadCategoryDto>> CreateCategory([FromForm] WriteCategoryDto dto)
     {
@@ -138,5 +136,17 @@ public class CategoriesController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/api/shop/search-associated-categories")]
+    public async Task<ActionResult<List<CategoryTreeDto>>> GetSearchAssociatedCategories([FromQuery] string? search)
+    {
+        _logger.LogWarning("Search term received: {SearchTerm}", search);
+        if (string.IsNullOrWhiteSpace(search))
+            return Ok(new List<CategoryTreeDto>());
+
+        var categories = await _categoryService.GetSearchAssociatedCategoriesAsync(search);
+        return Ok(categories);
     }
 }

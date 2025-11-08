@@ -156,19 +156,41 @@ export async function getAllProducts(): Promise<AxiosResponse | undefined> {
     }
 }
 
-export async function getAllProductsInCategory(categoryId: number, page = 1): Promise<AxiosResponse | undefined> {
-    try {
-        const url = `${API_PRODUCTS_QUERY_URL}?category=${categoryId}&page=${page}`;
-        const response = await apiClient.get(url);
-        return response;
-    } catch (error) {
-        apiErrorHandler(error);
+export async function getAllProductsInCategory(
+  categoryId: number, 
+  page = 1, 
+  searchString?: string
+): Promise<AxiosResponse | undefined> {
+  try {
+    const params = new URLSearchParams({
+      category: categoryId.toString(),
+      page: page.toString()
+    });
+    
+    // Add search parameter if provided
+    if (searchString && searchString.trim()) {
+      params.append('search', searchString.trim());
     }
+    
+    const url = `${API_PRODUCTS_QUERY_URL}?${params.toString()}`;
+    const response = await apiClient.get(url);
+    return response;
+  } catch (error) {
+    apiErrorHandler(error);
+  }
 }
 
 export async function getAllSearchProducts(searchString: string, page = 1): Promise<AxiosResponse | undefined> {
     try {
-        const response = await apiClient.get(`${API_SEARCH_URL}${searchString}&page=${page}`);
+        // Build proper URL instead of string concatenation
+        const params = new URLSearchParams();
+        if (searchString && searchString.trim()) {
+            params.append('search', searchString.trim());
+        }
+        params.append('page', page.toString());
+        
+        const url = `${API_PRODUCTS_QUERY_URL}?${params.toString()}`;
+        const response = await apiClient.get(url);
         return response;
     } catch (error) {
         apiErrorHandler(error);
@@ -224,7 +246,16 @@ export async function getAllSearchAssociatedCategories(
     searchString: string
 ): Promise<AxiosResponse<CategoryTree[]> | undefined> {
     try {
-        const response = await apiClient.get(`${API_SEARCH_ASSOCIATED_CATEGORIES_URL}${searchString}`);
+        // Build URL with proper query parameters
+        const params = new URLSearchParams();
+        if (searchString && searchString.trim()) {
+            params.append('search', searchString.trim()); // Use 'search' not 'string'
+        }
+        
+        const url = `${API_SEARCH_ASSOCIATED_CATEGORIES_URL}?${params.toString()}`;
+        console.log('Calling API:', url); // Add logging to debug
+        
+        const response = await apiClient.get(url);
         return response;
     } catch (error) {
         apiErrorHandler(error);

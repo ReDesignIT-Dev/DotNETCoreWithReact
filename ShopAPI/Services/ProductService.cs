@@ -40,11 +40,24 @@ public class ProductService : IProductService
         
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            var searchLower = query.Search.ToLower();
+            var searchLower = query.Search.ToLower().Trim();
+            _logger.LogInformation("Searching for: '{SearchTerm}'", searchLower);
+            
             productsQuery = productsQuery.Where(p =>
                 p.Name.ToLower().Contains(searchLower) ||
                 (p.Description != null && p.Description.ToLower().Contains(searchLower))
             );
+            
+            // Debug: Log what products match the search
+            var matchingProducts = await productsQuery
+                .Select(p => new { p.Id, p.Name, p.Description })
+                .ToListAsync();
+                
+            foreach (var product in matchingProducts)
+            {
+                _logger.LogInformation("Found product: ID={ProductId}, Name='{ProductName}', Description='{ProductDescription}'", 
+                    product.Id, product.Name, product.Description);
+            }
         }
 
         if (query.MinPrice.HasValue)
@@ -137,9 +150,10 @@ public class ProductService : IProductService
 
         if (!string.IsNullOrWhiteSpace(search))
         {
+            var searchLower = search.ToLower().Trim(); // Make consistent with GetProductsAsync
             query = query.Where(p =>
-                p.Name.Contains(search) ||
-                (p.Description != null && p.Description.Contains(search))
+                p.Name.ToLower().Contains(searchLower) ||
+                (p.Description != null && p.Description.ToLower().Contains(searchLower))
             );
         }
 
