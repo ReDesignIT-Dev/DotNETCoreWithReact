@@ -1,14 +1,24 @@
-import shopDefaultImageAsset from "assets/images/shop_default_image.jpg";
+﻿import shopDefaultImageAsset from "assets/images/shop_default_image.jpg";
 
-// config.ts
+// config.ts - Now uses environment variables with fallbacks
 export const FRONTEND_SHOP_URL = "/shop";
 
+// These will automatically pick the right environment
 export const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || "https://localhost:7288";
 export const FRONTEND_BASE_URL = process.env.REACT_APP_FRONTEND_BASE_URL || "http://localhost:3000";
+export const RECAPTCHA_SITEKEY = process.env.REACT_APP_RECAPTCHA_SITEKEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+
+// Debug info (remove in production)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('Backend URL:', BACKEND_BASE_URL);
+  console.log('Frontend URL:', FRONTEND_BASE_URL);
+}
+
+// Rest of your existing configuration...
 export const BACKEND_SHOP_URL = "api/shop";
 export const BACKEND_USER_URL = "api/shop/auth";
 export const BACKEND_HOME_URL = "api/myprojects";
-export const RECAPTCHA_SITEKEY = process.env.REACT_APP_RECAPTCHA_SITEKEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
 
 // main page
 export const FRONTEND_ABOUT_URL = "/about";

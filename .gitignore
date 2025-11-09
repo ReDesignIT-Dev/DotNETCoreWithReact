@@ -371,3 +371,5 @@ FodyWeavers.xsd
 /ShopAPI/shop.db
 /frontend/.vscode
 /frontend/.env.production
+/env frontend/.env.development
+/env frontend/.env.production
