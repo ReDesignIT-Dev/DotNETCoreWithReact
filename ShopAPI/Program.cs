@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -7,10 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using ShopAPI.Authorization;
 using ShopAPI.Data;
+using ShopAPI.Hubs;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using ShopAPI.Services;
-using ShopAPI.Hubs;
 using System.Text;
 
 DotNetEnv.Env.Load();
@@ -25,11 +26,19 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add systemd integration
+builder.Services.AddSystemd();
+
 builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add health checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ShopContext>();
 
 // Add SignalR with detailed configuration
 builder.Services.AddSignalR(options =>
@@ -147,7 +156,7 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
-// Enhanced CORS configuration for SignalR
+// Enhanced CORS configuration
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(corsBuilder =>
@@ -159,26 +168,60 @@ builder.Services.AddCors(options =>
                 "http://localhost:7288",
                 "https://localhost:7288",
                 "http://localhost:8000", 
-                "https://localhost:8000"
+                "https://localhost:8000",
+                "https://redesignit.pl",     
+                "http://redesignit.pl",    
+                "https://api.redesignit.pl", 
+                "http://api.redesignit.pl"
             )
             .AllowCredentials()
             .AllowAnyHeader()
-            .AllowAnyMethod()
-            .SetIsOriginAllowed(origin => true); // Allow any origin in development
+            .AllowAnyMethod();
     });
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var dbType = builder.Configuration["DEV_DB"] ?? "sqlite";
 
-if (builder.Environment.IsDevelopment())
+// Build PostgreSQL connection string from individual variables
+if (dbType.ToLower() == "postgres")
 {
-    builder.Services.AddDbContext<ShopContext>(opt =>
-        opt.UseSqlite(connectionString));
+    var host = builder.Configuration["POSTGRES_HOST"];
+    var database = builder.Configuration["POSTGRES_DB"];
+    var username = builder.Configuration["POSTGRES_USER"];
+    var password = builder.Configuration["POSTGRES_PASSWORD"];
+    var port = builder.Configuration["POSTGRES_PORT"] ?? "5432"; // Port is OK as default
+    
+    // Validate all required values are present
+    if (string.IsNullOrEmpty(host))
+        throw new InvalidOperationException("POSTGRES_HOST is required when using PostgreSQL");
+    if (string.IsNullOrEmpty(database))
+        throw new InvalidOperationException("POSTGRES_DB is required when using PostgreSQL");
+    if (string.IsNullOrEmpty(username))
+        throw new InvalidOperationException("POSTGRES_USER is required when using PostgreSQL");
+    if (string.IsNullOrEmpty(password))
+        throw new InvalidOperationException("POSTGRES_PASSWORD is required when using PostgreSQL");
+    
+    connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+    builder.Services.AddDbContext<ShopContext>(opt => opt.UseNpgsql(connectionString));
 }
 else
 {
-    builder.Services.AddDbContext<ShopContext>(opt =>
-        opt.UseNpgsql(connectionString));
+    // Use SQLite connection string as-is
+    builder.Services.AddDbContext<ShopContext>(opt => opt.UseSqlite(connectionString));
+}
+
+// Configure Data Protection for production - MOVE THIS BEFORE builder.Build()
+if (builder.Environment.IsProduction())
+{
+    var keysPath = builder.Configuration["Keys_Path"];
+    if (string.IsNullOrEmpty(keysPath))
+        throw new InvalidOperationException("Keys_Path is required");
+    
+    builder.Services.AddDataProtection()
+        .SetApplicationName("ShopAPI")
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+        .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 }
 
 var app = builder.Build();
@@ -250,8 +293,12 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
+
 app.MapControllers();
 
 app.MapHub<MainHub>("/hub");
+
+Log.Information("ShopAPI is fully started and ready to accept requests");
 
 app.Run();

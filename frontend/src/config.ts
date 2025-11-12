@@ -6,7 +6,7 @@ export const FRONTEND_SHOP_URL = "/shop";
 // These will automatically pick the right environment
 export const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || "https://localhost:7288";
 export const FRONTEND_BASE_URL = process.env.REACT_APP_FRONTEND_BASE_URL || "http://localhost:3000";
-export const RECAPTCHA_SITEKEY = process.env.REACT_APP_RECAPTCHA_SITEKEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+export const RECAPTCHA_SITEKEY = process.env.REACT_APP_RECAPTCHA_SITEKEY || "6LeCoQksAAAAAJAdGvP3gr3BfpfiHSQzWV8bBxqK";
 
 // Debug info (remove in production)
 if (process.env.NODE_ENV === 'development') {
