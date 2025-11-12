@@ -32,7 +32,7 @@ import { useEffect } from "react";
 import { fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
 import { AppDispatch } from "reduxComponents/store";
 import { ProductAdd } from "../components/Admin/ProductAdd";
-import { AdminPanel } from "./AdminPanel";
+import { AdminPanel } from "./ShopAdminPanel";
 import WebSocketTest from "components/WebSocketTest";
 import { useLocationTracker } from "hooks/useLocationTracker";
 import NotificationDemo from "../components/NotificationDemo";
