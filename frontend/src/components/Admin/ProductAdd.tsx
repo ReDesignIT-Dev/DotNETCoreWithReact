@@ -23,7 +23,7 @@ import {
   ImageUploadDropzone,
   ImageGallery 
 } from "components/Admin/FormFields";
-import { FRONTEND_ADMIN_PRODUCTS_URL } from "config";
+import { FRONTEND_SHOP_ADMIN_PRODUCTS_URL } from "config";
 
 export const ProductAdd = () => {
   const navigate = useNavigate();
@@ -151,12 +151,12 @@ export const ProductAdd = () => {
 
   const handleGoToProducts = () => {
     imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
-    navigate(FRONTEND_ADMIN_PRODUCTS_URL);
+    navigate(FRONTEND_SHOP_ADMIN_PRODUCTS_URL);
   };
 
   const handleCancel = () => {
     imageFiles.forEach(file => URL.revokeObjectURL(file.preview));
-    navigate(FRONTEND_ADMIN_PRODUCTS_URL);
+    navigate(FRONTEND_SHOP_ADMIN_PRODUCTS_URL);
   };
 
   return (

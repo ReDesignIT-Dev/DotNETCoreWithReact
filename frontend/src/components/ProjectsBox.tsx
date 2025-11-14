@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Card, CardContent, CardMedia, Container, Box, Grid2 } from "@mui/material";
 import { getAllProjects } from "services/homeServices/apiRequestsHome";
+import { BACKEND_BASE_URL } from "config";
 import shopDefaultImage from "assets/images/shop_default_image.jpg";
 
 const ProjectsBox: React.FC = () => {
@@ -36,13 +37,34 @@ const ProjectsBox: React.FC = () => {
       </Typography>
     );
   }
-  const formatUrl = (url: string): string => {
+
+  const formatProjectUrl = (url: string): string => {
+    if (!url) return "#";
+
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
       const formattedUrl = url.startsWith("www.") ? url.substring(4, url.length) : url;
       return `https://${formattedUrl}`;
     }
     return url;
   };
+
+  const formatImageUrl = (imageUrl: string | undefined): string => {
+    if (!imageUrl) return shopDefaultImage;
+
+    // If already absolute URL, return as is
+    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+      return imageUrl;
+    }
+
+    // If relative URL starting with /, prepend backend base URL
+    if (imageUrl.startsWith("/")) {
+      return `${BACKEND_BASE_URL}${imageUrl}`;
+    }
+
+    // If relative URL not starting with /, prepend backend base URL with /
+    return `${BACKEND_BASE_URL}/${imageUrl}`;
+  };
+
   return (
     <Container maxWidth="lg">
       <Typography variant="h4" component="h2" align="center" gutterBottom>
@@ -53,7 +75,8 @@ const ProjectsBox: React.FC = () => {
           <Grid2 container size={{ xs: 12, sm: 6, md: 4 }} sx={{ display: "flex" }} key={project.id}>
             <Card
               component="a"
-              href={formatUrl(project.url)}
+              href={formatProjectUrl(project.url)} // Fixed: should link to project.url, not image
+              target="_blank"
               rel="noopener noreferrer"
               sx={{
                 maxWidth: "282px",
@@ -82,7 +105,7 @@ const ProjectsBox: React.FC = () => {
               >
                 <CardMedia
                   component="img"
-                  image={project.image && project.image.thumbnailUrl ? project.image.thumbnailUrl : shopDefaultImage}
+                  image={formatImageUrl(project.image?.thumbnailUrl)}
                   alt={project.title}
                   sx={{
                     maxHeight: "250px",

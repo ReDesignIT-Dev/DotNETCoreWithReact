@@ -25,14 +25,14 @@ import {
     ROUTE_PATH_PASSWORD_RESET,
     ROUTE_PATH_ACTIVATE_USER,
     ROUTE_PATH_PRODUCT_ADD,
-    ROUTE_PATH_ADMIN_PANEL,
+    ROUTE_PATH_SHOP_ADMIN_PANEL,
 } from "config";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
 import { AppDispatch } from "reduxComponents/store";
 import { ProductAdd } from "../components/Admin/ProductAdd";
-import { AdminPanel } from "./ShopAdminPanel";
+import { ShopAdminPanel } from "./ShopAdminPanel";
 import WebSocketTest from "components/WebSocketTest";
 import { useLocationTracker } from "hooks/useLocationTracker";
 import NotificationDemo from "../components/NotificationDemo";
@@ -52,7 +52,7 @@ function Shop() {
             <Box sx={{ flex: 1 }}>
                 <Routes>
                     <Route path="" element={<ShopHome />} />
-                    <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
+                    <Route path={ROUTE_PATH_SHOP_ADMIN_PANEL} element={<ShopAdminPanel />} />
                     <Route path={ROUTE_PATH_LOGIN} element={<Login />} />
                     <Route path={ROUTE_PATH_REGISTER} element={<Register />} />
                     <Route path={ROUTE_PATH_PASSWORD_RECOVERY} element={<PasswordRecovery />} />
@@ -63,7 +63,6 @@ function Shop() {
                     <Route path={ROUTE_PATH_PRODUCT} element={<Product />} />
                     <Route path={ROUTE_PATH_SEARCH} element={<SearchPage />} />
                     <Route path={ROUTE_PATH_CART} element={<Cart />} />
-                    <Route path={ROUTE_PATH_ADMIN_PANEL} element={<AdminPanel />} />
                     <Route path="/test-socket" element={<WebSocketTest />}></Route>
                     <Route path="testing-ground" element={<NotificationDemo />} />
                     <Route path="*" element={<NotFound />} />

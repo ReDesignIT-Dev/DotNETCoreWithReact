@@ -5,9 +5,10 @@ import { Box } from "@mui/material";
 import Home from "./Home";
 import Header from "components/Header";
 import Footer from "components/Footer";
-import { FRONTEND_ABOUT_URL, FRONTEND_CONTACT_URL } from "config";
+import { FRONTEND_ABOUT_URL, FRONTEND_CONTACT_URL, ROUTE_PATH_MAIN_ADMIN_PANEL } from "config";
 import About from "./About";
 import Contact from "./Contact";
+import { MainAdminPanel } from "./MainAdminPanel";
 
 function MainPage() {
   return (
@@ -26,6 +27,7 @@ function MainPage() {
           <Route path="" element={<Home />} />
           <Route path={FRONTEND_ABOUT_URL} element={<About />} />
           <Route path={FRONTEND_CONTACT_URL} element={<Contact />} />
+          <Route path={ROUTE_PATH_MAIN_ADMIN_PANEL} element={<MainAdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       <Footer />

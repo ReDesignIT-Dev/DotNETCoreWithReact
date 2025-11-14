@@ -5,7 +5,7 @@ import { logout } from "reduxComponents/reduxUser/Auth/authReducer";
 import { useUser } from "hooks/useUser";
 import { AppDispatch } from "reduxComponents/store";
 import { useNavigate } from "react-router-dom";
-import { FRONTEND_LOGIN_URL, FRONTEND_ADMIN_PANEL_URL } from "config";
+import { FRONTEND_LOGIN_URL, FRONTEND_SHOP_ADMIN_PANEL_URL } from "config";
 import { debounce } from "lodash";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { isTokenValid, isUserAdmin } from "utils/cookies";
@@ -41,7 +41,7 @@ const SignInButton: React.FC = () => {
       {/* Admin Profile Icon */}
       {isAdminUser && (
         <Tooltip title="Admin Panel">
-          <IconButton size="small" sx={{ color: "#fff" }} onClick={() => navigate(FRONTEND_ADMIN_PANEL_URL)}>
+          <IconButton size="small" sx={{ color: "#fff" }} onClick={() => navigate(FRONTEND_SHOP_ADMIN_PANEL_URL)}>
             <FaUserCircleIcon size={28} />
           </IconButton>
         </Tooltip>

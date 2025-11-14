@@ -15,6 +15,16 @@ public class FileStorageService : IFileStorageService
     private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
     private const int ThumbnailMaxSize = 250;
+    
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IConfiguration _configuration;
+
+    public FileStorageService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+    {
+        _httpContextAccessor = httpContextAccessor;
+        _configuration = configuration;
+    }
+
     public record ImageSaveResult(string Url, string ThumbnailUrl);
 
     public async Task<ImageSaveResult> SaveImageAsync(IFormFile image, ImageType type, int? userId = null)
@@ -36,22 +46,22 @@ public class FileStorageService : IFileStorageService
         }
 
         string uploadDir;
-        string url;
+        string relativeUrl;
         switch (type)
         {
             case ImageType.Product:
                 if (userId == null)
                     throw new ArgumentException("userId is required for product images.");
                 uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "products", userId.ToString()!);
-                url = $"/uploads/products/{userId}/{hash}{ext}";
+                relativeUrl = $"/uploads/products/{userId}/{hash}{ext}";
                 break;
             case ImageType.Category:
                 uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "categories");
-                url = $"/uploads/categories/{hash}{ext}";
+                relativeUrl = $"/uploads/categories/{hash}{ext}";
                 break;
             case ImageType.MyProject:
                 uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "myprojects");
-                url = $"/uploads/myprojects/{hash}{ext}";
+                relativeUrl = $"/uploads/myprojects/{hash}{ext}";
                 break;
             default:
                 throw new ArgumentException("Invalid image type.");
@@ -73,7 +83,7 @@ public class FileStorageService : IFileStorageService
         // Save thumbnail
         var thumbFileName = $"{hash}_thumb{ext}";
         var thumbFilePath = Path.Combine(uploadDir, thumbFileName);
-        var thumbnailUrl = url.Replace($"{hash}{ext}", $"{hash}_thumb{ext}");
+        var relativeThumbnailUrl = relativeUrl.Replace($"{hash}{ext}", $"{hash}_thumb{ext}");
 
         if (!File.Exists(thumbFilePath))
         {
@@ -98,6 +108,42 @@ public class FileStorageService : IFileStorageService
             }
         }
 
-        return new ImageSaveResult(url, thumbnailUrl);
+        // Convert relative URLs to absolute URLs
+        var baseUrl = GetBaseUrl();
+        var absoluteUrl = $"{baseUrl}{relativeUrl}";
+        var absoluteThumbnailUrl = $"{baseUrl}{relativeThumbnailUrl}";
+
+        return new ImageSaveResult(absoluteUrl, absoluteThumbnailUrl);
+    }
+
+    private string GetBaseUrl()
+    {
+        // First try to get the configured backend base URL
+        var configuredBaseUrl = _configuration["Backend:BaseUrl"];
+        if (!string.IsNullOrEmpty(configuredBaseUrl))
+        {
+            return configuredBaseUrl.TrimEnd('/');
+        }
+
+        // Fallback to HTTP context
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            var request = httpContext.Request;
+            var scheme = request.Scheme;
+            var host = request.Host.Value;
+            
+            // Handle specific port mappings for development
+            if (host.Contains("localhost") && !host.Contains(":"))
+            {
+                // If localhost without port, assume default ports
+                host = scheme == "https" ? "localhost:7288" : "localhost:7288";
+            }
+            
+            return $"{scheme}://{host}";
+        }
+
+        // Final fallback for development
+        return "https://localhost:7288";
     }
 }

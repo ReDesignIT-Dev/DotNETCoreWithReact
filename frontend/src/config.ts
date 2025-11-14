@@ -52,9 +52,18 @@ export const ROUTE_PATH_SEARCH = "/search";
 export const FRONTEND_SEARCH_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_SEARCH}`;
 export const ROUTE_PATH_CART = "/cart";
 export const FRONTEND_CART_URL = `${FRONTEND_SHOP_URL}${ROUTE_PATH_CART}`;
-export const ADMIN_PANEL_URL = "/admin-panel"
-export const ROUTE_PATH_ADMIN_PANEL = `${ADMIN_PANEL_URL}/*`;
-export const FRONTEND_ADMIN_PANEL_URL = `${FRONTEND_SHOP_URL}${ADMIN_PANEL_URL}`;
+
+// ============= ADMIN PANELS SEPARATION =============
+
+// SHOP ADMIN PANEL (shop/admin-panel)
+export const SHOP_ADMIN_PANEL_URL = "/admin-panel";
+export const ROUTE_PATH_SHOP_ADMIN_PANEL = `${SHOP_ADMIN_PANEL_URL}/*`;
+export const FRONTEND_SHOP_ADMIN_PANEL_URL = `${FRONTEND_SHOP_URL}${SHOP_ADMIN_PANEL_URL}`;
+
+// MAIN SITE ADMIN PANEL (admin-panel)
+export const MAIN_ADMIN_PANEL_URL = "/admin-panel";
+export const ROUTE_PATH_MAIN_ADMIN_PANEL = `${MAIN_ADMIN_PANEL_URL}/*`;
+export const FRONTEND_MAIN_ADMIN_PANEL_URL = MAIN_ADMIN_PANEL_URL;
 
 // API urls should match the django urls
 export const API_LOGOUT_USER_URL = `${BACKEND_USER_URL}/logout`;
@@ -78,40 +87,82 @@ export const API_DELETE_FROM_CART_URL = `${API_CART_URL}/items`;
 
 // API home based
 export const API_PROJECTS_ALL_URL = `${BACKEND_HOME_URL}`;
+export const API_ADMIN_PROJECTS_URL = `${BACKEND_BASE_URL}/api/myprojects`;
 
-// admin panel navigation - RELATIVE PATHS for internal navigation
-export const ADMIN_PRODUCTS_PATH = "products";
-export const ADMIN_PRODUCTS_ADD_PATH = `${ADMIN_PRODUCTS_PATH}/add`;
-export const ADMIN_PRODUCTS_EDIT_PATH = `${ADMIN_PRODUCTS_PATH}/:id/edit`;
-export const ADMIN_CATEGORIES_PATH = "categories";
-export const ADMIN_CATEGORIES_ADD_PATH = `${ADMIN_CATEGORIES_PATH}/add`;
-export const ADMIN_CATEGORIES_EDIT_PATH = `${ADMIN_CATEGORIES_PATH}/:id/edit`;
-export const ADMIN_USERS_PATH = "users";
-export const ADMIN_REPORTS_PATH = "reports";
+// ============= SHOP ADMIN PANEL NAVIGATION =============
+// Shop admin panel navigation - RELATIVE PATHS for internal navigation
+export const SHOP_ADMIN_PRODUCTS_PATH = "products";
+export const SHOP_ADMIN_PRODUCTS_ADD_PATH = `${SHOP_ADMIN_PRODUCTS_PATH}/add`;
+export const SHOP_ADMIN_PRODUCTS_EDIT_PATH = `${SHOP_ADMIN_PRODUCTS_PATH}/:id/edit`;
+export const SHOP_ADMIN_CATEGORIES_PATH = "categories";
+export const SHOP_ADMIN_CATEGORIES_ADD_PATH = `${SHOP_ADMIN_CATEGORIES_PATH}/add`;
+export const SHOP_ADMIN_CATEGORIES_EDIT_PATH = `${SHOP_ADMIN_CATEGORIES_PATH}/:id/edit`;
+export const SHOP_ADMIN_USERS_PATH = "users";
+export const SHOP_ADMIN_REPORTS_PATH = "reports";
 
-// admin panel navigation - ABSOLUTE PATHS for external navigation
-export const FRONTEND_ADMIN_PRODUCTS_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_PRODUCTS_PATH}`;
-export const FRONTEND_ADMIN_CATEGORIES_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_CATEGORIES_PATH}`;
-export const FRONTEND_ADMIN_USERS_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_USERS_PATH}`;
-export const FRONTEND_ADMIN_REPORTS_URL = `${FRONTEND_ADMIN_PANEL_URL}/${ADMIN_REPORTS_PATH}`;
+// Shop admin panel navigation - ABSOLUTE PATHS for external navigation
+export const FRONTEND_SHOP_ADMIN_PRODUCTS_URL = `${FRONTEND_SHOP_ADMIN_PANEL_URL}/${SHOP_ADMIN_PRODUCTS_PATH}`;
+export const FRONTEND_SHOP_ADMIN_CATEGORIES_URL = `${FRONTEND_SHOP_ADMIN_PANEL_URL}/${SHOP_ADMIN_CATEGORIES_PATH}`;
+export const FRONTEND_SHOP_ADMIN_USERS_URL = `${FRONTEND_SHOP_ADMIN_PANEL_URL}/${SHOP_ADMIN_USERS_PATH}`;
+export const FRONTEND_SHOP_ADMIN_REPORTS_URL = `${FRONTEND_SHOP_ADMIN_PANEL_URL}/${SHOP_ADMIN_REPORTS_PATH}`;
 
-// Helper functions for dynamic paths
-// For navigation from admin panel root
-export const getAdminProductEditPath = (id: number) => `${ADMIN_PRODUCTS_PATH}/${id}/edit`;
-export const getAdminCategoryEditPath = (id: number) => `${ADMIN_CATEGORIES_PATH}/${id}/edit`;
+// ============= MAIN SITE ADMIN PANEL NAVIGATION =============
+// Main site admin panel navigation - RELATIVE PATHS for internal navigation
+export const MAIN_ADMIN_PROJECTS_PATH = "projects";
+export const MAIN_ADMIN_PROJECTS_ADD_PATH = `${MAIN_ADMIN_PROJECTS_PATH}/add`;
+export const MAIN_ADMIN_PROJECTS_EDIT_PATH = `${MAIN_ADMIN_PROJECTS_PATH}/:id/edit`;
+export const MAIN_ADMIN_SETTINGS_PATH = "settings";
+export const MAIN_ADMIN_ANALYTICS_PATH = "analytics";
 
-// For navigation from within products/categories pages (relative)
-export const getProductEditPath = (id: number) => `${id}/edit`;
-export const getCategoryEditPath = (id: number) => `${id}/edit`;
-export const getProductAddPath = () => "add";
-export const getCategoryAddPath = () => "add";
+// Main site admin panel navigation - ABSOLUTE PATHS for external navigation
+export const FRONTEND_MAIN_ADMIN_PROJECTS_URL = `${FRONTEND_MAIN_ADMIN_PANEL_URL}/${MAIN_ADMIN_PROJECTS_PATH}`;
+export const FRONTEND_MAIN_ADMIN_SETTINGS_URL = `${FRONTEND_MAIN_ADMIN_PANEL_URL}/${MAIN_ADMIN_SETTINGS_PATH}`;
+export const FRONTEND_MAIN_ADMIN_ANALYTICS_URL = `${FRONTEND_MAIN_ADMIN_PANEL_URL}/${MAIN_ADMIN_ANALYTICS_PATH}`;
+
+// ============= HELPER FUNCTIONS =============
+// Shop Admin Helper functions
+export const getShopAdminProductEditPath = (id: number) => `${SHOP_ADMIN_PRODUCTS_PATH}/${id}/edit`;
+export const getShopAdminCategoryEditPath = (id: number) => `${SHOP_ADMIN_CATEGORIES_PATH}/${id}/edit`;
+export const getShopProductEditPath = (id: number) => `${id}/edit`;
+export const getShopCategoryEditPath = (id: number) => `${id}/edit`;
+export const getShopProductAddPath = () => "add";
+export const getShopCategoryAddPath = () => "add";
+
+// Main Site Admin Helper functions
+export const getMainAdminProjectEditPath = (id: number) => `${MAIN_ADMIN_PROJECTS_PATH}/${id}/edit`;
+export const getMainProjectEditPath = (id: number) => `${id}/edit`;
+export const getMainProjectAddPath = () => "add";
+
+// ============= BACKWARD COMPATIBILITY (DEPRECATED - TO BE REMOVED) =============
+// Keep these for now to avoid breaking existing code, but mark as deprecated
+/** @deprecated Use SHOP_ADMIN_PRODUCTS_PATH instead */
+export const ADMIN_PRODUCTS_PATH = SHOP_ADMIN_PRODUCTS_PATH;
+/** @deprecated Use SHOP_ADMIN_PRODUCTS_ADD_PATH instead */
+export const ADMIN_PRODUCTS_ADD_PATH = SHOP_ADMIN_PRODUCTS_ADD_PATH;
+/** @deprecated Use SHOP_ADMIN_PRODUCTS_EDIT_PATH instead */
+export const ADMIN_PRODUCTS_EDIT_PATH = SHOP_ADMIN_PRODUCTS_EDIT_PATH;
+/** @deprecated Use SHOP_ADMIN_CATEGORIES_PATH instead */
+export const ADMIN_CATEGORIES_PATH = SHOP_ADMIN_CATEGORIES_PATH;
+/** @deprecated Use SHOP_ADMIN_CATEGORIES_ADD_PATH instead */
+export const ADMIN_CATEGORIES_ADD_PATH = SHOP_ADMIN_CATEGORIES_ADD_PATH;
+/** @deprecated Use SHOP_ADMIN_CATEGORIES_EDIT_PATH instead */
+export const ADMIN_CATEGORIES_EDIT_PATH = SHOP_ADMIN_CATEGORIES_EDIT_PATH;
+/** @deprecated Use SHOP_ADMIN_USERS_PATH instead */
+export const ADMIN_USERS_PATH = SHOP_ADMIN_USERS_PATH;
+/** @deprecated Use SHOP_ADMIN_REPORTS_PATH instead */
+export const ADMIN_REPORTS_PATH = SHOP_ADMIN_REPORTS_PATH;
+/** @deprecated Use getShopProductEditPath instead */
+export const getProductEditPath = getShopProductEditPath;
+/** @deprecated Use getShopCategoryEditPath instead */
+export const getCategoryEditPath = getShopCategoryEditPath;
+/** @deprecated Use getShopProductAddPath instead */
+export const getProductAddPath = getShopProductAddPath;
+/** @deprecated Use getShopCategoryAddPath instead */
+export const getCategoryAddPath = getShopCategoryAddPath;
 
 // ============= ASSET CONFIGURATION =============
 export const DEFAULT_IMAGES = {
-  SHOP_DEFAULT: shopDefaultImageAsset, // Now uses the imported asset
-  // TODO: Add more default images as needed
-  // PRODUCT_PLACEHOLDER: productPlaceholderAsset,
-  // CATEGORY_PLACEHOLDER: categoryPlaceholderAsset,
+  SHOP_DEFAULT: shopDefaultImageAsset,
 } as const;
 
 export const SHOP_DEFAULT_IMAGE = DEFAULT_IMAGES.SHOP_DEFAULT;
