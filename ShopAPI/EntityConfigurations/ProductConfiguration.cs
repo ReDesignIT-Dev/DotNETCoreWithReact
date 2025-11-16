@@ -8,15 +8,16 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
     {
-        // Name: required, max length 32
+        // Name: required, increased max length to accommodate longer product names
         builder.Property(p => p.Name)
             .IsRequired()
-            .HasMaxLength(32);
+            .HasMaxLength(255);
 
-        // Description: optional, no length limit (or set one if you want)
+        // Description: allow HTML content, much larger limit
         builder.Property(p => p.Description)
             .IsRequired()
-            .HasMaxLength(500); // Example: limit to 500 chars, adjust as needed
+            .HasMaxLength(10000) // 10,000 characters should be plenty for rich HTML descriptions
+            .HasColumnType("NVARCHAR(MAX)"); // Use MAX for SQL Server to allow very large content
 
         // Price: required
         builder.Property(p => p.Price)
