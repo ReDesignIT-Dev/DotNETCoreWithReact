@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { TextField, Box } from "@mui/material";
+import { FIELD_LIMITS } from "constants/validation";
 
 interface UsernameFieldProps {
   value: string;
@@ -31,7 +32,8 @@ const UsernameField: React.FC<UsernameFieldProps> = ({
   };
 
   const validate = (value: string): boolean => {
-    const isValid = value.length >= 3 && value.length <= 30;
+    // Use constants instead of hardcoded values
+    const isValid = value.length >= FIELD_LIMITS.USERNAME_MIN && value.length <= FIELD_LIMITS.USERNAME_MAX;
     onValidate(isValid);
     return isValid;
   };
@@ -52,7 +54,7 @@ const UsernameField: React.FC<UsernameFieldProps> = ({
         error={username !== "" && !validate(username)}
         helperText={
           username !== "" && !validate(username)
-            ? "Username must be between 3 and 30 characters"
+            ? `Username must be between ${FIELD_LIMITS.USERNAME_MIN} and ${FIELD_LIMITS.USERNAME_MAX} characters`
             : ""
         }
         sx={{

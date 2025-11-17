@@ -13,6 +13,12 @@ import {
   ImageGallery 
 } from 'components/Admin/FormFields';
 
+const VALIDATION = {
+  NAME_MAX_LENGTH: 255,
+  DESCRIPTION_MAX_LENGTH: 10000,
+  MIN_PRICE: 0.01,
+} as const;
+
 interface ProductUpdateProps {
   productId: number;
   onSuccess?: () => void;
@@ -252,14 +258,16 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
     
     if (!formData.name?.trim()) {
       errors.name = 'Name is required';
+    } else if (formData.name.length > VALIDATION.NAME_MAX_LENGTH) {
+      errors.name = `Name must not exceed ${VALIDATION.NAME_MAX_LENGTH} characters`;
     }
     
-    if (!formData.description?.trim()) {
-      errors.description = 'Description is required';
+    if (formData.description && formData.description.length > VALIDATION.DESCRIPTION_MAX_LENGTH) {
+      errors.description = `Description must not exceed ${VALIDATION.DESCRIPTION_MAX_LENGTH} characters`;
     }
     
-    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) < 0) {
-      errors.price = 'Price must be a valid positive number';
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) < VALIDATION.MIN_PRICE) {
+      errors.price = `Price must be at least $${VALIDATION.MIN_PRICE}`;
     }
     
     setFormErrors(errors);
@@ -440,6 +448,7 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         onChange={(value) => handleFieldChange('name', value)}
         error={formErrors.name}
         disabled={saving}
+        maxLength={VALIDATION.NAME_MAX_LENGTH}
       />
 
       <CategorySelector
@@ -462,6 +471,7 @@ export const ProductUpdate: React.FC<ProductUpdateProps> = ({ productId, onSucce
         onChange={(value) => handleFieldChange('description', value)}
         error={formErrors.description}
         disabled={saving}
+        maxLength={VALIDATION.DESCRIPTION_MAX_LENGTH}
       />
 
       {/* Combined Images Section */}

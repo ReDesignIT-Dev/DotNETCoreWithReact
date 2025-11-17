@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ShopAPI.Models;
+using ShopAPI.Constants;
 
 namespace ShopAPI.EntityConfigurations;
 
@@ -8,16 +9,15 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
     {
-        // Name: required, increased max length to accommodate longer product names
+        // Name: required, use constant for max length
         builder.Property(p => p.Name)
             .IsRequired()
-            .HasMaxLength(255);
+            .HasMaxLength(FieldLimits.ProductNameMaxLength);
 
-        // Description: allow HTML content, much larger limit
+        // Description: allow HTML content, use constant for max length
         builder.Property(p => p.Description)
             .IsRequired()
-            .HasMaxLength(10000) // 10,000 characters should be plenty for rich HTML descriptions
-            .HasColumnType("NVARCHAR(MAX)"); // Use MAX for SQL Server to allow very large content
+            .HasMaxLength(FieldLimits.ProductDescriptionMaxLength);
 
         // Price: required
         builder.Property(p => p.Price)

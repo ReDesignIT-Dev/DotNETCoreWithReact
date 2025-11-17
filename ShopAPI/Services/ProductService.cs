@@ -7,6 +7,7 @@ using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using ShopAPI.Requests;
+using ShopAPI.Constants;
 using static ShopAPI.Services.FileStorageService;
 
 namespace ShopAPI.Services;
@@ -17,13 +18,15 @@ public class ProductService : IProductService
     private readonly IFileStorageService _fileStorage;
     private readonly ILogger<ProductService> _logger;
     private readonly ICategoryService _categoryService;
+    private readonly IHtmlSanitizerService _htmlSanitizer;
 
-    public ProductService(ShopContext context, IFileStorageService fileStorage, ILogger<ProductService> logger, ICategoryService categoryService)
+    public ProductService(ShopContext context, IFileStorageService fileStorage, ILogger<ProductService> logger, ICategoryService categoryService, IHtmlSanitizerService htmlSanitizer)
     {
         _context = context;
         _fileStorage = fileStorage;
         _logger = logger;
         _categoryService = categoryService;
+        _htmlSanitizer = htmlSanitizer;
     }
 
     public async Task<IEnumerable<ReadProductDto>> GetProductsAsync(ProductQueryParameters query)
@@ -164,6 +167,29 @@ public class ProductService : IProductService
     {
         try
         {
+            // Validate and sanitize input
+            if (string.IsNullOrWhiteSpace(dto.Name))
+            {
+                _logger.LogWarning("CreateProductAsync failed: Product name is required");
+                return null;
+            }
+
+            // Use constant from FieldLimits
+            if (dto.Name.Length > FieldLimits.ProductNameMaxLength)
+            {
+                _logger.LogWarning("CreateProductAsync failed: Product name exceeds {MaxLength} characters", FieldLimits.ProductNameMaxLength);
+                return null;
+            }
+
+            var sanitizedDescription = _htmlSanitizer.Sanitize(dto.Description ?? string.Empty);
+
+            // Use constant from FieldLimits
+            if (sanitizedDescription.Length > FieldLimits.ProductDescriptionMaxLength)
+            {
+                _logger.LogWarning("CreateProductAsync failed: Description exceeds {MaxLength} characters", FieldLimits.ProductDescriptionMaxLength);
+                return null;
+            }
+
             // Validate category exists
             var category = await _context.Categories.FindAsync(dto.CategoryId);
             if (category == null)
@@ -217,11 +243,11 @@ public class ProductService : IProductService
             _logger.LogInformation("Created {ImageCount} ProductImage entities with positions 1 to {MaxPosition}",
                 images.Count, images.Count);
 
-            // Create product
+            // Create product with sanitized description
             var product = new Product
             {
                 Name = dto.Name,
-                Description = dto.Description ?? string.Empty,
+                Description = sanitizedDescription, // Use sanitized description
                 Price = dto.Price,
                 CategoryId = dto.CategoryId,
                 Category = category,
@@ -267,7 +293,7 @@ public class ProductService : IProductService
         {
             _logger.LogError(ex, "Error in CreateProductAsync for product {ProductName} (CategoryId: {CategoryId})",
                 dto.Name, dto.CategoryId);
-            throw; // Re-throw to be handled by controller
+            throw;
         }
     }
 
@@ -280,15 +306,30 @@ public class ProductService : IProductService
         if (product == null)
             return false;
 
-        // Update basic fields
+        // Update basic fields with validation and sanitization
         if (!string.IsNullOrEmpty(dto.Name))
         {
+            // Use constant from FieldLimits
+            if (dto.Name.Length > FieldLimits.ProductNameMaxLength)
+            {
+                _logger.LogWarning("UpdateProductAsync failed: Product name exceeds {MaxLength} characters", FieldLimits.ProductNameMaxLength);
+                return false;
+            }
             product.Name = dto.Name;
             product.Slug = SlugHelper.GenerateSlug(dto.Name, id);
         }
 
         if (!string.IsNullOrEmpty(dto.Description))
-            product.Description = dto.Description;
+        {
+            var sanitizedDescription = _htmlSanitizer.Sanitize(dto.Description);
+            // Use constant from FieldLimits
+            if (sanitizedDescription.Length > FieldLimits.ProductDescriptionMaxLength)
+            {
+                _logger.LogWarning("UpdateProductAsync failed: Description exceeds {MaxLength} characters", FieldLimits.ProductDescriptionMaxLength);
+                return false;
+            }
+            product.Description = sanitizedDescription;
+        }
 
         if (dto.Price.HasValue)
             product.Price = dto.Price.Value;

@@ -1,0 +1,6 @@
+export const FIELD_LIMITS = {
+  PRODUCT_NAME: 255,
+  PRODUCT_DESCRIPTION: 10000,
+  USERNAME_MIN: 3,
+  USERNAME_MAX: 30,
+} as const;

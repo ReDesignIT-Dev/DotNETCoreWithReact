@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using ShopAPI.Dtos.Product;
 using ShopAPI.Interfaces;
 using ShopAPI.Requests;
-using ShopAPI.Enums;
 using System.Security.Claims;
-using ShopAPI.Services;
+using ShopAPI.Constants;
+
 namespace ShopAPI.Controllers;
 
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "AdminAndActive")]
@@ -69,6 +69,11 @@ public class ProductsController : ControllerBase
                 return BadRequest("Product name is required.");
             }
 
+            if (dto.Name.Length > FieldLimits.ProductNameMaxLength)
+            {
+                return BadRequest($"Product name exceeds maximum length of {FieldLimits.ProductNameMaxLength} characters. Current length: {dto.Name.Length}");
+            }
+
             if (dto.Price <= 0)
             {
                 return BadRequest("Product price must be greater than 0.");
@@ -88,12 +93,10 @@ public class ProductsController : ControllerBase
                 return BadRequest("Category does not exist.");
             }
 
-
             return CreatedAtAction(nameof(GetProductById), new { id = created.Id }, created);
         }
         catch
         {
-          
             return StatusCode(500, "An internal server error occurred while creating the product.");
         }
     }

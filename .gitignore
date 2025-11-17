@@ -373,3 +373,4 @@ FodyWeavers.xsd
 /frontend/.env.production
 /env frontend/.env.development
 /env frontend/.env.production
+/frontend/.env.development

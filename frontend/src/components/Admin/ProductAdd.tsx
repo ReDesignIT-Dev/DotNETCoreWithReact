@@ -18,12 +18,20 @@ import { selectFlatCategories } from "reduxComponents/reduxShop/Categories/selec
 import { 
   NameField, 
   PriceField, 
-  DescriptionField, 
+  SimpleRichTextField, 
   CategorySelector, 
   ImageUploadDropzone,
   ImageGallery 
 } from "components/Admin/FormFields";
 import { FRONTEND_SHOP_ADMIN_PRODUCTS_URL } from "config";
+import { FIELD_LIMITS } from "constants/validation";
+
+// Use constants from validation file
+const VALIDATION = {
+  NAME_MAX_LENGTH: FIELD_LIMITS.PRODUCT_NAME,
+  DESCRIPTION_MAX_LENGTH: FIELD_LIMITS.PRODUCT_DESCRIPTION, 
+  MIN_PRICE: 0.01,
+} as const;
 
 export const ProductAdd = () => {
   const navigate = useNavigate();
@@ -220,12 +228,19 @@ export const ProductAdd = () => {
           <Controller
             name="name"
             control={control}
-            rules={{ required: "Name is required" }}
+            rules={{ 
+              required: "Name is required",
+              maxLength: {
+                value: VALIDATION.NAME_MAX_LENGTH,
+                message: `Name must not exceed ${VALIDATION.NAME_MAX_LENGTH} characters`
+              }
+            }}
             render={({ field }) => (
               <NameField
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.name?.message}
+                maxLength={VALIDATION.NAME_MAX_LENGTH}
               />
             )}
           />
@@ -247,10 +262,20 @@ export const ProductAdd = () => {
           <Controller
             name="description"
             control={control}
+            rules={{
+              maxLength: {
+                value: VALIDATION.DESCRIPTION_MAX_LENGTH,
+                message: `Description must not exceed ${VALIDATION.DESCRIPTION_MAX_LENGTH} characters`
+              }
+            }}
             render={({ field }) => (
-              <DescriptionField
+              <SimpleRichTextField
                 value={field.value}
                 onChange={field.onChange}
+                error={errors.description?.message}
+                maxLength={VALIDATION.DESCRIPTION_MAX_LENGTH}
+                label="Description"
+                required={false}
               />
             )}
           />
@@ -258,7 +283,13 @@ export const ProductAdd = () => {
           <Controller
             name="price"
             control={control}
-            rules={{ required: "Price is required", min: { value: 0.01, message: "Price must be greater than 0" } }}
+            rules={{ 
+              required: "Price is required", 
+              min: { 
+                value: VALIDATION.MIN_PRICE, 
+                message: `Price must be at least $${VALIDATION.MIN_PRICE}` 
+              } 
+            }}
             render={({ field }) => (
               <PriceField
                 value={field.value}
