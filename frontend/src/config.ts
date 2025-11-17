@@ -8,13 +8,6 @@ export const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || "https
 export const FRONTEND_BASE_URL = process.env.REACT_APP_FRONTEND_BASE_URL || "http://localhost:3000";
 export const RECAPTCHA_SITEKEY = process.env.REACT_APP_RECAPTCHA_SITEKEY || "6LeCoQksAAAAAJAdGvP3gr3BfpfiHSQzWV8bBxqK";
 
-// Debug info (remove in production)
-if (process.env.NODE_ENV === 'development') {
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('Backend URL:', BACKEND_BASE_URL);
-  console.log('Frontend URL:', FRONTEND_BASE_URL);
-}
-
 // Rest of your existing configuration...
 export const BACKEND_SHOP_URL = "api/shop";
 export const BACKEND_USER_URL = "api/shop/auth";

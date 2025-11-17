@@ -304,7 +304,16 @@ export default function Product() {
       </Grid2>
 
       <Box mt={4}>
-        <Typography variant="body1">{product.description}</Typography>
+              <Box
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                  sx={{
+                      '& strong': { fontWeight: 'bold' },
+                      '& em': { fontStyle: 'italic' },
+                      '& ul': { paddingLeft: 3, marginTop: 1, marginBottom: 1 },
+                      '& ol': { paddingLeft: 3, marginTop: 1, marginBottom: 1 },
+                      '& li': { marginBottom: 0.5 }
+                  }}
+              />
       </Box>
 
       {/* Lightbox for fullscreen images */}

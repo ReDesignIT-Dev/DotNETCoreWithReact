@@ -17,7 +17,6 @@ export const useLocationTracker = () => {
 
         if (shouldTrack) {
             dispatch(setActivePath(fullPath));
-        } else {
         }
     }, [location, dispatch]);
 };

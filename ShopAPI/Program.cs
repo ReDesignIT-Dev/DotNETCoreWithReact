@@ -64,6 +64,7 @@ builder.Services.AddScoped<IAuthorizationHandler, ActiveUserHandler>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IHtmlSanitizerService, HtmlSanitizerService>();
 
 // Configure Identity BEFORE authentication
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
