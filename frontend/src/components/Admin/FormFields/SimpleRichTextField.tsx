@@ -6,7 +6,9 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   FormHelperText,
-  Paper
+  Paper,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   FormatBold,
@@ -33,9 +35,10 @@ export const SimpleRichTextField: React.FC<SimpleRichTextFieldProps> = ({
   disabled = false,
   label = "Description",
   required = false,
-  maxLength = FIELD_LIMITS.PRODUCT_DESCRIPTION // Use constant instead of hardcoded 10000
+  maxLength = FIELD_LIMITS.PRODUCT_DESCRIPTION
 }) => {
   const [selectedFormat, setSelectedFormat] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   const handleFormatChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -118,24 +121,53 @@ export const SimpleRichTextField: React.FC<SimpleRichTextFieldProps> = ({
           </ToggleButton>
         </ToggleButtonGroup>
       </Paper>
+
+      <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 1 }}>
+        <Tab label="Edit" />
+        <Tab label="Preview" />
+      </Tabs>
       
-      <TextField
-        id="rich-text-input"
-        fullWidth
-        multiline
-        rows={8}
-        value={value}
-        onChange={(e) => {
-          const newValue = e.target.value;
-          if (newValue.replace(/<[^>]*>/g, '').length <= maxLength) {
-            onChange(newValue);
-          }
-        }}
-        disabled={disabled}
-        error={!!error}
-        placeholder="Enter product description with HTML formatting..."
-        variant="outlined"
-      />
+      {activeTab === 0 ? (
+        <TextField
+          id="rich-text-input"
+          fullWidth
+          multiline
+          rows={8}
+          value={value}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            if (newValue.replace(/<[^>]*>/g, '').length <= maxLength) {
+              onChange(newValue);
+            }
+          }}
+          disabled={disabled}
+          error={!!error}
+          placeholder="Enter product description with HTML formatting..."
+          variant="outlined"
+        />
+      ) : (
+        <Paper 
+          variant="outlined" 
+          sx={{ 
+            p: 2, 
+            minHeight: 200,
+            maxHeight: 300,
+            overflow: 'auto',
+            backgroundColor: '#f5f5f5'
+          }}
+        >
+          <Box 
+            dangerouslySetInnerHTML={{ __html: value || '<em>No content to preview</em>' }}
+            sx={{
+              '& strong': { fontWeight: 'bold' },
+              '& em': { fontStyle: 'italic' },
+              '& ul': { paddingLeft: 2, marginTop: 1, marginBottom: 1 },
+              '& ol': { paddingLeft: 2, marginTop: 1, marginBottom: 1 },
+              '& li': { marginBottom: 0.5 }
+            }}
+          />
+        </Paper>
+      )}
       
       <FormHelperText 
         error={!!error}
