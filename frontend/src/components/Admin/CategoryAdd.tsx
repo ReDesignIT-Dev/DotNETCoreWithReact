@@ -11,9 +11,11 @@ import {
     Alert,
     CircularProgress,
 } from "@mui/material";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selectors";
 import { addCategory } from "services/shopServices/apiRequestsShop";
+import { fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
+import { AppDispatch } from "reduxComponents/store";
 
 interface CategoryAddProps {
     onSuccess?: () => void;
@@ -21,6 +23,7 @@ interface CategoryAddProps {
 }
 
 export const CategoryAdd: React.FC<CategoryAddProps> = ({ onSuccess, onCancel }) => {
+    const dispatch = useDispatch<AppDispatch>();
     const categories = useSelector(selectTreeCategories);
     const [formData, setFormData] = useState<CreateCategoryData>({
         name: "DefaultName",
@@ -61,6 +64,9 @@ export const CategoryAdd: React.FC<CategoryAddProps> = ({ onSuccess, onCancel })
 
             if (response?.status === 201) {
                 setSuccess(true);
+
+                // Refetch the category tree to update Redux state
+                await dispatch(fetchCategoryTree()).unwrap();
 
                 setFormData({
                     name: "DefaultName",
@@ -155,7 +161,7 @@ export const CategoryAdd: React.FC<CategoryAddProps> = ({ onSuccess, onCancel })
                     </MenuItem>
                     {flatCategories.map((category) => (
                         <MenuItem key={category.id} value={category.id}>
-                            {"�".repeat(category.level)} {category.name}
+                            {"—".repeat(category.level)} {category.name}
                         </MenuItem>
                     ))}
                 </Select>
