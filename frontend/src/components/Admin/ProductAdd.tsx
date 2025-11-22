@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   Button,
@@ -51,6 +51,7 @@ export const ProductAdd = () => {
     handleSubmit,
     reset,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<CreateProductRequest>({
     defaultValues: {
@@ -72,14 +73,23 @@ export const ProductAdd = () => {
       return imageFile; 
     });
 
+
     setImageFiles(prev => {
       const updated = [...prev, ...newImageFiles];
-      setValue("images", updated.map(img => img as File));
+      const filesToSet = updated.map(img => img as File);
+      setValue("images", filesToSet);
+      
+      // Verify what was set
+      setTimeout(() => {
+        const formImages = getValues("images");
+      }, 0);
+      
       return updated;
     });
-  }, [imageFiles.length, setValue]);
+  }, [imageFiles.length, setValue, getValues]);
 
   const removeImage = (imageId: string | number) => {
+   
     setImageFiles(prev => {
       const filtered = prev.filter(img => img.id !== imageId);
       const updated = filtered.map((img, index) => ({
@@ -92,7 +102,14 @@ export const ProductAdd = () => {
         URL.revokeObjectURL(imageToRemove.preview);
       }
       
-      setValue("images", updated.map(img => img as File));
+      const filesToSet = updated.map(img => img as File);
+      setValue("images", filesToSet);
+      
+      // Verify what was set
+      setTimeout(() => {
+        const formImages = getValues("images");
+      }, 0);
+      
       return updated;
     });
   };
@@ -113,20 +130,24 @@ export const ProductAdd = () => {
   }, []);
 
   const onSubmit = async (data: CreateProductRequest) => {
+      
     setLoading(true);
 
     const sortedImages = imageFiles.sort((a, b) => a.position - b.position);
-    
+        
+    const imagesToSend = sortedImages.map(file => file as File);
+        
     const productData: CreateProductRequest = {
       name: data.name,
       categoryId: data.categoryId,
       description: data.description || "",
       price: data.price,
-      images: sortedImages.map(file => file as File)
+      images: imagesToSend
     };
 
     try {
-      const response = await addProduct(productData);  
+      const response = await addProduct(productData);
+      
       if (response && response.status === 201) {
         setSubmitted(true);
         setSnackbarOpen(true);
@@ -310,21 +331,32 @@ export const ProductAdd = () => {
               <ImageGallery
                 images={galleryImages}
                 onReorder={(result) => {
-                  // Handle the reorder using the result format from ImageGallery
+               
                   const sourceIndex = result.source.index;
                   const destinationIndex = result.destination.index;
                   
-                  const newOrder = [...imageFiles];
-                  const [reorderedItem] = newOrder.splice(sourceIndex, 1);
-                  newOrder.splice(destinationIndex, 0, reorderedItem);
-                  
-                  const updated = newOrder.map((item, index) => ({
-                    ...item,
-                    position: index + 1
-                  }));
-                  
-                  setImageFiles(updated);
-                  setValue("images", updated.map(img => img as File));
+                  setImageFiles(prevFiles => {
+                                       
+                    const newOrder = [...prevFiles];
+                    const [reorderedItem] = newOrder.splice(sourceIndex, 1);
+                    newOrder.splice(destinationIndex, 0, reorderedItem);
+                                        
+                    // Update position property directly on the File objects
+                    const updated = newOrder.map((item, index) => {
+                      item.position = index + 1;
+                      return item;
+                    });
+                    
+                    const filesToSet = updated.map(img => img as File);
+                    
+                    setValue("images", filesToSet);
+                    
+                    // Verify what was set
+                    setTimeout(() => {
+                      const formImages = getValues("images");
+                                         
+                    return updated;
+                  });
                 }}
                 onRemove={removeImage}
                 title="Selected Images"
