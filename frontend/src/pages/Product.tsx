@@ -1,25 +1,23 @@
-import { useEffect, useState, ChangeEvent, MouseEvent } from "react";
+import { Box, Button, Card, CardMedia, Grid2, TextField, Typography } from "@mui/material";
+import CategoryBreadcrumb from "components/CategoryBreadcrumb";
+import Loading from "components/Loading";
+import { SHOP_DEFAULT_IMAGE } from "config";
+import { useNotification } from "contexts/NotificationContext";
+import { ChangeEvent, MouseEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getProduct } from "services/shopServices/apiRequestsShop";
 import { useCart } from "services/shopServices/cartLogic";
-import { useNotification } from "contexts/NotificationContext";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
-import { Box, Grid2, Typography, Button, TextField, Card, CardMedia } from "@mui/material";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/scrollbar";
-import Lightbox from "yet-another-react-lightbox";
-import Inline from "yet-another-react-lightbox/plugins/inline";
-import "yet-another-react-lightbox/styles.css";
+import { A11y, Navigation, Pagination, Scrollbar } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 import { createSafeImage, getImageSrc } from "utils/imageUtils";
-import { SHOP_DEFAULT_IMAGE } from "config";
 import { getIdFromSlug } from "utils/utils";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
 import NotFound from "./NotFound";
-import CategoryBreadcrumb from "components/CategoryBreadcrumb";
-import { useMemo } from "react";
-import Loading from "components/Loading";
 
 export default function Product() {
   const { slug } = useParams() as { slug: string };
@@ -204,7 +202,7 @@ export default function Product() {
 
   return (
     <Box maxWidth="lg" mx="auto" p={3}>
-      {product.categoryId ? <CategoryBreadcrumb categoryId={product.categoryId} includeSelf={true} /> : "Category missing"}
+          {product.categoryId ? <CategoryBreadcrumb categoryId={product.categoryId} includeSelf={true} lastLinked={true} /> : "Category missing"}
 
       {/* Main product info */}
       <Grid2 container direction="column" sx={{ width: "100%" }}>

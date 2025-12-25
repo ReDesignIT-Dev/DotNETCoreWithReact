@@ -14,11 +14,13 @@ import { NavigateNext } from "@mui/icons-material";
 interface CategoryBreadcrumbProps {
     categoryId: number;
     includeSelf?: boolean;
+    lastLinked?: boolean;
 }
 
 const CategoryBreadcrumb: React.FC<CategoryBreadcrumbProps> = ({
     categoryId,
-    includeSelf = false
+    includeSelf = false,
+    lastLinked = false
 }) => {
     const navigate = useNavigate();
 
@@ -89,7 +91,7 @@ const CategoryBreadcrumb: React.FC<CategoryBreadcrumbProps> = ({
             {breadcrumb.map((pathItem, index) => {
                 const isLast = index === breadcrumb.length - 1;
 
-                if (isLast) {
+                if (isLast && !lastLinked) {
                     return (
                         <Typography
                             key={pathItem.id}
