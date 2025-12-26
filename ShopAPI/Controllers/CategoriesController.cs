@@ -137,8 +137,9 @@ public class CategoriesController : ControllerBase
             return BadRequest("Invalid request body");
         }
 
-        _logger.LogInformation("DTO received - Name: {Name}, ShortName: {ShortName}, ParentId: {ParentId}, Image: {HasImage}", 
-            dto.Name, dto.ShortName, dto.ParentId, dto.Image != null);
+        _logger.LogInformation($"DTO received - Name: {dto.Name}," +
+            $" ShortName: {dto.ShortName}, ParentId: {dto.ParentId}, " +
+            $"Image: {dto.Image != null}, RemoveImage: {dto.RemoveImage}");
 
         var success = await _categoryService.UpdateCategoryAsync(id, dto);
         if (!success)

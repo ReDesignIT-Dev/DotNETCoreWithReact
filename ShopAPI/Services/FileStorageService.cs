@@ -138,7 +138,6 @@ public class FileStorageService : IFileStorageService
         }
         catch (Exception ex)
         {
-            // Log the exception if you have a logger
             // _logger.LogError(ex, "Error deleting image: {ImageUrl}", imageUrl);
             return false;
         }

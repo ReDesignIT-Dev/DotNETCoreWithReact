@@ -200,8 +200,19 @@ public class CategoryService : ICategoryService
         category.ParentId = dto.ParentId;
         category.Slug = SlugHelper.GenerateSlug(dto.Name, id);
 
-        // Handle image updates
-        if (dto.Image != null)
+        // Handle image removal
+        if (dto.RemoveImage && category.Image != null)
+        {
+            // Delete old image files from storage
+            await _fileStorage.DeleteImageAsync(category.Image.Url);
+            await _fileStorage.DeleteImageAsync(category.Image.ThumbnailUrl);
+            
+            // Remove the old image entity
+            _context.Remove(category.Image);
+            category.Image = null;
+        }
+        // Handle image replacement/addition
+        else if (dto.Image != null)
         {
             // If there's an existing image, remove it first
             if (category.Image != null)
