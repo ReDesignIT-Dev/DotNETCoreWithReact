@@ -116,6 +116,34 @@ public class FileStorageService : IFileStorageService
         return new ImageSaveResult(absoluteUrl, absoluteThumbnailUrl);
     }
 
+    public async Task<bool> DeleteImageAsync(string imageUrl)
+    {
+        try
+        {
+            // Convert absolute URL to relative path
+            var baseUrl = GetBaseUrl();
+            var relativePath = imageUrl.Replace(baseUrl, "").TrimStart('/');
+            
+            // Convert URL path to file system path
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), relativePath.Replace('/', Path.DirectorySeparatorChar));
+            
+            // Delete the file if it exists
+            if (File.Exists(filePath))
+            {
+                await Task.Run(() => File.Delete(filePath));
+                return true;
+            }
+            
+            return false;
+        }
+        catch (Exception ex)
+        {
+            // Log the exception if you have a logger
+            // _logger.LogError(ex, "Error deleting image: {ImageUrl}", imageUrl);
+            return false;
+        }
+    }
+
     private string GetBaseUrl()
     {
         // First try to get the configured backend base URL

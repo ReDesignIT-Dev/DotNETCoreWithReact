@@ -37,8 +37,12 @@ public class CategoryService : ICategoryService
 
     public async Task<ReadCategoryDto?> GetCategoryByIdAsync(int id)
     {
-        var c = await _context.Categories.FindAsync(id);
+        var c = await _context.Categories
+            .Include(c => c.Image)
+            .FirstOrDefaultAsync(c => c.Id == id);
+        
         if (c == null) return null;
+        
         return new ReadCategoryDto 
         {
             Id = c.Id,
@@ -46,7 +50,15 @@ public class CategoryService : ICategoryService
             Slug = c.Slug,
             ShortName = c.ShortName,
             ParentId = c.ParentId,
-            ProductCount = c.Products.Count
+            ProductCount = c.Products.Count,
+            Image = c.Image != null
+                ? new CategoryImageDto
+                {
+                    Id = c.Image.Id,
+                    Url = c.Image.Url,
+                    ThumbnailUrl = c.Image.ThumbnailUrl
+                }
+                : null
         };
     }
 
@@ -175,14 +187,41 @@ public class CategoryService : ICategoryService
 
     public async Task<bool> UpdateCategoryAsync(int id, WriteCategoryDto dto)
     {
-
-        var category = await _context.Categories.FindAsync(id);
+        var category = await _context.Categories
+            .Include(c => c.Image)
+            .FirstOrDefaultAsync(c => c.Id == id);
+        
         if (category == null)
             return false;
 
+        // Update basic fields
         category.Name = dto.Name;
+        category.ShortName = dto.ShortName;
         category.ParentId = dto.ParentId;
         category.Slug = SlugHelper.GenerateSlug(dto.Name, id);
+
+        // Handle image updates
+        if (dto.Image != null)
+        {
+            // If there's an existing image, remove it first
+            if (category.Image != null)
+            {
+                // Delete old image files from storage
+                await _fileStorage.DeleteImageAsync(category.Image.Url);
+                await _fileStorage.DeleteImageAsync(category.Image.ThumbnailUrl);
+                
+                // Remove the old image entity
+                _context.Remove(category.Image);
+            }
+
+            // Save the new image
+            var imageResult = await _fileStorage.SaveImageAsync(dto.Image, ImageType.Category, null);
+            category.Image = new CategoryImage 
+            { 
+                Url = imageResult.Url, 
+                ThumbnailUrl = imageResult.ThumbnailUrl 
+            };
+        }
 
         await _context.SaveChangesAsync();
         return true;
@@ -190,7 +229,10 @@ public class CategoryService : ICategoryService
 
     public async Task<bool> DeleteCategoryAsync(int id)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await _context.Categories
+            .Include(c => c.Image)
+            .FirstOrDefaultAsync(c => c.Id == id);
+        
         if (category == null)
             return false;
 
@@ -215,6 +257,13 @@ public class CategoryService : ICategoryService
         foreach (var product in products)
         {
             product.CategoryId = defaultCategory.Id;
+        }
+
+        // Delete category image if exists
+        if (category.Image != null)
+        {
+            await _fileStorage.DeleteImageAsync(category.Image.Url);
+            await _fileStorage.DeleteImageAsync(category.Image.ThumbnailUrl);
         }
 
         _context.Categories.Remove(category);

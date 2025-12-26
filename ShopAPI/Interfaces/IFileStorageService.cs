@@ -6,5 +6,6 @@ namespace ShopAPI.Interfaces;
 public interface IFileStorageService
 {
     Task<ImageSaveResult> SaveImageAsync(IFormFile file, ImageType type, int? userId);
+    Task<bool> DeleteImageAsync(string imageUrl);
 }
 

@@ -16,6 +16,7 @@ import { selectTreeCategories } from "reduxComponents/reduxShop/Categories/selec
 import { addCategory } from "services/shopServices/apiRequestsShop";
 import { fetchCategoryTree } from "reduxComponents/reduxShop/Categories/thunks";
 import { AppDispatch } from "reduxComponents/store";
+import { SingleImageUpload, SingleImagePreview } from "./FormFields";
 
 interface CategoryAddProps {
     onSuccess?: () => void;
@@ -26,8 +27,8 @@ export const CategoryAdd: React.FC<CategoryAddProps> = ({ onSuccess, onCancel })
     const dispatch = useDispatch<AppDispatch>();
     const categories = useSelector(selectTreeCategories);
     const [formData, setFormData] = useState<CreateCategoryData>({
-        name: "DefaultName",
-        shortName: "DefaultShortName",
+        name: "",
+        shortName: "",
         parentId: null,
         image: null,
     });
@@ -43,9 +44,12 @@ export const CategoryAdd: React.FC<CategoryAddProps> = ({ onSuccess, onCancel })
         setError(null);
     };
 
-    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0] || null;
+    const handleImageSelect = (file: File | null) => {
         handleInputChange('image', file);
+    };
+
+    const handleRemoveImage = () => {
+        handleInputChange('image', null);
     };
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -69,8 +73,8 @@ export const CategoryAdd: React.FC<CategoryAddProps> = ({ onSuccess, onCancel })
                 await dispatch(fetchCategoryTree()).unwrap();
 
                 setFormData({
-                    name: "DefaultName",
-                    shortName: "DefaultShortName",
+                    name: "",
+                    shortName: "",
                     parentId: null,
                     image: null,
                 });
@@ -167,21 +171,25 @@ export const CategoryAdd: React.FC<CategoryAddProps> = ({ onSuccess, onCancel })
                 </Select>
             </FormControl>
 
-            <Box mt={2} mb={2}>
-                <Typography variant="body2" color="text.secondary" mb={1}>
+            <Box mt={3} mb={2}>
+                <Typography variant="h6" gutterBottom>
                     Category Image (Optional)
                 </Typography>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    disabled={isLoading}
-                    style={{ width: '100%' }}
-                />
-                {formData.image && (
-                    <Typography variant="body2" color="text.secondary" mt={1}>
-                        Selected: {formData.image.name}
-                    </Typography>
+                
+                {formData.image ? (
+                    <SingleImagePreview
+                        imageFile={formData.image}
+                        altText={formData.name || 'Category image'}
+                        onRemove={handleRemoveImage}
+                        disabled={isLoading}
+                        title="Selected Image"
+                    />
+                ) : (
+                    <SingleImageUpload
+                        onFileSelect={handleImageSelect}
+                        disabled={isLoading}
+                        currentFileName={undefined}
+                    />
                 )}
             </Box>
 

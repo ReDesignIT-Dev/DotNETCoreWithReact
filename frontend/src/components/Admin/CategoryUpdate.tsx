@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, TextField, Typography, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem, Card, CardMedia, IconButton } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Box, Button, TextField, Typography, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { getCategory, updateCategory } from 'services/shopServices/apiRequestsShop';
 import { useSelector } from 'react-redux';
 import { selectTreeCategories } from 'reduxComponents/reduxShop/Categories/selectors';
+import { SingleImageUpload, SingleImagePreview } from './FormFields';
 
 interface CategoryUpdateProps {
   categoryId: number;
@@ -98,8 +98,7 @@ export const CategoryUpdate: React.FC<CategoryUpdateProps> = ({ categoryId, onSu
     }
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
+  const handleImageSelect = (file: File | null) => {
     handleChange('newImage', file);
     // If adding new image, don't remove current
     if (file) {
@@ -109,6 +108,10 @@ export const CategoryUpdate: React.FC<CategoryUpdateProps> = ({ categoryId, onSu
 
   const handleRemoveCurrentImage = () => {
     handleChange('removeCurrentImage', true);
+    handleChange('newImage', null);
+  };
+
+  const handleRemoveNewImage = () => {
     handleChange('newImage', null);
   };
 
@@ -141,68 +144,33 @@ export const CategoryUpdate: React.FC<CategoryUpdateProps> = ({ categoryId, onSu
       setSaving(true);
       setError(null);
       
-      // Check if we need to send FormData (for image operations) or JSON
-      const hasImageChanges = modifiedFields.has('newImage') || modifiedFields.has('removeCurrentImage');
+      // Always use FormData to support image operations
+      const updateData = new FormData();
       
-      if (hasImageChanges) {
-        // Use FormData for image operations
-        const updateData = new FormData();
-        
-        // Always include required fields when using FormData
-        updateData.append('name', formData.name.trim());
-        updateData.append('shortName', formData.shortName.trim());
-        
-        if (formData.parentId !== null) {
-          updateData.append('parentId', formData.parentId.toString());
-        }
-        
-        if (formData.newImage) {
-          updateData.append('image', formData.newImage);
-        }
-        
-        if (formData.removeCurrentImage) {
-          updateData.append('removeImage', 'true');
-        }
-        
-        const response = await updateCategory(categoryId, updateData);
-        
-        if (response?.status === 204) {
-          if (onSuccess) {
-            onSuccess();
-          }
-        } else {
-          setError('Failed to update category');
+      // Always include required fields when using FormData
+      updateData.append('name', formData.name.trim());
+      updateData.append('shortName', formData.shortName.trim());
+      
+      if (formData.parentId !== null) {
+        updateData.append('parentId', formData.parentId.toString());
+      }
+      
+      if (formData.newImage) {
+        updateData.append('image', formData.newImage);
+      }
+      
+      if (formData.removeCurrentImage) {
+        updateData.append('removeImage', 'true');
+      }
+      
+      const response = await updateCategory(categoryId, updateData);
+      
+      if (response?.status === 204) {
+        if (onSuccess) {
+          onSuccess();
         }
       } else {
-        // Use JSON for text-only updates
-        const updateData: any = {};
-        
-        if (modifiedFields.has('name')) {
-          updateData.name = formData.name.trim();
-        }
-        if (modifiedFields.has('shortName')) {
-          updateData.shortName = formData.shortName.trim();
-        }
-        if (modifiedFields.has('parentId')) {
-          updateData.parentId = formData.parentId;
-        }
-        
-        // You'll need to create a JSON version of updateCategory
-        const response = await fetch(`/api/categories/${categoryId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updateData),
-        });
-        
-        if (response.status === 204) {
-          if (onSuccess) {
-            onSuccess();
-          }
-        } else {
-          setError('Failed to update category');
-        }
+        setError('Failed to update category');
       }
     } catch (err) {
       setError('Error updating category');
@@ -263,6 +231,9 @@ export const CategoryUpdate: React.FC<CategoryUpdateProps> = ({ categoryId, onSu
     );
   }
 
+  const hasCurrentImage = category.image && !formData.removeCurrentImage;
+  const hasNewImage = formData.newImage !== null;
+
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500 }}>
       <Typography variant="h5" mb={3}>
@@ -317,47 +288,50 @@ export const CategoryUpdate: React.FC<CategoryUpdateProps> = ({ categoryId, onSu
         </Select>
       </FormControl>
 
-      {/* Current Image Section */}
-      {category.image && !formData.removeCurrentImage && (
-        <Box mt={2} mb={2}>
-          <Typography variant="body2" color="text.secondary" mb={1}>
-            Current Image
-          </Typography>
-          <Card sx={{ maxWidth: 200, position: 'relative' }}>
-            <CardMedia
-              component="img"
-              height="120"
-              image={category.image.url}
-              alt={category.name}
-            />
-            <IconButton
-              sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.7)' }}
-              onClick={handleRemoveCurrentImage}
-              disabled={saving}
-              size="small"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Card>
-        </Box>
-      )}
-
-      {/* New Image Upload */}
-      <Box mt={2} mb={2}>
-        <Typography variant="body2" color="text.secondary" mb={1}>
-          {category.image && !formData.removeCurrentImage ? 'Replace Image (Optional)' : 'Category Image (Optional)'}
+      <Box mt={3} mb={2}>
+        <Typography variant="h6" gutterBottom>
+          Category Image (Optional)
         </Typography>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          disabled={saving}
-          style={{ width: '100%' }}
-        />
-        {formData.newImage && (
-          <Typography variant="body2" color="text.secondary" mt={1}>
-            New image selected: {formData.newImage.name}
-          </Typography>
+
+        {/* Show new image if selected */}
+        {hasNewImage && (
+          <SingleImagePreview
+            imageFile={formData.newImage!}
+            altText={formData.name || 'Category image'}
+            onRemove={handleRemoveNewImage}
+            disabled={saving}
+            title="New Image"
+          />
+        )}
+
+        {/* Show current image if exists and no new image selected */}
+        {hasCurrentImage && !hasNewImage && (
+          <SingleImagePreview
+            imageUrl={category.image!.url}
+            altText={category.name}
+            onRemove={handleRemoveCurrentImage}
+            disabled={saving}
+            title="Current Image"
+          />
+        )}
+
+        {/* Show upload zone if no image */}
+        {!hasCurrentImage && !hasNewImage && (
+          <SingleImageUpload
+            onFileSelect={handleImageSelect}
+            disabled={saving}
+          />
+        )}
+
+        {/* Show change image button if there's a current or new image */}
+        {(hasCurrentImage || hasNewImage) && (
+          <Box mt={2}>
+            <SingleImageUpload
+              onFileSelect={handleImageSelect}
+              disabled={saving}
+              currentFileName={hasNewImage ? formData.newImage!.name : undefined}
+            />
+          </Box>
         )}
       </Box>
 

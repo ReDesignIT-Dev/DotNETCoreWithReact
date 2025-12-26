@@ -4,6 +4,7 @@ import {
   Card,
   CardActionArea,
   CardContent,
+  CardMedia,
   Grid2,
   Typography,
   Container,
@@ -30,6 +31,15 @@ export default function ShopHome() {
         <Grid2 container key={category.slug} sx={{ display: "flex", flexDirection: "column" }} gap={5}>
           <Card>
             <CardActionArea onClick={() => handleCategoryClick(category.slug)}>
+              {category.image && (
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={category.image.url}
+                  alt={category.name}
+                  sx={{ objectFit: "cover" }}
+                />
+              )}
               <CardContent sx={{ textAlign: "center" }}>
                 <Typography variant="h6">{category.name}</Typography>
               </CardContent>

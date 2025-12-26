@@ -117,11 +117,37 @@ public class CategoriesController : ControllerBase
 
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> EditCategory(int id, [FromBody] WriteCategoryDto dto)
+    public async Task<IActionResult> EditCategory(int id, [FromForm] WriteCategoryDto dto)
     {
+        // Log request details
+        _logger.LogInformation("EditCategory called for ID: {CategoryId}", id);
+        _logger.LogInformation("Content-Type: {ContentType}", Request.ContentType);
+        _logger.LogInformation("Content-Length: {ContentLength}", Request.ContentLength);
+        
+        // Log all headers
+        foreach (var header in Request.Headers)
+        {
+            _logger.LogInformation("Header: {Key} = {Value}", header.Key, header.Value);
+        }
+
+        // Check if body binding succeeded
+        if (dto == null)
+        {
+            _logger.LogWarning("DTO is null - body binding failed");
+            return BadRequest("Invalid request body");
+        }
+
+        _logger.LogInformation("DTO received - Name: {Name}, ShortName: {ShortName}, ParentId: {ParentId}, Image: {HasImage}", 
+            dto.Name, dto.ShortName, dto.ParentId, dto.Image != null);
+
         var success = await _categoryService.UpdateCategoryAsync(id, dto);
         if (!success)
+        {
+            _logger.LogWarning("Update failed - Category with id {CategoryId} not found", id);
             return NotFound();
+        }
+        
+        _logger.LogInformation("Category {CategoryId} updated successfully", id);
         return NoContent();
     }
 
