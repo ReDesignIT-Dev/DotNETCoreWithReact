@@ -30,7 +30,15 @@ public class CategoryService : ICategoryService
                 Slug = c.Slug,
                 ShortName = c.ShortName,
                 ParentId = c.ParentId,
-                ProductCount = c.Products.Count
+                ProductCount = c.Products.Count,
+                Image = c.Image != null
+                ? new CategoryImageDto
+                {
+                    Id = c.Image.Id,
+                    Url = c.Image.Url,
+                    ThumbnailUrl = c.Image.ThumbnailUrl
+                }
+                : null
             })
             .ToListAsync();
     }

@@ -22,7 +22,7 @@ public class CategoriesController : ControllerBase
     }
     [AllowAnonymous]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WriteCategoryDto>>> GetCategories()
+    public async Task<ActionResult<IEnumerable<ReadCategoryDto>>> GetCategories()
     {
         var categories = await _categoryService.GetCategoriesAsync();
         return Ok(categories);
