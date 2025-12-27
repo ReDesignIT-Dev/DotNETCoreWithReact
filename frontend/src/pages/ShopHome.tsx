@@ -38,17 +38,25 @@ export default function ShopHome() {
                         {categories.map((category) => (
                             category.showOnHomePage && (
                                 <Grid2 key={category.slug} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                                    <Card>
-                                        <CardActionArea onClick={() => handleCategoryClick(category.slug)}>
-                                            {category.image && (
-                                                <CardMedia
-                                                    component="img"
-                                                    height="200"
-                                                    image={category.image.thumbnailUrl}
-                                                    alt={category.name}
-                                                    sx={{ objectFit: "contain" }}
-                                                />
-                                            )}
+                                    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                                        <CardActionArea
+                                            onClick={() => handleCategoryClick(category.slug)}
+                                            sx={{ flexGrow: 1, display: "flex", flexDirection: "column", alignItems: "stretch" }}
+                                        >
+                                            <Box sx={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "grey.100" }}>
+                                                {category.image ? (
+                                                    <CardMedia
+                                                        component="img"
+                                                        image={category.image.thumbnailUrl}
+                                                        alt={category.name}
+                                                        sx={{ maxHeight: 200, maxWidth: "100%", objectFit: "contain" }}
+                                                    />
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        No Image
+                                                    </Typography>
+                                                )}
+                                            </Box>
                                             <CardContent sx={{ textAlign: "center" }}>
                                                 <Typography variant="h6">{category.name}</Typography>
                                             </CardContent>
