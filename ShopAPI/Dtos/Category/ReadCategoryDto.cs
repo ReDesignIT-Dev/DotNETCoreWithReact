@@ -9,4 +9,5 @@ public class ReadCategoryDto
     public int? ParentId { get; set; }
     public required string ShortName { get; set; }
     public int ProductCount { get; set; }
+    public bool ShowOnHomePage { get; set; } = false;
 }

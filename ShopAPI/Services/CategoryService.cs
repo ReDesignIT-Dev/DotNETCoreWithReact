@@ -6,6 +6,7 @@ using ShopAPI.Helpers;
 using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using static ShopAPI.Services.FileStorageService;
+using Microsoft.Extensions.Logging;
 
 namespace ShopAPI.Services;
 
@@ -13,11 +14,13 @@ public class CategoryService : ICategoryService
 {
     private readonly ShopContext _context;
     private readonly IFileStorageService _fileStorage;
+    private readonly ILogger<CategoryService> _logger;
 
-    public CategoryService(ShopContext context, IFileStorageService fileStorage)
+    public CategoryService(ShopContext context, IFileStorageService fileStorage, ILogger<CategoryService> logger)
     {
         _context = context;
         _fileStorage = fileStorage;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<ReadCategoryDto>> GetCategoriesAsync()
@@ -31,6 +34,7 @@ public class CategoryService : ICategoryService
                 ShortName = c.ShortName,
                 ParentId = c.ParentId,
                 ProductCount = c.Products.Count,
+                ShowOnHomePage = c.ShowOnHomePage,
                 Image = c.Image != null
                 ? new CategoryImageDto
                 {
@@ -59,6 +63,7 @@ public class CategoryService : ICategoryService
             ShortName = c.ShortName,
             ParentId = c.ParentId,
             ProductCount = c.Products.Count,
+            ShowOnHomePage = c.ShowOnHomePage,
             Image = c.Image != null
                 ? new CategoryImageDto
                 {
@@ -81,6 +86,16 @@ public class CategoryService : ICategoryService
                 Slug = c.Slug,
                 ShortName = c.ShortName,
                 ParentId = c.ParentId,
+                ProductCount = c.Products.Count,
+                ShowOnHomePage = c.ShowOnHomePage,
+                Image = c.Image != null
+                ? new CategoryImageDto
+                {
+                    Id = c.Image.Id,
+                    Url = c.Image.Url,
+                    ThumbnailUrl = c.Image.ThumbnailUrl
+                }
+                : null
             })
             .ToListAsync();
     }
@@ -93,7 +108,7 @@ public class CategoryService : ICategoryService
 
     public async Task<List<int>> GetAllDescendantCategoryIdsAsync(int categoryId)
     {
-        var categoryIds = new List<int> { categoryId }; // Include the parent category itself
+        var categoryIds = new List<int> { categoryId }; 
         var categoriesToProcess = new Queue<int>();
         categoriesToProcess.Enqueue(categoryId);
 
@@ -109,7 +124,7 @@ public class CategoryService : ICategoryService
             foreach (var childId in childCategoryIds)
             {
                 categoryIds.Add(childId);
-                categoriesToProcess.Enqueue(childId); // Add to queue to process its children
+                categoriesToProcess.Enqueue(childId); 
             }
         }
 
@@ -118,7 +133,6 @@ public class CategoryService : ICategoryService
 
     private List<CategoryTreeDto> BuildCategoryTree(List<ReadCategoryDto> categories, int? parentId = null)
     {
-
         return categories
             .Where(c => c.ParentId == parentId)
             .Select(c => new CategoryTreeDto
@@ -130,6 +144,7 @@ public class CategoryService : ICategoryService
                 ParentId = c.ParentId,
                 ShortName = c.ShortName,
                 ProductCount = c.ProductCount,
+                ShowOnHomePage = c.ShowOnHomePage,  
                 Children = BuildCategoryTree(categories, c.Id)
             })
             .ToList();
@@ -137,22 +152,29 @@ public class CategoryService : ICategoryService
 
     public async Task<ReadCategoryDto> CreateCategoryAsync(WriteCategoryDto dto)
     {
+        _logger.LogInformation("Creating category - ShowOnHomePage from DTO: {ShowOnHomePage}", dto.ShowOnHomePage);
+        
         ImageSaveResult? imageResult = null;
         if (dto.Image != null)
             imageResult = await _fileStorage.SaveImageAsync(dto.Image, ImageType.Category, null);
+        
         var category = new Category
         {
             Name = dto.Name,
             ShortName = dto.ShortName,
             ParentId = null,
+            ShowOnHomePage = dto.ShowOnHomePage,
             Image = imageResult != null
                 ? new CategoryImage { Url = imageResult.Url, ThumbnailUrl = imageResult.ThumbnailUrl }
                 : null
         };
-    
+        
+        _logger.LogInformation("Category entity created - ShowOnHomePage BEFORE SaveChanges: {ShowOnHomePage}", category.ShowOnHomePage);
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
+        
+        _logger.LogInformation("Category {CategoryId} saved - ShowOnHomePage AFTER SaveChanges: {ShowOnHomePage}", category.Id, category.ShowOnHomePage);
 
         int? validParentId = null;
         if (dto.ParentId.HasValue)
@@ -180,6 +202,7 @@ public class CategoryService : ICategoryService
             Slug = category.Slug,
             ParentId = category.ParentId,
             ShortName = category.ShortName,
+            ShowOnHomePage = category.ShowOnHomePage,
             Image = category.Image != null
                 ? new CategoryImageDto
                 {
@@ -191,49 +214,55 @@ public class CategoryService : ICategoryService
         };
     }
 
-
-
     public async Task<bool> UpdateCategoryAsync(int id, WriteCategoryDto dto)
     {
+        _logger.LogInformation("Updating category {CategoryId} - ShowOnHomePage from DTO: {ShowOnHomePage}", id, dto.ShowOnHomePage);
+        
         var category = await _context.Categories
             .Include(c => c.Image)
             .FirstOrDefaultAsync(c => c.Id == id);
         
         if (category == null)
+        {
+            _logger.LogWarning("Category {CategoryId} not found", id);
             return false;
+        }
+
+        _logger.LogInformation("Category {CategoryId} loaded - Current ShowOnHomePage value: {ShowOnHomePage}", id, category.ShowOnHomePage);
 
         // Update basic fields
         category.Name = dto.Name;
         category.ShortName = dto.ShortName;
         category.ParentId = dto.ParentId;
         category.Slug = SlugHelper.GenerateSlug(dto.Name, id);
+        category.ShowOnHomePage = dto.ShowOnHomePage;
+        
+        _logger.LogInformation("Category {CategoryId} - ShowOnHomePage BEFORE SaveChanges: {ShowOnHomePage}", id, category.ShowOnHomePage);
 
         // Handle image removal
         if (dto.RemoveImage && category.Image != null)
         {
-            // Delete old image files from storage
+            _logger.LogInformation("Removing image for category {CategoryId}", id);
+            
             await _fileStorage.DeleteImageAsync(category.Image.Url);
             await _fileStorage.DeleteImageAsync(category.Image.ThumbnailUrl);
             
-            // Remove the old image entity
             _context.Remove(category.Image);
             category.Image = null;
         }
         // Handle image replacement/addition
         else if (dto.Image != null)
         {
-            // If there's an existing image, remove it first
+            _logger.LogInformation("Updating image for category {CategoryId}", id);
+            
             if (category.Image != null)
             {
-                // Delete old image files from storage
                 await _fileStorage.DeleteImageAsync(category.Image.Url);
                 await _fileStorage.DeleteImageAsync(category.Image.ThumbnailUrl);
                 
-                // Remove the old image entity
                 _context.Remove(category.Image);
             }
 
-            // Save the new image
             var imageResult = await _fileStorage.SaveImageAsync(dto.Image, ImageType.Category, null);
             category.Image = new CategoryImage 
             { 
@@ -243,6 +272,13 @@ public class CategoryService : ICategoryService
         }
 
         await _context.SaveChangesAsync();
+        
+        _logger.LogInformation("Category {CategoryId} saved - ShowOnHomePage AFTER SaveChanges: {ShowOnHomePage}", id, category.ShowOnHomePage);
+        
+        // Verify in database
+        var verifyCategory = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        _logger.LogInformation("Category {CategoryId} verification from DB - ShowOnHomePage: {ShowOnHomePage}", id, verifyCategory?.ShowOnHomePage);
+        
         return true;
     }
 

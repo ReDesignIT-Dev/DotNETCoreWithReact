@@ -38,6 +38,7 @@ interface Category {  // corresponds to ReadCategoryDto
     parentId: number | null;
     shortName: string;
     productCount: number;
+    showOnHomePage?: boolean;
 }
 
 // ============= API REQUEST TYPES =============
@@ -63,6 +64,8 @@ interface CreateCategoryRequest {
     shortName: string;
     parentId?: number | null;
     image?: File | null;
+    showOnHomePage?: boolean;
+    
 }
 
 interface UpdateCategoryRequest {
@@ -71,6 +74,7 @@ interface UpdateCategoryRequest {
     parentId?: number | null;
     newImage?: File | null;
     removeCurrentImage?: boolean;
+    showOnHomePage?: boolean;
 }
 
 // ============= SPECIALIZED FRONTEND TYPES =============

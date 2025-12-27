@@ -139,7 +139,7 @@ public class CategoriesController : ControllerBase
 
         _logger.LogInformation($"DTO received - Name: {dto.Name}," +
             $" ShortName: {dto.ShortName}, ParentId: {dto.ParentId}, " +
-            $"Image: {dto.Image != null}, RemoveImage: {dto.RemoveImage}");
+            $"Image: {dto.Image != null}, RemoveImage: {dto.RemoveImage}, ShowOnHomePage: {dto.ShowOnHomePage}");
 
         var success = await _categoryService.UpdateCategoryAsync(id, dto);
         if (!success)

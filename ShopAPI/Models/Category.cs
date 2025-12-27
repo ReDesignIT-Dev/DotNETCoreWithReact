@@ -11,5 +11,6 @@ public class Category
     public List<Category> Children { get; set; } = new();
     public List<Product> Products { get; set; } = new();
     public CategoryImage? Image { get; set; }
+    public bool ShowOnHomePage { get; set; } = false;
 
 }

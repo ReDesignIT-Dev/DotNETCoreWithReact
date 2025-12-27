@@ -7,4 +7,5 @@ public class WriteCategoryDto
     public int? ParentId { get; set; }
     public required string ShortName { get; set; }
     public bool RemoveImage { get; set; } = false;
+    public bool ShowOnHomePage { get; set; } = false;
 }
