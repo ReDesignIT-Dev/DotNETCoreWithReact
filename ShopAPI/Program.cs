@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +13,7 @@ using ShopAPI.Interfaces;
 using ShopAPI.Models;
 using ShopAPI.Services;
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides;
 
 DotNetEnv.Env.Load();
 
@@ -163,19 +164,44 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(corsBuilder =>
     {
-        corsBuilder
-            .WithOrigins(
-                "http://localhost:3000", 
+        var allowedOrigins = new List<string>();
+
+        if (builder.Environment.IsDevelopment())
+        {
+            // Development origins
+            allowedOrigins.AddRange(new[]
+            {
+                "http://localhost:3000",
                 "https://localhost:3000",
                 "http://localhost:7288",
                 "https://localhost:7288",
-                "http://localhost:8000", 
-                "https://localhost:8000",
-                "https://redesignit.pl",     
-                "http://redesignit.pl",    
-                "https://api.redesignit.pl", 
-                "http://api.redesignit.pl"
-            )
+                "http://localhost:8000",
+                "https://localhost:8000"
+            });
+        }
+
+        // Production/common origins from configuration
+        var frontendUrl = builder.Configuration["Frontend:BaseUrl"];
+        var backendUrl = builder.Configuration["Backend:BaseUrl"];
+        
+        if (!string.IsNullOrEmpty(frontendUrl))
+        {
+            allowedOrigins.Add(frontendUrl);
+            // Also add www variant if not present
+            if (!frontendUrl.Contains("www."))
+            {
+                var wwwUrl = frontendUrl.Replace("://", "://www.");
+                allowedOrigins.Add(wwwUrl);
+            }
+        }
+        
+        if (!string.IsNullOrEmpty(backendUrl))
+        {
+            allowedOrigins.Add(backendUrl);
+        }
+
+        corsBuilder
+            .WithOrigins(allowedOrigins.ToArray())
             .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -213,7 +239,7 @@ else
     builder.Services.AddDbContext<ShopContext>(opt => opt.UseSqlite(connectionString));
 }
 
-// Configure Data Protection for production - MOVE THIS BEFORE builder.Build()
+// Configure Data Protection for production - BEFORE builder.Build()
 if (builder.Environment.IsProduction())
 {
     var keysPath = builder.Configuration["Keys_Path"];
@@ -228,8 +254,17 @@ if (builder.Environment.IsProduction())
 
 var app = builder.Build();
 
-// Move CORS before other middleware
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseCors();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 if (!builder.Environment.IsDevelopment())
 {
@@ -282,8 +317,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
 
 app.UseStaticFiles(new StaticFileOptions
 {
