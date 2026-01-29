@@ -1,6 +1,11 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-import "./CommonStyles.css";
+import {
+  TextField,
+  IconButton,
+  InputAdornment,
+  Box
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface PasswordFieldProps {
   value: string;
@@ -29,26 +34,37 @@ const PasswordField: React.FC<PasswordFieldProps> = ({ value, customClasses, onC
   };
 
   return (
-    <div className={`${customClasses}`}>
-      <label className='input-label'>Password</label>
-      <input
+    <Box className={customClasses}>
+      <TextField
+        label="Password"
         type={showPassword ? "text" : "password"}
-        id='newPasswordField'
+        id="newPasswordField"
         value={password}
         onChange={handleChange}
-        className='text-center w-100'
-        placeholder='password'
+        placeholder="password"
+        fullWidth
+        variant="outlined"
+        size="small"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => setShowPassword(!showPassword)}
+                edge="end"
+                size="small"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+        sx={{
+          '& .MuiInputBase-input': {
+            textAlign: 'center'
+          }
+        }}
       />
-      <div className='text-center'>
-        <div
-          className='d-inline-flex justify-content-center align-items-center p-1 mt-1 btn btn-link text-black text-decoration-none'
-          onClick={() => setShowPassword(!showPassword)}
-        >
-          <span>{showPassword ? "Hide password" : "Show password"}</span>
-          <span className='mx-2'>{showPassword ? React.createElement(FaEyeSlash as any) : React.createElement(FaEye as any)}</span>
-        </div>
-      </div>
-    </div>
+    </Box>
   );
 };
 
