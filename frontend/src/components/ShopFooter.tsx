@@ -3,6 +3,8 @@ import { Box, Typography, Link } from "@mui/material";
 import { LinkedIn, GitHub, YouTube } from "@mui/icons-material";
 
 const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
     <Box
       sx={{
@@ -16,7 +18,7 @@ const Footer: React.FC = () => {
       }}
     >
       <Typography variant="body2" sx={{ textAlign: "center", flex: 1 }}>
-        © 2024 ReDesignIT. All rights reserved.
+        © {currentYear} ReDesignIT. All rights reserved.
       </Typography>
       <Box
         sx={{
