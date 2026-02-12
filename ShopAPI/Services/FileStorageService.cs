@@ -15,14 +15,15 @@ public class FileStorageService : IFileStorageService
     private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB
     private const int ThumbnailMaxSize = 250;
-    
+    private readonly ILogger<ProductService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
 
-    public FileStorageService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+    public FileStorageService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<ProductService> logger)
     {
         _httpContextAccessor = httpContextAccessor;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public record ImageSaveResult(string Url, string ThumbnailUrl);
@@ -138,7 +139,7 @@ public class FileStorageService : IFileStorageService
         }
         catch (Exception ex)
         {
-            // _logger.LogError(ex, "Error deleting image: {ImageUrl}", imageUrl);
+            _logger.LogError(ex, "Error deleting image: {ImageUrl}", imageUrl);
             return false;
         }
     }
@@ -160,8 +161,14 @@ public class FileStorageService : IFileStorageService
             var scheme = request.Scheme;
             var host = request.Host.Value;
             
+            // Check for null or empty host
+            if (string.IsNullOrEmpty(host))
+            {
+                return "https://localhost:7288"; // Fallback
+            }
+            
             // Handle specific port mappings for development
-            if (host.Contains("localhost") && !host.Contains(":"))
+            if (host.Contains("localhost", StringComparison.OrdinalIgnoreCase) && !host.Contains(':'))
             {
                 // If localhost without port, assume default ports
                 host = scheme == "https" ? "localhost:7288" : "localhost:7288";
